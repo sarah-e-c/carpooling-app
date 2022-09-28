@@ -1,8 +1,8 @@
-from app import app, db
-from app import models
+from carpooling import app, db
+from carpooling import models
 import os
 
-from app import routes
+from carpooling import routes
 import logging 
 
 logger = logging.getLogger(__name__)

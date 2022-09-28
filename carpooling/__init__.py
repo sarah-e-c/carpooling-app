@@ -8,3 +8,5 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 db = SQLAlchemy(app)
+import carpooling.routes
+

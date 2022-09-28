@@ -16,9 +16,12 @@ if __name__ == '__main__':
             car_color_2 = 'Light Blue',
             phone_number = 8045906570,
             email_address = 'sarah.beth.crowder@gmail.com',
+            num_years_with_license = 2,
             num_seats = 2,
             student_or_parent = 'Student',
-            extra_information = 'First'
+            extra_information = 'First',
+            emergency_contact_number = '8047315832',
+            emergency_contact_relation = 'Mother'
         )
         db.session.add(first_user)
         db.session.commit()

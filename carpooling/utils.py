@@ -1,4 +1,4 @@
 class PersonAlreadyExistsException(Exception):
-    """Exception for """
+    """Exception for a person already existing """
     def __init__():
         super().__init__()

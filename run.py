@@ -16,4 +16,4 @@ if __name__ == '__main__':
         db.session.add(first_user)
         db.session.commit()
 
-    app.run(debug=True) #gjghjhghjghjgjhgjhgjhghghgpoipoi0980=-0
+    app.run(debug=True)

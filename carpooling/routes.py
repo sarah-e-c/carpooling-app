@@ -11,9 +11,9 @@ logging.basicConfig(level=logging.DEBUG)
 def driver_page(lastname, firstname):
     logging.debug('here')
     driver = Driver.query.filter_by(last_name=lastname, first_name=firstname).one()
-    driver_info = {'Last Name': driver.last_name, 
-                    'First Name': driver.first_name,
-                    'Car 1 Type': driver.car_type_1,
+    driver_info = {'lastname': driver.last_name.capitalize(), 
+                    'firstname': driver.first_name.capitalize(),
+                    'car_type_1': driver.car_type_1,
                     'Car 1 Color': driver.car_color_1,
                     'Car 2 Type': driver.car_type_2,
                     'Car 2 Color': driver.car_color_2,
@@ -23,12 +23,16 @@ def driver_page(lastname, firstname):
                     'Phone number': driver.phone_number,
                     'Email Address': driver.email_address,
                     'Student or Parent': driver.student_or_parent}
-    return driver_info
+    return render_template('driver_page_template.html', **driver_info)
+
 
 #@app.route('/')
 @app.route('/home')
 def home_page():
-    return render_template('home.html', context=time.time())
+    return render_template('driver_page_template.html')
+    # with open ('carpooling/templates/mechtech_template.html') as f:
+    #     return f.read()
+
 
 
 

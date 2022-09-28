@@ -1,1 +1,1 @@
-web: gunicorn carpooling_app:app
+web: gunicorn app:carpooling_app

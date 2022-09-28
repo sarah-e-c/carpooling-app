@@ -16,4 +16,8 @@ class Driver(db.Model):
     car_color_2 = db.Column(db.String)
     car_type_3 = db.Column(db.String)
     car_color_3 = db.Column(db.String)
+    extra_information = db.Column(db.String)
+
+    def __repr__(self):
+        return f'Driver: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 

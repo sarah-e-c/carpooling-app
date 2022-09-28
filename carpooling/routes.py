@@ -4,6 +4,7 @@ from carpooling import app
 from carpooling.models import Driver
 import logging
 import time
+from carpooling.utils import PersonAlreadyExistsException
 from flask import render_template, request, redirect, url_for
 
 logging.basicConfig(level=logging.DEBUG)
@@ -66,17 +67,17 @@ def handle_form():
         }
         try:
             if Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0:
-                raise Exception('A person with that name already exists.')
+                raise PersonAlreadyExistsException('A person with that name already exists.')
             new_driver = Driver(**driver_info)
             db.session.add(new_driver)
             db.session.commit()
             logger.info(f'New driver added to database: {new_driver}')
+        except PersonAlreadyExistsException as e:
+            logger.info(e)
+            return redirect(url_for("register_user_page", message='A person with that name already exists.'))
         except Exception as e:
             logger.info(e)
-            if e == Exception('A person with that name already exists.'):
-                return redirect(url_for("register_user_page", message='A person with that name already exists.'))
-            else:
-                return redirect(url_for("register_user_page", message='Something went wrong. Make sure that all inputs are valid.'))
+            return redirect(url_for("register_user_page", message='Something went wrong. Make sure that all inputs are valid.'))
         return 'Submitted Successfully! Thank you for helping the team!'
     else: 
         return 'wrong page'

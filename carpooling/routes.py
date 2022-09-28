@@ -11,15 +11,15 @@ logging.basicConfig(level=logging.DEBUG)
 def driver_page(lastname, firstname):
     logging.debug('here')
     driver = Driver.query.filter_by(last_name=lastname, first_name=firstname).one()
-    driver_info = {'lastname': driver.last_name.capitalize(), 
-                    'firstname': driver.first_name.capitalize(),
-                    'car_type_1': driver.car_type_1,
-                    'Car 1 Color': driver.car_color_1,
-                    'Car 2 Type': driver.car_type_2,
-                    'Car 2 Color': driver.car_color_2,
-                    'Car 3 Type': driver.car_type_3,
-                    'Car 3 Color': driver.car_color_3,
-                    'Number of seats': driver.num_seats,
+    driver_info = {'lastname': driver.last_name.capitalize(),
+                    'firstname':  driver.last_name.capitalize(),
+                    'car_type_1': driver.car_type_1, # driver.car_type_1
+                    'car_color_1': driver.car_color_1,
+                    'car_type_2': driver.car_type_2,
+                    'car_color_2': driver.car_color_2,
+                    'car_type_3': driver.car_type_3,
+                    'car_color_3': driver.car_color_3,
+                    'number_seats': driver.num_seats,
                     'Phone number': driver.phone_number,
                     'Email Address': driver.email_address,
                     'Student or Parent': driver.student_or_parent}

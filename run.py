@@ -1,5 +1,3 @@
-from distutils.command.build_scripts import first_line_re
-from genericpath import isfile
 from carpooling import app, db
 from carpooling import models
 import os
@@ -11,7 +9,9 @@ if __name__ == '__main__':
         db.create_all()
         first_user = models.Driver(
             first_name='sarah',
-            last_name='crowder'
+            last_name='crowder',
+            car_type_1 = 'Mazda 6',
+            car_color_1 = 'Black'
         )
         db.session.add(first_user)
         db.session.commit()

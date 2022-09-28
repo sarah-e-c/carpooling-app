@@ -5,7 +5,7 @@ import os
 from carpooling import routes
 import logging 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) # i cri everytime
 
 if __name__ == '__main__': # run app
     if len(db.engine.table_names()) < 1:

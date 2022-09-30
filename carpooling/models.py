@@ -1,4 +1,5 @@
 from carpooling import db
+from sqlalchemy.sql import func
 
 class Driver(db.Model):
     __tablename__ = 'drivers'
@@ -21,3 +22,11 @@ class Driver(db.Model):
     def __repr__(self):
         return f'Driver: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
+class AuthKey(db.Model):
+    __tablename__ = 'auth_keys'
+    index = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String, nullable=False)
+    date_created = db.Column(db.DateTime, default=func.now())
+
+    def __repr__(self):
+        return f'AuthKey created at: {self.time_created}'

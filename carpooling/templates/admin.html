@@ -448,14 +448,14 @@
     }
 
     h1.style2, h2.style2, h3.style2, p.style2 {
-        color: #FFFFFF;
+        color: #73C167;
         font-family: 'Fira Sans', sans-serif;
         font-size: larger;
         letter-spacing: 0.025rem;
         width: calc(100% + 0.025rem);
         font-size: 1em;
         line-height: 1.875;
-        font-weight: 300;
+        font-weight: 600;
         text-align: center;
         align-self: center;
     }
@@ -855,24 +855,37 @@
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
                     </span>
                 </div>
-                <h1 id="text01" class="style1">Mech Tech Dragons Carpooling</h1>
+                <h1 id="text01" class="style1">Admin Log In</h1>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
-                    <p class="style2">
-                        Mech tech dragons caropoling is a minimal application that lets you view registered drivers for team 422. It may be expanded in the future to include ride sharing and sign-ups. Your data is stored in a secure database and is only accessible by the team. We may expand it further to include sign ups.
-                    </p>
+                    <form action="{{url_for("verify_admin")}}" method="post" class="style1" id="formtable">
+                        <p>
+                        <label for="username">Admin Username</label>
+                        <input type="text" name="username" id="username" value="" />
+                        </p>
+                        <br>
+                        <p>
+                        <label for="password">Admin Password</label>
+                        <input type="text" name="password" id="password" value=""/>
+                        </p>
+
+                        <ul id = "buttons01" class="style1 buttons">
+                            <input type="submit" value="Login" class="style1" id="submitbutton"> 
+                        </ul>
+                        <br>
+                    </form>
                 </div>
-                <ul id="buttons01" class="style1 buttons">
+                <!--<ul id="buttons01" class="style1 buttons">
                     <li>
-                        <a href="{{url_for('register_user_page')}}" class="button n01">
+                        <a href="https://domain.ext/path" class="button n01">
                             <svg>
                                 <use xlink:href="#icon-b64"></use>
                             </svg>
-                            <span class="label">Register Now</span>
+                            <span class="label">Submit</span>
                         </a>
                     </li>
                 </ul>
-           
+            -->
             </div>
         </div>
     </div>

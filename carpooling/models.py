@@ -17,6 +17,7 @@ class Driver(db.Model):
     car_color_2 = db.Column(db.String)
     emergency_contact_number = db.Column(db.String, nullable=False)
     emergency_contact_relation = db.Column(db.String, nullable=False)
+    # carpools = db.relationship('Carpool', backref='driver_index', lazy=True)
     extra_information = db.Column(db.String)
 
     def __repr__(self):
@@ -30,3 +31,20 @@ class AuthKey(db.Model):
 
     def __repr__(self):
         return f'AuthKey created at: {self.time_created}'
+
+# class Carpool(db.Model):
+#     __tablename__ = 'carpools'
+#     index = db.Column(db.Integer, primary_key=True)
+#     driver_index = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
+#     driver = db.relationship('Driver', backref=db.backref('carpools', lazy=True))
+#     num_passengers = db.Column(db.Integer, nullable=False)
+#     event = db.Column()
+#     destination = db.Column(db.String, nullable=False)
+#     extra_information = db.Column(db.String)
+
+#     def __repr__(self):
+#         return f'Carpool: {self.driver.first_name.capitalize()} {self.driver.last_name.capitalize()}'
+
+# class CarpoolEvent(db.Model):
+#     __tablename__ = 'carpool_events'
+#     event_index = db.Column(db.Integer, primary_key=True)

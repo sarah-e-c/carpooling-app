@@ -12,7 +12,10 @@ if __name__ == '__main__': # run app
     logging.basicConfig(level=logging.DEBUG)
     if len(db.engine.table_names()) < 2:
         logger.info('first time setup')
-        models.AuthKey.query.delete()
+        try:
+            models.AuthKey.query.delete() # only for testing
+        except:
+            pass
         db.create_all()
         first_key = models.AuthKey(
             key = secrets.token_hex(4)

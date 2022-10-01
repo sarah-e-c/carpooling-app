@@ -9,6 +9,7 @@ import secrets
 logger = logging.getLogger(__name__)
 
 if __name__ == '__main__': # run app
+    
     logging.basicConfig(level=logging.DEBUG)
     if len(db.engine.table_names()) < 2:
         logger.info('first time setup')

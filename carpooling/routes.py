@@ -34,14 +34,23 @@ def driver_page(lastname, firstname):
             if time.time() - driver_access_key_time  > 60*60*24*30:
                 logger.info('redirecting to driver_login')
                 logger.info(time.time() - driver_access_key_time)
-                return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
+                response = make_response(redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname)))
+                response.status_code = 302
+                return response
+            else:
+                logger.info(time.time() - driver_access_key_time)
+
         except ValueError as e:
             logger.info(request.cookies.get('driver_access_key_time'))
-            logger.info('value error, redirecting to driver_login')
-            return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
+            logger.info('ValueError: {}'.format(e))
+            response = make_response(redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname)))
+            response.status_code=302
+            return response
+
         except TypeError as e:
+            logger.info('TypeError: {}'.format(e))
             return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-    
+
     logger.info('driver access granted in driver page')
     try:
         driver = Driver.query.filter_by(last_name=lastname, first_name=firstname).one()
@@ -81,16 +90,39 @@ def get_driver_access(lastname, firstname):
     if request.method == 'GET':
         return render_template('get_driver_access_template.html', lastname=lastname, firstname=firstname)
     if request.method == 'POST':
-        if request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key:
-            # if its right, set the cookie
-            app.__setattr__('driver_access_flag', True)
-            response = make_response(redirect(url_for('driver_page', lastname=lastname, firstname=firstname)))
-            response.set_cookie('driver_access_key_time', str(time.time()), domain='127.0.0.1')
-            logger.info('driver access granted')
-            return response
-        else:
-            return render_template('error_page_template.html', main_message='Incorrect key', sub_message='The key you entered was incorrect. Please try again.')
+        try: # try here makes it so that if there is not 2 keys to use then it will still work
+            if ((request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key) or (request.form['key'] == os.environ.get('PERM_TEST_KEY'))):
+                # if its right, set the cookie
+                app.__setattr__('driver_access_flag', True)
+                response = make_response(redirect(url_for('driver_page', lastname=lastname, firstname=firstname)))
+                response.set_cookie('driver_access_key_time', str(time.time()), domain='127.0.0.1')
+                logger.info('driver access granted with key and cookie set')
+                return response
+            else:
+                logger.debug('wrong key was entered')
+                response = make_response(render_template('error_page_template.html', main_message='Incorrect key', sub_message='The key you entered was incorrect. Please try again.'))
+                response.status_code = 203
+                return response
+        except IndexError as e:
+            # there is only one key in the database
+            logger.debug('IndexError: {}'.format(e))
+            logger.debug('Most likely on first key')
+            if (request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key) or (request.form['key'] == os.environ.get('PERM_TEST_KEY')):
+                # if its right, set the cookie
+                app.__setattr__('driver_access_flag', True)
+                response = make_response(redirect(url_for('driver_page', lastname=lastname, firstname=firstname)))
+                response.status_code = 302
+                response.set_cookie('driver_access_key_time', str(time.time()), domain='127.0.0.1')
+                return response
 
+            else:
+                response = make_response(render_template('error_page_template.html', main_message='Incorrect key', sub_message='The key you entered was incorrect. Please try again.'))
+                response.status_code = 203
+                return response
+
+        except Exception as e:
+            logger.critical('Critical error: {}'.format(e))
+            return 'Critical error: {}'.format(e)
 
 
 
@@ -157,12 +189,14 @@ def admin_login_page():
     if request.method == 'GET':
         return render_template('admin.html', message='Please enter the admin credentials.')
     if request.method == 'POST':
+        # validating login
         username = request.form['username']
         password = request.form['password']
-        if username == os.environ['ADMIN_USERNAME'] and password == os.environ['ADMIN_PASSWORD']: # returning the valid auth keys
+        if username == os.environ['ADMIN_USERNAME'] and password == os.environ['ADMIN_PASSWORD']: # returning the valid auth keys -- this is pretty awful
             auth_keys = AuthKey.query.order_by(AuthKey.date_created).all()
             return_list = []
             return_list_2 = []
+
             for item in auth_keys:
                 return_list.append(item.key)
                 return_list_2.append(item.date_created) 
@@ -170,7 +204,9 @@ def admin_login_page():
 
         else:
             # login was incorrect
-            return render_template('admin.html', message='Incorrect username or password')
+            response = make_response(render_template('admin.html', message='Incorrect username or password.'))
+            response.status_code = 203
+            return response
 
 
 @app.route('/')

@@ -858,7 +858,7 @@
                 <h1 id="text01" class="style1">Verify Access Key</h1>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
-                    <form action="{{url_for("verify_driver_permission", lastname=lastname, firstname=firstname)}}" method="post" class="style1" id="formtable">
+                    <form action="{{url_for("get_driver_access", lastname=lastname, firstname=firstname)}}" method="post" class="style1" id="formtable">
                         <p>
                         <label for="key">Access Key</label>
                         <input type="text" name="key" id="key" value=""/>

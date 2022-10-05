@@ -14,6 +14,5 @@ app.__setattr__('driver_access_flag', False)
 
 db = SQLAlchemy(app)
 
-
 import carpooling.routes
 

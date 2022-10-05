@@ -9,6 +9,7 @@ import secrets
 logger = logging.getLogger(__name__)
 
 if __name__ == '__main__': # run app
+<<<<<<< HEAD
     
     logging.basicConfig(level=logging.DEBUG)
     if len(db.engine.table_names()) < 5:
@@ -19,6 +20,13 @@ if __name__ == '__main__': # run app
             pass
         db.create_all()
         models.AuthKey.query.delete()
+=======
+    logging.basicConfig(level=logging.DEBUG)
+    if len(db.engine.table_names()) < 2:
+        logger.info('first time setup')
+        models.AuthKey.query.delete()
+        db.create_all()
+>>>>>>> 48e185e (reverting)
         first_key = models.AuthKey(
             key = secrets.token_hex(4)
         )

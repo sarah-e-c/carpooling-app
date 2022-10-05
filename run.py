@@ -11,13 +11,17 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__': # run app
     
     logging.basicConfig(level=logging.DEBUG)
-    if len(db.engine.table_names()) < 2:
+    if len(db.engine.table_names()) < 5:
         logger.info('first time setup')
+<<<<<<< HEAD
         try:
             models.AuthKey.query.delete() # only for testing
         except:
             pass
+=======
+>>>>>>> 55a65cb (before merge)
         db.create_all()
+        models.AuthKey.query.delete()
         first_key = models.AuthKey(
             key = secrets.token_hex(4)
         )

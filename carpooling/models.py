@@ -1,6 +1,7 @@
 from carpooling import db
 from sqlalchemy.sql import func
 
+
 class Driver(db.Model):
     __tablename__ = 'drivers'
     index = db.Column(db.Integer, primary_key=True)
@@ -59,12 +60,12 @@ class Carpool(db.Model):
     driver_index = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
     driver = db.relationship('Driver', backref=db.backref('carpools', lazy=True))
     num_passengers = db.Column(db.Integer, nullable=False)
-    event_index = db.Column(db.String, foreignkey='events.index', nullable=False)
+    event_index = db.Column(db.String, db.ForeignKey('events.index'), nullable=False)
     event = db.relationship('Event', backref=db.backref('carpools', lazy=True))
     destination = db.Column(db.String, nullable=False)
     extra_information = db.Column(db.String)
-    region = db.relationship('Region', backref=db.backref('carpools'))
-    region_name = db.Column(db.String, nullable=False, foreignkey='regions.name')
+    region = db.relationship('Region', backref=db.backref('carpools'), lazy=True)
+    region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=False)
 
     def __repr__(self):
         return f'Carpool: {self.driver.first_name.capitalize()} {self.driver.last_name.capitalize()}'
@@ -76,22 +77,22 @@ class Region(db.Model):
     __tablename__ = 'regions'
     name = db.Column(db.String, primary_key=True)
     dropoff_location = db.Column(db.String, nullable=False)
-    carpools = db.relationship('Carpool', backref=db.backref('region'))
-    passengers = db.relationship('Passenger', backref=db.backref('region'))
+    #carpools = db.relationship('Carpool', backref=db.backref('region'))
+    #passengers = db.relationship('Passenger', backref=db.backref('region'))
 
 
 class Event(db.Model):
     """
     Event model. Events can have multiple carpools for each region.
     """
-    __tablename__ = 'carpool_events'
-    event_index = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'events'
+    index = db.Column(db.Integer, primary_key=True)
     event_name = db.Column(db.String, nullable=False)
     event_date = db.Column(db.DateTime, nullable=False)
     event_start_time = db.Column(db.DateTime, nullable=False)
     event_end_time = db.Column(db.DateTime, nullable=False)
     event_location = db.Column(db.String, nullable=False, default='Maggie Walker Governor\'s School')
-    carpools = db.relationship('Carpool', backref='event', lazy=True)
+    #carpools = db.relationship('Carpool', backref='event', lazy=True)
 
     def __repr__(self):
         return f'Event: {self.event_name}'
@@ -110,7 +111,7 @@ class Passenger(db.Model):
     emergency_contact_number = db.Column(db.String, nullable=True)
     emergency_contact_relation = db.Column(db.String, nullable=True)
     extra_information = db.Column(db.String)
-    region_name = db.Column(db.String, nullable=False, foreignkey='regions.name')
+    region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=False, )
     region = db.relationship('Region', backref=db.backref('passengers'))
 
 

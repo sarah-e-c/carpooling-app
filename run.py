@@ -5,28 +5,25 @@ import os
 from carpooling import routes
 import logging 
 import secrets
+import datetime
 
 logger = logging.getLogger(__name__)
 
-if __name__ == '__main__': # run app
-<<<<<<< HEAD
-    
+
+def test_set_up():
     logging.basicConfig(level=logging.DEBUG)
-    if len(db.engine.table_names()) < 5:
+    if len(db.engine.table_names()) < 100:
         logger.info('first time setup')
         try:
             models.AuthKey.query.delete() # only for testing
+            models.Driver.query.delete() # only for testing
+            models.Event.query.delete() # only for testing
+            models.Carpool.query.delete() # only for testing
+            models.Region.query.delete() # only for testing
         except:
             pass
+    
         db.create_all()
-        models.AuthKey.query.delete()
-=======
-    logging.basicConfig(level=logging.DEBUG)
-    if len(db.engine.table_names()) < 2:
-        logger.info('first time setup')
-        models.AuthKey.query.delete()
-        db.create_all()
->>>>>>> 48e185e (reverting)
         first_key = models.AuthKey(
             key = secrets.token_hex(4)
         )
@@ -46,8 +43,47 @@ if __name__ == '__main__': # run app
             num_years_with_license = 1
         )
 
+        test_event = models.Event(
+            event_name = 'test',
+            event_start_time = datetime.datetime.now() + datetime.timedelta(days=1),
+            event_end_time = datetime.datetime.now() + datetime.timedelta(days=1),
+            event_date = datetime.datetime.now() + datetime.timedelta(days=1),
+            event_location = 'test'
+        )
+
+        test_region = models.Region(
+            name = 'test',
+            dropoff_location = 'test'
+        )
+
+        test_carpool = models.Carpool(
+            driver_index = 1,
+            num_passengers = 4,
+            event_index = 1,
+            destination = 'test',
+            region_name = 'test'
+        )
+
+        test_carpool_2 = models.Carpool(
+            num_passengers = 3,
+            event_index = 1,
+            destination = 'test',
+            region_name = 'test'
+        )
+
+
+        db.session.add(test_carpool)
+        db.session.add(test_carpool_2)
+
+
+        db.session.add(test_region)
+        db.session.add(test_event)
         db.session.add(first_key)
         db.session.add(test_man)
         db.session.commit()
+        logger.info('first time setup complete')
+
+if __name__ == '__main__': # run app
+    test_set_up()
     
     app.run(debug=True)

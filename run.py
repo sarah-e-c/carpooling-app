@@ -7,6 +7,9 @@ import logging
 import secrets
 import datetime
 
+
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +23,7 @@ def test_set_up():
             models.Event.query.delete() # only for testing
             models.Carpool.query.delete() # only for testing
             models.Region.query.delete() # only for testing
+            models.Passenger.query.delete() # only for testing
         except:
             pass
     
@@ -58,7 +62,7 @@ def test_set_up():
 
         test_carpool = models.Carpool(
             driver_index = 1,
-            num_passengers = 4,
+            num_passengers = 5,
             event_index = 1,
             destination = 'test',
             region_name = 'test'
@@ -70,6 +74,44 @@ def test_set_up():
             destination = 'test',
             region_name = 'test'
         )
+
+        test_passenger = models.Passenger(
+            last_name = 'test',
+            first_name = 'test',
+            phone_number = 'test',
+            email_address = 'test',
+            emergency_contact_number = 'test',
+            emergency_contact_relation = 'test',
+            region_name = 'test',
+        )
+
+        test_passenger_2 = models.Passenger(
+            last_name = 'test2',
+            first_name = 'test2',
+            phone_number = 'test',
+            email_address = 'test',
+            emergency_contact_number = 'test',
+            emergency_contact_relation = 'test',
+            region_name = 'test',
+        )
+
+        test_passenger_3 = models.Passenger(
+            last_name = 'test3',
+            first_name = 'test3',
+            phone_number = 'test',
+            email_address = 'test',
+            emergency_contact_number = 'test',
+            emergency_contact_relation = 'test',
+            region_name = 'test',
+        )
+
+        test_carpool.passengers.append(test_passenger)
+        test_carpool.passengers.append(test_passenger_2)
+        test_carpool.passengers.append(test_passenger_3)
+
+        # db.session.add(test_passenger)
+        # db.session.add(test_passenger_2)
+        # db.session.add(test_passenger_3)
 
 
         db.session.add(test_carpool)

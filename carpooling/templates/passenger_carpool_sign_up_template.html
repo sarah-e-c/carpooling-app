@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-    <title>Mech Techs Carpooling {{main_message}}</title>
+    <title>Mech Techs Carpooling Driver Sign Up</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="description" content="Information Page"/>
-    <meta property="og:site_name" content="Information Page"/>
-    <meta property="og:title" content="Information Page"/>
+    <meta name="description" content="driver sign up"/>
+    <meta property="og:site_name" content="Mech Techs Carpooling"/>
+    <meta property="og:title" content="Driver Sign Up"/>
     <meta property="og:type" content="website"/>
-    <meta property="og:description" content="driver sign up"/>
+    <meta property="og:description" content="Driver sign up"/>
     <meta property="og:image" content="https://mechtechsignup.carrd.co/assets/images/card.jpg?v=33337d93"/>
     <meta property="og:image:type" content="image/jpeg"/>
     <meta property="og:image:width" content="1280"/>
@@ -43,48 +43,6 @@
     blockquote, q {
         quotes: none;
     }
-    .topnav {
-        background-color: #333;
-        overflow: hidden;
-      }
-      
-      /* Style the links inside the navigation bar */
-      .topnav a {
-        float: left;
-        color: #ffffff;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-        font-family: 'Fira Sans', sans-serif;
-      }
-      
-      /* Change the color of links on hover */
-      .topnav a:hover {
-        background-color: #ddd;
-        color: black;
-      }
-      
-      /* Add a color to the active/current link */
-      .topnav a.active {
-        background-color: #00B259;
-        color: white;
-      }
-    
-      .topnav a.user-info {
-        float: right;
-        color: #ffffff;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-        font-family: 'Fira Sans', sans-serif;
-      }
-    
-      .topnav a.user-info:hover {
-        background-color: #ddd;
-        color: black;
-      }
 
     blockquote:before, blockquote:after, q:before, q:after {
         content: '';
@@ -490,14 +448,14 @@
     }
 
     h1.style2, h2.style2, h3.style2, p.style2 {
-        color: #FFFFFF;
+        color: #73C167;
         font-family: 'Fira Sans', sans-serif;
         font-size: larger;
         letter-spacing: 0.025rem;
         width: calc(100% + 0.025rem);
         font-size: 1em;
         line-height: 1.875;
-        font-weight: 300;
+        font-weight: 600;
         text-align: center;
         align-self: center;
     }
@@ -859,6 +817,50 @@
             gap: 1.03125rem;
         }
     }
+    /* Add a black background color to the top navigation */
+.topnav {
+    background-color: #333;
+    overflow: hidden;
+  }
+  
+  /* Style the links inside the navigation bar */
+  .topnav a {
+    float: left;
+    color: #ffffff;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+    font-family: 'Fira Sans', sans-serif;
+  }
+  
+  /* Change the color of links on hover */
+  .topnav a:hover {
+    background-color: #ddd;
+    color: black;
+  }
+  
+  /* Add a color to the active/current link */
+  .topnav a.active {
+    background-color: #00B259;
+    color: white;
+  }
+
+  .topnav a.user-info {
+    float: right;
+    color: #ffffff;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+    font-family: 'Fira Sans', sans-serif;
+  }
+
+  .topnav a.user-info:hover {
+    background-color: #ddd;
+    color: black;
+  }
+
     </style>
     <noscript>
         <style>
@@ -899,34 +901,98 @@
         <a class="user-info" href="{{ url_for('login_page') }}">Login</a>
         <a class="user-info" href="{{url_for('generic_register_page')}}">Register/Update</a>
         <a class="user-info" href="{{url_for('login_help_page')}}">Login Help</a>
-        
         {% endif %}
       </div>
-      
     <div id="wrapper">
         <div id="main">
             <div class="inner">
-
                 <div id="image01" class="style1 image">
                     <span class="frame">
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
                     </span>
                 </div>
-                <h1 id="text01" class="style1">{{main_message}}</h1>
+                <h1 id="text01" class="style1">{{carpool.event.event_name.capitalize()}} Passenger Sign Up</h1>
+                <h2 id="text07" class="style2">{{ message }}</h2>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
-                    <p class="style2">
-                        {{sub_message}}
-                    </p>
+                    <form action="{{url_for("passenger_carpool_signup_page", carpool_index = carpool.index)}}" method="post">
+                        <div id="formtable">
+                        <p>
+                        <label for="firstname">First Name</label>
+                        
+                        <input type="text" id="firstname" name="firstname" placeholder="John" class="input1" required="required">
+                        </p>
+                        <br>
+
+                        <p>
+                        <label for="lastname">Last Name   &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                        <input type="text" id="lastname" name="lastname" placeholder="Cena" class="input1">
+                        </p>
+                        <br>
+
+                        <p>
+                            <label for="phonenumber">Phone Number &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                            <input type="text" id="phonenumber" name="phonenumber" placeholder="8045553333" class="input1">
+                        </p>
+                        <br>
+
+                        <p>
+                            <label for="email">Email Address &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                            <input type="text" id="email" name="email" placeholder="example@example.com" class="input1">
+                        </p>
+                        <br>
+
+                        <p>
+                            <label for="emergencycontact">Emergency Contact Phone Number &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                            <input type="text" id="emergencycontact" name="emergencycontact" placeholder="8045554444" class="input1">
+                        </p>
+                        <br>
+
+                        <p>
+                            <label for="emergencycontactrelation">Emergency Contact Relationship &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" placeholder="Mother" class="input1">
+                        </p>
+                        <br>
+
+                        <p>
+                            <label for="note">Note &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                            <input type="text" id="note" name="note" placeholder="Mother" class="input1">
+                        </p>
+                        <br>
+
+                        </div>
+                        <ul id = "buttons01" class="style1 buttons">
+                            <input type="submit" value="Submit" class="style1" id="submitbutton"> 
+                        </ul>
+                        <br>
+                    </form>
+                    <br>
+                    <h2 class="style2">Not registered?</h2>
+                    <ul id = "buttons02" class="style1 buttons">
+                        <li style="opacity: 1; transform: none; size: 10px;">
+                        <a href= "{{url_for('register_passenger_page')}}" class="button n01" style="size:10px">
+                            <svg> <use xlink:href="#icon-b64">
+                                Shadow Content (User Agent)
+                            </use>
+                        </svg>
+                        <span class="label">Register Now</span>
+                    </a>
+                    </li>
+                    </ul>
+
+
                 </div>
-                <ul id="buttons01" class="style1 buttons">
+                <!--<ul id="buttons01" class="style1 buttons">
                     <li>
-                        <a href="{{url_for('home_page')}}" class="button n01">
-                            <span class="label">Return Home</span>
+                        <a href="https://domain.ext/path" class="button n01">
+                            <svg>
+                                <use xlink:href="#icon-b64"></use>
+                            </svg>
+                            <span class="label">Submit</span>
                         </a>
                     </li>
                 </ul>
-           
+            -->
             </div>
         </div>
     </div>

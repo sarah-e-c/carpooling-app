@@ -1,5 +1,7 @@
 from carpooling import db
 from sqlalchemy.sql import func
+from flask_login import UserMixin
+
 
 
 class Driver(db.Model):
@@ -20,6 +22,7 @@ class Driver(db.Model):
     emergency_contact_relation = db.Column(db.String, nullable=False)
     # carpools = db.relationship('Carpool', backref='driver_index', lazy=True)
     extra_information = db.Column(db.String)
+
 
     def __repr__(self):
         return f'Driver: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -55,7 +58,7 @@ class Carpool(db.Model):
     extra_information = db.Column(db.String)
     region = db.relationship('Region', backref=db.backref('carpools'), lazy=True)
     region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=False)
-    passengers = db.relationship('Passenger', secondary='passenger_carpool_links')
+    passengers = db.relationship('Passenger', secondary='passenger_carpool_links', overlaps='carpools')
 
 
     def has_driver(self):
@@ -71,7 +74,7 @@ class Carpool(db.Model):
         except IndexError:
             return 'Open'
 
-        return self.passengers[number].first_name.capitalize() + ' ' + self.passengers[number].last_name.first().capitalize() + '.'
+        return self.passengers[number].first_name.capitalize() + ' ' + self.passengers[number].last_name[0].capitalize() + '.'
 
     def get_dropoff_location(self):
         """
@@ -85,7 +88,10 @@ class Carpool(db.Model):
             return self.region.dropoff_location
     
     def __repr__(self):
-        return f'Carpool: {self.driver.first_name.capitalize()} {self.driver.last_name.capitalize()}'
+        try:
+            return f'Carpool with driver: {self.driver.first_name.capitalize()} {self.driver.last_name.capitalize()}'
+        except:
+            return 'empty carpool'
 
     
 
@@ -105,6 +111,10 @@ class Event(db.Model):
     event_description = db.Column(db.String, nullable=True)
     #carpools = db.relationship('Carpool', backref='event', lazy=True)
 
+    def get_description(self):
+        if self.event_description is None:
+            return ''
+        return self.event_description
 
 
     def __repr__(self):
@@ -117,6 +127,7 @@ class Region(db.Model):
     __tablename__ = 'regions'
     name = db.Column(db.String, primary_key=True)
     dropoff_location = db.Column(db.String, nullable=False)
+    color = db.Column(db.String, nullable=False, default='#fff')
     #carpools = db.relationship('Carpool', backref=db.backref('region'))
     #passengers = db.relationship('Passenger', backref=db.backref('region'))
 
@@ -137,18 +148,53 @@ class Passenger(db.Model):
     emergency_contact_number = db.Column(db.String, nullable=True)
     emergency_contact_relation = db.Column(db.String, nullable=True)
     extra_information = db.Column(db.String)
-    region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=False, )
-    region = db.relationship('Region', backref=db.backref('passengers'), lazy=True)
-    carpools = db.relationship('Carpool', secondary='passenger_carpool_links', lazy=True)
+    region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=True)
+    region = db.relationship('Region', backref=db.backref('passengers'))
+    carpools = db.relationship('Carpool', secondary='passenger_carpool_links', overlaps='passengers')
 
 
     def __repr__(self):
         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
 class PassengerCarpoolLink(db.Model):
+    """
+    Table to link passengers to carpools.
+    """
     __tablename__ = 'passenger_carpool_links'
-    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), primary_key=True)
-    carpool_id = db.Column(db.Integer, db.ForeignKey('carpools.index'), primary_key=True)
+    index = db.Column(db.Integer, primary_key=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'))
+    carpool_id = db.Column(db.Integer, db.ForeignKey('carpools.index'))
 
     def __repr__(self):
         return f'PassengerCarpoolLink: {self.passenger_id} {self.carpool_id}'
+
+
+class StudentAndRegion(db.Model):
+    """
+    Table to link students to regions. Is really only going to be used for the initial phase.
+    """
+    __tablename__ = 'student_and_region'
+    index = db.Column(db.Integer, primary_key=True)
+    student_first_name = db.Column(db.String, nullable=False)
+    student_last_name = db.Column(db.String, nullable=False)
+    region_name = db.Column(db.String, db.ForeignKey('regions.name'))
+    region = db.relationship('Region', backref=db.backref('students'))
+
+    def __repr__(self):
+        return f'StudentAndRegion: {self.student_id} {self.region_name}'
+
+
+class User(UserMixin, db.Model):
+    """
+    Class for a user. Users have some special accesses.
+    """
+    __tablename__ = 'users'
+    index = db.Column(db.Integer, primary_key=True)
+    password = db.Column(db.String, nullable=True)
+    salt = db.Column(db.String, nullable=True)
+    first_name = db.Column(db.String, nullable=False)
+    last_name = db.Column(db.String, nullable=False)
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
+    driver_profile = db.relationship('Driver', backref=db.backref('user'), lazy=True)
+    passenger_profile = db.relationship('Passenger', backref=db.backref('user'), lazy=True)

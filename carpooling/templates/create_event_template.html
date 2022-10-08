@@ -48,6 +48,48 @@
         content: '';
         content: none;
     }
+    .topnav {
+        background-color: #333;
+        overflow: hidden;
+      }
+      
+      /* Style the links inside the navigation bar */
+      .topnav a {
+        float: left;
+        color: #ffffff;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        font-family: 'Fira Sans', sans-serif;
+      }
+      
+      /* Change the color of links on hover */
+      .topnav a:hover {
+        background-color: #ddd;
+        color: black;
+      }
+      
+      /* Add a color to the active/current link */
+      .topnav a.active {
+        background-color: #00B259;
+        color: white;
+      }
+    
+      .topnav a.user-info {
+        float: right;
+        color: #ffffff;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        font-family: 'Fira Sans', sans-serif;
+      }
+    
+      .topnav a.user-info:hover {
+        background-color: #ddd;
+        color: black;
+      }
 
     table {
         border-collapse: collapse;
@@ -847,9 +889,23 @@
             <path d="M31.6,36.5H8.4c-1.7,0-3.1-1.4-3.1-3.1v-4.6c0-3.8,1.8-6.9,5.2-9c1.1-0.7,2.4-1.2,3.8-1.6 c-0.8-0.7-1.5-1.5-2-2.4c-0.8-1.3-1.2-2.9-1.2-4.4c0-4.9,4-8.9,8.9-8.9s8.9,4,8.9,8.9c0,1.6-0.4,3.1-1.2,4.4c-0.5,0.9-1.2,1.7-2,2.4 c1.4,0.4,2.7,1,3.8,1.6c3.4,2,5.2,5.1,5.2,9v4.6C34.7,35.1,33.3,36.5,31.6,36.5z"/>
         </symbol>
     </svg>
+    <div class="topnav">
+        <a href="{{ url_for('home_page') }}">Home</a>
+        <a href="{{ url_for('events_page') }}">Events</a>
+        {% if user.is_authenticated %}
+        <a class="user-info" href = "{{ url_for('user_profile_page') }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
+        <a class="user-info" href="{{ url_for('logout_page') }}">Logout</a>
+        {% else %}
+        <a class="user-info" href="{{ url_for('login_page') }}">Login</a>
+        <a class="user-info" href="{{url_for('generic_register_page')}}">Register/Update</a>
+        <a class="user-info" href="{{url_for('login_help_page')}}">Login Help</a>
+        
+        {% endif %}
+      </div>
     <div id="wrapper">
         <div id="main">
             <div class="inner">
+
                 <div id="image01" class="style1 image">
                     <span class="frame">
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>

@@ -116,6 +116,12 @@ class Event(db.Model):
             return ''
         return self.event_description
 
+    def get_date(self):
+        return self.event_date.strftime('%A, %B %d, %Y')
+    
+    def get_times(self):
+        return f'{self.event_start_time.strftime("%I:%M %p")} - {self.event_end_time.strftime("%I:%M %p")}'
+
 
     def __repr__(self):
         return f'Event: {self.event_name}'
@@ -189,7 +195,7 @@ class User(UserMixin, db.Model):
     Class for a user. Users have some special accesses.
     """
     __tablename__ = 'users'
-    index = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     password = db.Column(db.String, nullable=True)
     salt = db.Column(db.String, nullable=True)
     first_name = db.Column(db.String, nullable=False)
@@ -198,3 +204,4 @@ class User(UserMixin, db.Model):
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
     driver_profile = db.relationship('Driver', backref=db.backref('user'), lazy=True)
     passenger_profile = db.relationship('Passenger', backref=db.backref('user'), lazy=True)
+

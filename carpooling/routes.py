@@ -5,13 +5,13 @@ from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool
 import logging
 import time
 from carpooling.utils import PersonAlreadyExistsException
-from flask import render_template, request, redirect, url_for, make_response
+from flask import render_template, request, redirect, url_for, make_response, flash, session
 import secrets
 import os
 import datetime
 from sqlalchemy import func
 import hashlib
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -91,11 +91,15 @@ def get_driver_access(lastname, firstname):
 
 @app.route('/')
 @app.route('/home')
-def home_page():
+def home_page(logout=False):
     """
     Home page
     """
-    return render_template('home.html', user=current_user)
+    logout = request.args.get('logout')
+    if logout:
+        logout_user()
+        logger.info(f'User {current_user} logged out')
+    return render_template('index.html', user=current_user)
 
 
 @app.route('/register-driver', methods=['GET','POST'])
@@ -139,9 +143,9 @@ def register_new_driver_page():
         }
         try:
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
-                raise PersonAlreadyExistsException('A person with that name already exists.')
+                raise PersonAlreadyExistsException()
             if (Passenger.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
-                raise PersonAlreadyExistsException('You are already registered as a passenger. Upgrade to a driver through the login page.')
+                raise PersonAlreadyExistsException()
             
             new_driver = Driver(**driver_info)
 
@@ -292,6 +296,15 @@ def driver_carpool_signup_page(carpool_index):
     Page that drivers go to when they are signing up for a carpool. Still needs a check for sign in
     """
     if request.method == 'GET':
+        if current_user.is_authenticated:
+            carpool = Carpool.query.get(carpool_index)
+            carpool.driver = current_user.driver_profile
+            carpool.num_passengers = current_user.driver_profile.num_seats
+            carpool.driver_index = current_user.driver_profile.index
+            db.session.commit()
+            logger.info(f'{current_user} signed up for carpool {carpool}')
+            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up to drive! Thank you for helping the team!', user=current_user) 
+
         carpool = Carpool.query.get(carpool_index)
         return render_template('driver_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
     if request.method == 'POST':
@@ -335,25 +348,35 @@ def passenger_carpool_signup_page(carpool_index):
         passenger = Passenger.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
         logger.debug(passenger)
         if passenger is None:
-            new_passenger = Passenger(
-                first_name = request.form['firstname'].lower(),
-                last_name = request.form['lastname'].lower(),
-                email_address = request.form['email'].lower(),
-                phone_number = request.form['phonenumber'],
-                emergency_contact_number = request.form['emergencycontactnumber'],
-                emergency_contact_relation = request.form['emergencycontactrelation'],
-                extra_information = request.form['note']
-            )
-            db.session.add(new_passenger)
-            db.session.commit()
-            #TODO
+            try:
+                new_passenger = Passenger(
+                    first_name = request.form['firstname'].lower(),
+                    last_name = request.form['lastname'].lower(),
+                    email_address = request.form['email'].lower(),
+                    phone_number = request.form['phonenumber'],
+                    emergency_contact_number = request.form['emergencycontact'],
+                    emergency_contact_relation = request.form['emergencycontactrelation'],
+                    extra_information = request.form['note']
+                )
 
-            logger.info('new temp')
+                carpool.passengers.append(new_passenger)
+                db.session.add(new_passenger)
+                db.session.commit()
+                #TODO
 
-            return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='That passenger does not exist. Please try again.', user=current_user)
+                logger.info('new temp passenger created')
+                return render_template('error_page_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
+            except Exception as e:
+                logger.debug(e)
+                return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
 
         else:
-            pass
+            passenger.extra_information = request.form['note']
+            carpool.passengers.append(passenger)
+            db.session.add(passenger)
+            db.session.commit()
+            logger.info('existing passenger added to carpool without sign in')
+            return render_template('error_page_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
 
 
     carpool  = Carpool.query.get(carpool_index)
@@ -406,17 +429,17 @@ def register_passenger_page():
                 'first_name': request.form['firstname'].lower(),
                 'last_name': request.form['lastname'].lower(),
                 'password': generate_password_hash(request.form['password'], method='sha256'),
-                'passenger_id': passenger.id,
+                'passenger_id': passenger.index,
                 'driver_id': None,
             }
-
+        
             user = User(**user_information)
             db.session.add(user)
             db.session.commit()
 
 
-        except Exception as e:
-            logger.info(e)
+        except Exception as urMom:
+            logger.info(urMom)
             return render_template('passenger_sign_up_template.html', message='There was an error', user=current_user)
         
     
@@ -433,7 +456,7 @@ def login_help_page():
     return current_user.is_authenticated
         #return redirect(url_for('home_page'))
     
-    # TODO # do
+    # TODO do
 
 @app.route('/admin_home')
 def admin_home_page():
@@ -442,12 +465,6 @@ def admin_home_page():
     """
     pass
 
-@app.route('/convert-temp-passenger', methods=['GET', 'POST'])
-def convert_passenger_page():
-    """
-    Page that allows for the conversion of a temp passenger to a real passenger"""
-    pass
-    # TODO
 
 @app.route('/legacy-driver-to-current', methods=['GET', 'POST'])
 def legacy_driver_to_login_page():
@@ -457,33 +474,49 @@ def legacy_driver_to_login_page():
     pass
     # TODO
 
-@app.route('/temp-passenger-to-login', methods=['GET', 'POST'])
-def temp_passenger_to_login_page():
-    """
-    Page that allows for the conversion of a temp passenger to a login
-    """
-    pass
-    # TODO
 
 @login_required
 @app.route('/user-profile/<user_id>', methods=['GET', 'POST'])
 def user_profile_page(user_id):
+    """
+    Page that allows for the management of the user profile
+    """
     pass
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
-    pass
+    """
+    Login page for drivers and passengers.
+    """
+    if request.method == 'GET':
+        return render_template('login.html', message='Login!', user=current_user)
+    if request.method == 'POST':
+        user = User.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
+        if user is None:
+            return render_template('login.html', message='That user does not exist. Please try again.', user=current_user)
+        if user.password is None:
+            return render_template('error_page_template.html', main_message='Not registered', sub_message='The user exists in the database but is not registered to a user. Please use update/register.', user=current_user)
 
-@app.route('/logout')
-def logout_page():
-    pass
+        if check_password_hash(user.password, request.form['password']):
+            login_user(user, remember=request.form['remember'])
+            return redirect(url_for('home_page'))
+        else:
+            return render_template('login.html', message='Incorrect password. Please try again.', user=current_user)
+
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password_page():
     pass #TODO
 
+
+
+
 @app.route('/generic-register', methods=['GET', 'POST'])
 def generic_register_page():
-    pass #TODO
+    """
+    Page that points to driver or passenger registration
+    """
+    return render_template('generic_register_template.html', user=current_user)
+
     

@@ -126,6 +126,6 @@ def test_set_up():
         logger.info('first time setup complete')
 
 if __name__ == '__main__': # run app
-    test_set_up()
+    #test_set_up()
     
     app.run(debug=True)

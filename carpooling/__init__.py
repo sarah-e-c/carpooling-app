@@ -19,6 +19,8 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.init_app(app)
 
+app.secret_key = os.environ.get('SECRET_KEY')
+
 import carpooling.routes
 from carpooling.models import User
 

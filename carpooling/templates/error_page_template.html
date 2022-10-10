@@ -893,8 +893,8 @@
         <a href="{{ url_for('home_page') }}">Home</a>
         <a href="{{ url_for('events_page') }}">Events</a>
         {% if user.is_authenticated %}
-        <a class="user-info" href = "{{ url_for('user_profile_page') }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
-        <a class="user-info" href="{{ url_for('logout_page') }}">Logout</a>
+        <a class="user-info" href = "{{ url_for('user_profile_page', user_id=user.id) }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
+        <a class="user-info" onclick="confirm_logout(event)" href="{{ url_for('home_page', logout=True) }}">Logout</a>
         {% else %}
         <a class="user-info" href="{{ url_for('login_page') }}">Login</a>
         <a class="user-info" href="{{url_for('generic_register_page')}}">Register/Update</a>
@@ -930,7 +930,12 @@
             </div>
         </div>
     </div>
-    <script>
+        <script>
+    function confirm_logout(e) {
+        if (!confirm("Are you sure you want to logout?")) {
+            e.preventDefault();
+        }
+    }
     (function() {
         var on = addEventListener,
             $ = function(q) {

@@ -1,3 +1,4 @@
+from sys import _clear_type_cache
 from carpooling import app, db
 from carpooling import models
 import os
@@ -31,6 +32,7 @@ def test_set_up():
         first_key = models.AuthKey(
             key = secrets.token_hex(4)
         )
+
         test_man = models.Driver(
             last_name = 'test',
             first_name = 'test',
@@ -126,6 +128,6 @@ def test_set_up():
         logger.info('first time setup complete')
 
 if __name__ == '__main__': # run app
-    #test_set_up()
+    test_set_up()
     
     app.run(debug=True)

@@ -15,7 +15,6 @@ from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-
 DEFAULT_NUMBER_OF_CARPOOLS = 4
 
 logging.basicConfig(level=logging.DEBUG)
@@ -111,6 +110,7 @@ def register_new_driver_page():
     """
     Page to register a new driver to the database.
     """
+    
     # updating the auth keys
     if (datetime.datetime.now() - AuthKey.query.order_by(AuthKey.index.desc()).first().date_created).days > 29:
         new_auth_key = AuthKey(auth_key=secrets.token_hex(16))
@@ -448,22 +448,7 @@ def register_passenger_page():
 
         
         
-@app.route('/login-help')
-def login_help_page():
-    """
-    Page for people to go to to change their password, see if they exist, or other
-    """
-    return current_user.is_authenticated
-        #return redirect(url_for('home_page'))
-    
-    # TODO do
 
-@app.route('/admin_home')
-def admin_home_page():
-    """
-    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
-    """
-    pass
 
 
 @app.route('/legacy-driver-to-current', methods=['GET', 'POST'])
@@ -471,17 +456,45 @@ def legacy_driver_to_login_page():
     """
     Page that allows for the conversion of a legacy driver to creating an account
     """
-    pass
-    # TODO
+
+    if request.method == 'GET': 
+        logger.debug('get request')
+        return render_template('legacy_driver_to_login_template.html', message='Enter your information', user=current_user)
+    if request.method == 'POST':
+        if request.form['password'] != request.form['confirmpassword']:
+            return render_template('legacy_driver_to_login_template.html', message='Passwords do not match. Please try again.', user=current_user)
+        try:
+            existing_driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
+            if existing_driver is None:
+                return render_template('legacy_driver_to_login_template.html', message='The driver does not exist. Please try again or register.', user=current_user)
+            new_passenger = Passenger(
+                first_name = request.form['firstname'].lower(),
+                last_name = request.form['lastname'].lower(),
+                email_address = existing_driver.email_address,
+                phone_number = existing_driver.phone_number,
+                emergency_contact_number = existing_driver.emergency_contact_number,
+                emergency_contact_relation = existing_driver.emergency_contact_relation,
+                extra_information = existing_driver.extra_information
+            )
+            db.session.add(new_passenger)
+            db.session.commit()
+
+            new_user = User(
+                first_name = request.form['firstname'].lower(),
+                last_name = request.form['lastname'].lower(),
+                password = generate_password_hash(request.form['password'], method='sha256'),
+                passenger_id = new_passenger.index,
+                driver_id = existing_driver.index
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
+        except Exception as e:
+            logger.debug(e)
+            return render_template('legacy_driver_to_login_template.html', message='There was an error. Please try again.', user=current_user)
 
 
-@login_required
-@app.route('/user-profile/<user_id>', methods=['GET', 'POST'])
-def user_profile_page(user_id):
-    """
-    Page that allows for the management of the user profile
-    """
-    pass
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -505,18 +518,46 @@ def login_page():
             return render_template('login.html', message='Incorrect password. Please try again.', user=current_user)
 
 
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password_page():
-    pass #TODO
-
-
-
-
 @app.route('/generic-register', methods=['GET', 'POST'])
 def generic_register_page():
     """
     Page that points to driver or passenger registration
     """
     return render_template('generic_register_template.html', user=current_user)
+
+
+
+@app.route('/login-help')
+def login_help_page():
+    """
+    Page for people to go to to change their password, see if they exist, or other
+    """
+    return render_template('login_help_page_template.html', user=current_user)
+
+@app.route('/admin_home')
+def admin_home_page():
+    """
+    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
+    """
+    pass
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password_page():
+    pass #TODO
+
+@login_required
+@app.route('/user-profile/<user_id>', methods=['GET', 'POST'])
+def user_profile_page(user_id):
+    return render_template('user_profile_page_template.html', user=current_user)
+    """
+    Page that allows for the management of the user profile
+    """
+    pass
+
+@login_required
+@app.route('/update-user', methods=['GET', 'POST'])
+def update_user_information_page():
+    return 'update user information page'
+    # TODO
 
     

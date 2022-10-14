@@ -911,34 +911,44 @@
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
                     </span>
                 </div>
-                <h1 id="text01" class="style1">Mech Tech Dragons Carpooling</h1>
+                <h1 id="text01" class="style1">Login Help</h1>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
                     <p class="style2">
-                        Would you like to register a passenger or a driver?<br>
-                        (If you have your license, it is recommended that you sign up as a driver. You don't have to drive if you don't want to.)
+                        What would you like to do?
+                        <ul>
+                        <li>
+                            <p class="style2">Register as a driver or a passenger</p>
+                        </li>
+                        <li>
+                            <p class="style2"> Forgot Password</p>
+                        </li>
+                        <li>
+                            <p class="style2"> Update your profile</p>
+                        </li>
+                        </ul>
                     </p>
                 </div>
                 <ul id="buttons01" class="style1 buttons">
                     <li>
-                        <a href="{{url_for('register_new_driver_page')}}" class="button n01">
+                        <a href="{{url_for('generic_register_page')}}" class="button n01">
                             <svg>
                                 <use xlink:href="#icon-b64"></use>
                             </svg>
-                            <span class="label">Driver</span>
+                            <span class="label">Register</span>
                         </a>
-                        <a href="{{url_for('register_passenger_page')}}" class="button n01">
+                        <a href="{{url_for('forgot_password_page')}}" class="button n01">
                             <svg>
                                 <use xlink:href="#icon-b64"></use>
                             </svg>
-                            <span class="label">Passenger</span>
+                            <span class="label">Forgot Password</span>
                         </a>
                         <br>
-                        <a href="{{url_for('legacy_driver_to_login_page')}}" class="button n01">
+                        <a href="{{url_for('update_user_information_page')}}" class="button n01">
                             <svg>
                                 <use xlink:href="#icon-b64"></use>
                             </svg>
-                            <span class="label">I already registered as a driver</span>
+                            <span class="label">Update Profile</span>
                         </a>
                     
                     </li>

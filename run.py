@@ -11,17 +11,17 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__': # run app
     
     logging.basicConfig(level=logging.DEBUG)
-    if len(db.engine.table_names()) < 2:
-        logger.info('first time setup')
-        try:
-            models.AuthKey.query.delete() # only for testing
-        except:
-            pass
-        db.create_all()
-        first_key = models.AuthKey(
-            key = secrets.token_hex(4)
-        )
-        db.session.add(first_key)
-        db.session.commit()
+    # if len(db.engine.table_names()) < 2:
+    #     logger.info('first time setup')
+    #     try:
+    #         models.AuthKey.query.delete() # only for testing
+    #     except:
+    #         pass
+    #     db.create_all()
+    #     first_key = models.AuthKey(
+    #         key = secrets.token_hex(4)
+    #     )
+    #     db.session.add(first_key)
+    #     db.session.commit()
     
     app.run(debug=True)

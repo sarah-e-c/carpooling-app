@@ -163,18 +163,20 @@ def register_user_page():
         }
         try:
             if Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0:
-                raise PersonAlreadyExistsException()
+                # driver already exists, let the user know
+                logger.debug('driver already exists')
+                return render_template('driver_sign_up_template.html', message='A person with that name already exists in the database.')
             new_driver = Driver(**driver_info)
             db.session.add(new_driver)
             db.session.commit()
             logger.info(f'New driver added to database: {new_driver}')
 
-        except PersonAlreadyExistsException as e: # person already exists in the database
+        except Exception as e: # im sorry :(
             logger.info(e)
-            return render_template('driver_sign_up_template.html', message='A person with that name already exists in the database.')
-
-        except Exception as e:
-            logger.info(e)
+            try:
+                _ = int(request.form['numberofseats'])
+            except Exception as e:
+                return render_template('driver_sign_up_template.html', message='Max number of passengers must be an integer')
             return render_template('driver_sign_up_template.html', message='An error occurred. Make sure that all inputs are valid.')
         
         # if they got here, it was a success!

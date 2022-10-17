@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Mech Tech Carpooling Driver Information</title>
+    <title>Mech Tech Carpooling Passenger Information</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="carpooling example">
@@ -65,91 +65,6 @@
         font-size: 17px;
         font-family: 'Fira Sans', sans-serif;
       }
-      #buttons01 {
-        column-span: all;
-        display: block;
-        align-items: center;
-        align-self: center;
-        align-content: center;
-    }
-    .buttons li {
-        max-width: 100%;
-    }
-
-    .buttons li a {
-        align-items: center;
-        justify-content: center;
-        max-width: 100%;
-        text-align: center;
-        text-decoration: none;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-
-    .buttons.style1 {
-        gap: 1.375rem;
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-
-    .buttons.style1 li a {
-        display: inline-flex;
-        width: auto;
-        height: 3.75rem;
-        line-height: 3.75rem;
-        padding: 0 1.875rem;
-        vertical-align: middle;
-        font-family: 'Fira Sans', sans-serif;
-        letter-spacing: 0.025rem;
-        padding-left: calc(0.025rem + 1.875rem);
-        font-size: 1em;
-        font-weight: 600;
-        border-radius: 2.5rem;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        transition: transform 0.25s ease, color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
-    }
-
-    .buttons.style1 li a svg {
-        display: block;
-        fill: rgba(0, 0, 0, 0.631);
-        flex-grow: 0;
-        flex-shrink: 0;
-        height: 100%;
-        min-width: 16px;
-        width: 1.5em;
-        margin-left: 0.5em;
-        margin-right: calc(-0.125em + 0.025rem);
-        transition: fill 0.25s ease;
-    }
-
-    .buttons.style1 li a .label {
-        direction: var(--site-language-direction);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        flex-grow: 1;
-        flex-shrink: 1;
-        text-align: left;
-        width: 100%;
-    }
-
-    .buttons.style1 .button {
-        background-color: #00B259;
-        color: rgba(0, 0, 0, 0.631);
-    }
-
-    .buttons.style1 .button svg {
-        fill: rgba(0, 0, 0, 0.29);
-    }
-
-    .buttons.style1 .button:hover {
-        background-color: #91FFD8 !important;
-    }
-
-    .buttons.style1 li a:hover {
-        transform: scale(1.0775);
-    }
-
       
       /* Change the color of links on hover */
       .topnav a:hover {
@@ -803,62 +718,41 @@
         <div id="main">
             <div class="inner">
 
-                <h1 id="text02" class="style1" style="opacity: 1; transform: none;"> User: {{ user.first_name }} {{ user.last_name }}</h1>
-                <p id="text07" class="style2" style="opacity: 1; transform: none;">{{ user.driver_profile.student_or_parent }}</p>
-                <p id="text01" class="style2" style="opacity: 1; transform: none;">
-                    <span class="p">
-                        Number of seats: {{ user.driver_profile.number_seats }}
-                        <br>
-                        Years with license: {{user.driver_profile.num_years_with_license}}
-                        <br>
-                         Car type: {{ user.driver_profile.car_type_1 }}
-                        <br>
-                         Car color: {{ user.driver_profile.car_color_1}}
-                        <br>
-                         Email: {{ user.driver_profile.email_address }}
-                        <br>
-                         Phone number: {{ user.driver_profile.phone_number }}
-                        <br>
-                         Secondary car type: {{ user.driver_profile.car_type_2}}
-                        <br>
-                         Secondary car color: {{ user.driver_profile.car_color_2}}
-                        <br>
-                         Emergency contact number: {{user.driver_profile.emergency_contact_number}}
-                        <br>
-                         Emergency contact relationship: {{user.driver_profile.emergency_contact_relation}}
-                        <br>
-                         Note: {{user.driver_profile.extra_information}}
-                         <br>
-                         Region: {{user.passenger_profile.region_name}}
-
-                    </span>
-                </p>
-                <p id="text02" class="style2" style="opacity: 1; transform: none;"> Actions</p>
-                <ul id="buttons01" class="style1 buttons">
-                    <li>
-                        <a href="{{url_for('update_user_information_page')}}" class="button n01">
+                <h1 id="text02" class="style1" style="opacity: 1; transform: none;">{{ passenger.firstname.capitalize() }} {{ passenger.lastname.capitalize() }}</h1>
+                <p id="text07" class="style2" style="opacity: 1; transform: none;"></p>
+                <ul id="icons01" class="style1 icons">
+                    <li style="opacity: 1; transform: none;">
+                        <a class="n01" href= {{ passenger.email_address }}>
                             <svg>
-                                <use xlink:href="#icon-b64"></use>
+                                <use xlink:href="#icon-901"></use>
                             </svg>
-                            <span class="label">Edit information</span>
+                            <span class="label">Email (Alt)</span>
                         </a>
-                        <a href="{{url_for('forgot_password_page')}}" class="button n01">
+                    </li>
+                    <li style="opacity: 1; transform: none;">
+                        <a class="n02" href={{passenger.phone_number}}>
                             <svg>
-                                <use xlink:href="#icon-b64"></use>
+                                <use xlink:href="#icon-90c"></use>
                             </svg>
-                            <span class="label">Forgot Password</span>
+                            <span class="label">Mobile</span>
                         </a>
-                        <br>
-                        <a href="{{url_for('manage_carpools_page')}}" class="button n01">
-                            <svg>
-                                <use xlink:href="#icon-b64"></use>
-                            </svg>
-                            <span class="label">Manage Carpools</span>
-                        </a>
-                    
                     </li>
                 </ul>
-                </div>
+                <p id="text01" class="style2" style="opacity: 1; transform: none;">
+                    <span class="p">
+                        <br>
+                         Email: {{ passenger.email_address }}
+                        <br>
+                         Phone number: {{ passenger.phone_number }}
+                        <br>
+                         Emergency contact number: {{passenger.emergency_contact_number}}
+                        <br>
+                         Emergency contact relationship: {{passenger.emergency_contact_relationship}}
+                        <br>
+                         Note: {{passenger.extra_information}}
+                    </span>
+                </p>
+            </div>
         </div>
     </div>
         <script>

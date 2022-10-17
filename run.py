@@ -25,6 +25,7 @@ def test_set_up():
             models.Carpool.query.delete() # only for testing
             models.Region.query.delete() # only for testing
             models.Passenger.query.delete() # only for testing
+            models.User.query.delete() # only for testing
         except:
             pass
     
@@ -128,6 +129,6 @@ def test_set_up():
         logger.info('first time setup complete')
 
 if __name__ == '__main__': # run app
-    test_set_up()
+    #test_set_up()
     
     app.run(debug=True)

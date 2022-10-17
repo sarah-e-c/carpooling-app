@@ -12,7 +12,8 @@ import datetime
 from sqlalchemy import func
 import hashlib
 from flask_login import login_required, current_user, login_user, logout_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_mail import Message
 
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
@@ -123,8 +124,6 @@ def register_new_driver_page():
             message = 'Register to be a driver for team 422!'
         return render_template('driver_sign_up_template.html', message=message, user=current_user)
     if request.method == 'POST':
-
-        
         driver_info = {
             'first_name':request.form['firstname'].lower(),
             'last_name': request.form['lastname'].lower(),
@@ -172,6 +171,8 @@ def register_new_driver_page():
                 'driver_id': new_driver.index,
                 'passenger_id': new_passenger.index
             }
+
+            logger.debug(f'New User info: {user_info}')
 
             new_user = User(**user_info)
             db.session.add(new_user)
@@ -294,10 +295,13 @@ def create_event():
 def driver_carpool_signup_page(carpool_index):
     """
     Page that drivers go to when they are signing up for a carpool. Still needs a check for sign in
+    :carpool_index index of the carpool to be signed up for
     """
     if request.method == 'GET':
         if current_user.is_authenticated:
             carpool = Carpool.query.get(carpool_index)
+            if carpool.driver is not None:
+                return redirect(url_for('event_page', event_index=carpool.event_index))
             carpool.driver = current_user.driver_profile
             carpool.num_passengers = current_user.driver_profile.num_seats
             carpool.driver_index = current_user.driver_profile.index
@@ -428,7 +432,7 @@ def register_passenger_page():
             user_information = {
                 'first_name': request.form['firstname'].lower(),
                 'last_name': request.form['lastname'].lower(),
-                'password': generate_password_hash(request.form['password'], method='sha256'),
+                'password': generate_password_hash(request.form['password']),
                 'passenger_id': passenger.index,
                 'driver_id': None,
             }
@@ -482,7 +486,7 @@ def legacy_driver_to_login_page():
             new_user = User(
                 first_name = request.form['firstname'].lower(),
                 last_name = request.form['lastname'].lower(),
-                password = generate_password_hash(request.form['password'], method='sha256'),
+                password = generate_password_hash(request.form['password']),
                 passenger_id = new_passenger.index,
                 driver_id = existing_driver.index
             )
@@ -507,8 +511,10 @@ def login_page():
     if request.method == 'POST':
         user = User.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
         if user is None:
+            logger.debug('attempted user does not exist')
             return render_template('login.html', message='That user does not exist. Please try again.', user=current_user)
         if user.password is None:
+            logger.debug('attempted user is probably a legacy driver')
             return render_template('error_page_template.html', main_message='Not registered', sub_message='The user exists in the database but is not registered to a user. Please use update/register.', user=current_user)
 
         if check_password_hash(user.password, request.form['password']):
@@ -534,6 +540,165 @@ def login_help_page():
     """
     return render_template('login_help_page_template.html', user=current_user)
 
+
+
+@login_required
+@app.route('/user-profile', methods=['GET', 'POST'])
+def user_profile_page():
+    """
+    Page that allows for the management of the user profile
+    """
+    return render_template('user_profile_page_template.html', user=current_user)
+
+
+@login_required
+@app.route('/update-user', methods=['GET', 'POST'])
+def update_user_information_page():
+    """
+    Page that allows for the updating of user information -- basically just a copy of the sign up page but with default values
+    """
+    regions = Region.query.all()
+    if (request.method == 'GET') and (current_user.driver_profile is not None):
+        return render_template('update_user_information_template.html', user=current_user, regions=regions)
+    elif request.method == 'GET':
+        
+        logger.debug(current_user)
+        logger.debug(current_user.driver_profile)
+        logger.debug(current_user.passenger_profile)
+        logger.debug(current_user.driver_id)
+        return render_template('update_user_information_template_passenger.html', user=current_user, regions=regions)
+    elif request.method == 'POST':
+        region = Region.query.filter_by(name=request.form['region']).first()
+        driver_info = {
+            'first_name':request.form['firstname'].lower(),
+            'last_name': request.form['lastname'].lower(),
+            'student_or_parent': request.form['studentorparent'],
+            'num_years_with_license': request.form['licenseyears'],
+            'phone_number': request.form['phonenumber'],
+            'email_address': request.form['email'],
+            'car_type_1': request.form['cartype1'],
+            'car_color_1': request.form['carcolor1'],
+            'car_type_2': request.form['cartype2'],
+            'car_color_2': request.form['carcolor2'],
+            'emergency_contact_number': request.form['emergencycontact'],
+            'emergency_contact_relation': request.form['emergencycontactrelation'],
+            'extra_information': request.form['note'],
+            'num_seats': request.form['numberofseats'],
+            'region': region,
+        }
+        try:
+            existing_driver = current_user.driver_profile
+            for key, value in driver_info.items():
+                setattr(existing_driver, key, value)
+            db.session.commit()
+            logger.info('Driver information updated: {}'.format(existing_driver))
+
+            # deleting the unneeded rows so it can also be converted to passenger -- this is a bit of a hack <- copilot :(
+            del driver_info['student_or_parent']
+            del driver_info['num_years_with_license']
+            del driver_info['num_seats']
+            del driver_info['car_type_1']
+            del driver_info['car_color_1']
+            del driver_info['car_type_2']
+            del driver_info['car_color_2']
+
+            # updating the passenger information
+            existing_passenger = current_user.passenger_profile
+            for key, value in driver_info.items():
+                setattr(existing_passenger, key, value)
+            db.session.commit()
+            logger.info(f'Passenger Data modified: {existing_passenger}')
+
+            # updating the user information
+            existing_user = current_user
+            existing_user.first_name = request.form['firstname'].lower()
+            existing_user.last_name = request.form['lastname'].lower()
+            db.session.commit()
+            logger.info(f'User Data modified: {existing_user}')
+
+            return redirect(url_for("user_profile_page"))
+        except Exception as e:
+            logger.debug(e)
+            return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user)
+    else: 
+        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+
+
+
+@login_required
+@app.route('/manage-carpools', methods=['GET', 'POST'])
+def manage_carpools_page():
+    """
+    Page that allows for the management of carpools
+    """
+    driver_carpools = Carpool.query.filter_by(driver_index=current_user.driver_id).all() # TODO add the filter for the current time
+    return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools)
+
+
+@login_required
+@app.route('/passenger/<lastname>/<firstname>')
+def passenger_page(lastname, firstname):
+    """
+    Page that allows for the viewing of passenger information. Is only accessible if the person is logged in 
+    and has an upcoming carpool with the person in it.
+    """
+
+    current_user_carpools = Carpool.query.filter_by(driver_id=current_user.driver_profile.index).all() # TODO:filter by current user and upcoming
+
+    # checking if the person is able to see
+    for carpool in current_user_carpools:
+        if (carpool.event.start_time) > datetime.datetime.now():
+            for passenger in carpool.passengers:
+                if (passenger.first_name == firstname) and (passenger.last_name == lastname):
+                    return render_template('passenger_page_template.html', user=current_user, passenger=passenger)
+
+    # if the person is not able to see
+    return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to see the passenger.', user=current_user)
+
+
+
+
+
+@login_required
+@app.route('/cancel-carpool/<carpool_id>')
+def cancel_carpool(carpool_id):
+    """
+    Page that allows for the cancellation of a carpool. Is not really used except for through carpool management page. Emails the passengers.
+    """
+    
+    for carpool in current_user.driver_profile.carpools:
+        logger.debug(carpool.index)
+        logger.debug(carpool_id)
+        logger.debug('got here')
+        if str(carpool.index) == carpool_id:
+            logger.debug('got here')
+            for passenger in carpool.passengers:
+                
+                pass
+                #send_email(passenger.email_address, 'Carpool Cancelled', 'email/carpool_cancelled', user=passenger, carpool=carpool) #TODO: send email to passenger
+            carpool.driver = None
+            carpool.driver_id = None
+            carpool.passengers = []  
+            db.session.commit()
+            return redirect(url_for('manage_carpools_page'))
+    
+    logger.debug(f'{current_user.driver_profile.carpools}')
+    return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
+
+@login_required
+@app.route('/change-carpool-name', methods=['POST'])
+def change_carpool_destination():
+    """
+    Page that allows for the change of the destination of a carpool.
+    """
+    new_destination = request.header['New-Carpool-Destination']
+    carpool_index = int(request.header['Carpool-Index'])
+    current_user.driver_profile.carpools[carpool_index].destination = new_destination
+    db.session.commit()
+    logger.info('carpool destination changed to {}'.format(new_destination))
+    return redirect(url_for('manage_carpools_page'))
+
+
 @app.route('/admin_home')
 def admin_home_page():
     """
@@ -543,21 +708,7 @@ def admin_home_page():
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password_page():
+    """
+    Page that allows for the resetting of a password
+    """
     pass #TODO
-
-@login_required
-@app.route('/user-profile/<user_id>', methods=['GET', 'POST'])
-def user_profile_page(user_id):
-    return render_template('user_profile_page_template.html', user=current_user)
-    """
-    Page that allows for the management of the user profile
-    """
-    pass
-
-@login_required
-@app.route('/update-user', methods=['GET', 'POST'])
-def update_user_information_page():
-    return 'update user information page'
-    # TODO
-
-    

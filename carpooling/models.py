@@ -197,11 +197,13 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     password = db.Column(db.String, nullable=True)
-    salt = db.Column(db.String, nullable=True)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
     driver_profile = db.relationship('Driver', backref=db.backref('user'), lazy=True)
     passenger_profile = db.relationship('Passenger', backref=db.backref('user'), lazy=True)
+    is_admin = db.Column(db.Integer, nullable=False, default=0)
 
+    def __repr__(self):
+        return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'

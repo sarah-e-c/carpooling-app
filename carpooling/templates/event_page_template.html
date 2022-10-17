@@ -76,7 +76,7 @@
     </div> <!-- TODO make a multiline dialog box-->
     <div class="style1">
         {% for region in regions%}
-        <div class="regiondiv" style="border-color: {{region.color}}">
+        <div class="regiondiv" style="border-color:{{region.color}}">
             <h3 class="style2">{{region.name.capitalize()}} Region</h3>
             {% for carpool in region.get_carpools_in_event(event) %}
                 {% if carpool.has_driver() %}
@@ -90,7 +90,7 @@
                         <span class="label"> {{carpool.get_passenger_number_name(i)}} </span>
                     </a>
                     {% else %}
-                    <a href={{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}} class="button n01">
+                    <a href="{{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}}" class="button n01">
                         <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
                         </a>
                     {% endif %}

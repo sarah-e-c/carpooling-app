@@ -8,7 +8,7 @@ from flask_mail import Mail
 app = Flask(__name__)
 
 #database_url = os.environ.get('DATABASE_URL')
-mail = Mail(app)
+
 
 database_url = 'sqlite:///test.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://', 1)
@@ -16,6 +16,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.__setattr__('admin_access_flag', False)
 app.__setattr__('driver_access_flag', False)
 
+app.config['MAIL_SERVER'] = 'smtp.zoho.com' 
+app.config['MAIL_PORT'] = 465 
+app.config['MAIL_USE_SSL'] = True 
+app.config['MAIL_USERNAME'] = os.environ['MAIL_USERNAME']
+app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
+
+mail = Mail(app)
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()

@@ -1,7 +1,11 @@
 from carpooling import db
+from flask import current_app
 from sqlalchemy.sql import func
 from flask_login import UserMixin
+from itsdangerous import URLSafeSerializer
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 class Driver(db.Model):
@@ -139,6 +143,9 @@ class Region(db.Model):
 
     def get_carpools_in_event(self, event: Event):
         return [carpool for carpool in self.carpools if carpool.event == event]
+
+    def __repr__(self):
+        return f'Region: {self.name}'
         
 
 class Passenger(db.Model):
@@ -203,7 +210,37 @@ class User(UserMixin, db.Model):
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
     driver_profile = db.relationship('Driver', backref=db.backref('user'), lazy=True)
     passenger_profile = db.relationship('Passenger', backref=db.backref('user'), lazy=True)
+    team_auth_key = db.Column(db.String, nullable=False, default='0') # a special key sent out by the team to allow access to the site
     is_admin = db.Column(db.Integer, nullable=False, default=0)
+
+    def is_driver(self):
+        """
+        Method to determine if 
+        """
+        return  'Yes' if self.driver_id is not None else 'No'
+
+    def get_reset_password_token(self, expires_in=600):
+        """
+        Method to get the reset password token from the user
+        """
+        s = URLSafeSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps([self.id, self.password])
+
+    def verify_reset_password_token(self, token):
+        """
+        Method to verify the reset password token
+        """
+        try:
+            s = URLSafeSerializer(current_app.config['SECRET_KEY'])
+            data =  s.loads(token)
+            if data[0] != self.id:
+                return False
+            return True
+
+        except Exception as e:
+            logger.critical(f'Error verifying reset password token: {e}')
+            return False
+
 
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'

@@ -1,24 +1,25 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Mech Techs Carpooling {{main_message}}</title>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="description" content="Information Page"/>
-    <meta property="og:site_name" content="Information Page"/>
-    <meta property="og:title" content="Information Page"/>
-    <meta property="og:type" content="website"/>
-    <meta property="og:description" content="driver sign up"/>
-    <meta property="og:image" content="https://mechtechsignup.carrd.co/assets/images/card.jpg?v=33337d93"/>
-    <meta property="og:image:type" content="image/jpeg"/>
-    <meta property="og:image:width" content="1280"/>
-    <meta property="og:image:height" content="800"/>
-    <meta property="og:url" content="https://mechtechsignup.carrd.co"/>
-    <meta property="twitter:card" content="summary_large_image"/>
-    <link rel="canonical" href="https://mechtechsignup.carrd.co"/>
-    <link rel="stylesheet" href="{{url_for('static', filename='driver_sign_up_template_files/css.css')}}"/>
+    <title>Mech Tech Carpooling Driver Information</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="carpooling example">
+    <meta property="og:site_name" content="Mech Tech Dragons Carpooling">
+    <meta property="og:title" content="Mech Tech Dragons Driver Information">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Driver Information Page">
+    <meta property="og:image" content="https://mechtech.carrd.co/assets/images/card.jpg?v=5a607ea2">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="800">
+    <meta property="og:url" content="https://mechtech.carrd.co">
+    <meta property="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://mechtech.carrd.co">
+    <link href="{{ url_for('static', filename='mechtech_template_files/css.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300&display=swap" rel="stylesheet">
-    <!--<link href="https://fonts.googleapis.com/css?display=swap&family=Lexend+Giga:400,400italic%7CManrope:600,600italic" rel="stylesheet" type="text/css"/> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <style>
     html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
         margin: 0;
@@ -44,6 +45,11 @@
     blockquote, q {
         quotes: none;
     }
+
+    blockquote:before, blockquote:after, q:before, q:after {
+        content: '';
+        content: none;
+    }
     .topnav {
         background-color: #333;
         overflow: hidden;
@@ -59,6 +65,91 @@
         font-size: 17px;
         font-family: 'Fira Sans', sans-serif;
       }
+      #buttons01 {
+        column-span: all;
+        display: block;
+        align-items: center;
+        align-self: center;
+        align-content: center;
+    }
+    .buttons li {
+        max-width: 100%;
+    }
+
+    .buttons li a {
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .buttons.style1 {
+        gap: 1.375rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .buttons.style1 li a {
+        display: inline-flex;
+        width: auto;
+        height: 3.75rem;
+        line-height: 3.75rem;
+        padding: 0 1.875rem;
+        vertical-align: middle;
+        font-family: 'Fira Sans', sans-serif;
+        letter-spacing: 0.025rem;
+        padding-left: calc(0.025rem + 1.875rem);
+        font-size: 1em;
+        font-weight: 600;
+        border-radius: 2.5rem;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        transition: transform 0.25s ease, color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .buttons.style1 li a svg {
+        display: block;
+        fill: rgba(0, 0, 0, 0.631);
+        flex-grow: 0;
+        flex-shrink: 0;
+        height: 100%;
+        min-width: 16px;
+        width: 1.5em;
+        margin-left: 0.5em;
+        margin-right: calc(-0.125em + 0.025rem);
+        transition: fill 0.25s ease;
+    }
+
+    .buttons.style1 li a .label {
+        direction: var(--site-language-direction);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        flex-shrink: 1;
+        text-align: left;
+        width: 100%;
+    }
+
+    .buttons.style1 .button {
+        background-color: #00B259;
+        color: rgba(0, 0, 0, 0.631);
+    }
+
+    .buttons.style1 .button svg {
+        fill: rgba(0, 0, 0, 0.29);
+    }
+
+    .buttons.style1 .button:hover {
+        background-color: #91FFD8 !important;
+    }
+
+    .buttons.style1 li a:hover {
+        transform: scale(1.0775);
+    }
+
       
       /* Change the color of links on hover */
       .topnav a:hover {
@@ -87,16 +178,10 @@
         color: black;
       }
 
-    blockquote:before, blockquote:after, q:before, q:after {
-        content: '';
-        content: none;
-    }
-
     table {
         border-collapse: collapse;
         border-spacing: 0;
     }
-
 
     body {
         -webkit-text-size-adjust:none
@@ -144,7 +229,7 @@
         transform: scale(1);
         width: 100vw;
         z-index: 0;
-        background-image: url('data:image/svg+xml;charset=utf8,%3Csvg%20viewBox%3D%220%200%20512%20512%22%20width%3D%22512%22%20height%3D%22512%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cfilter%20id%3D%22noise%22%3E%20%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.875%22%20result%3D%22noise%22%20%2F%3E%20%3CfeColorMatrix%20type%3D%22matrix%22%20values%3D%220%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.34765625%200%22%20%2F%3E%20%3C%2Ffilter%3E%20%3Crect%20filter%3D%22url%28%23noise%29%22%20x%3D%220%22%20y%3D%220%22%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22transparent%22%20opacity%3D%221%22%20%2F%3E%3C%2Fsvg%3E');
+        background-image: url('mechtech_template_files/data_url.svg');
         background-size: 512px;
         background-position: center;
         background-repeat: repeat;
@@ -183,51 +268,6 @@
 
     html {
         font-size: 16pt;
-    }
-    /*form {
-        text-align: left;
-        margin: auto;
-        color:rgb(255, 255, 255);
-        overflow: hidden;
-        font-family: 'Fira Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-        font-size: small;
-        display: table;
-        align-self: center;
-        align-items: center;
-    }
-    */
-
-    #formtable {
-        text-align: left;
-        margin: auto;
-        color:rgb(255, 255, 255);
-        overflow: hidden;
-        font-family: 'Fira Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-        font-size: small;
-        display: table;
-        align-self: center;
-        align-items: center;
-    }
-    .input1 {
-        align-self: right;
-        vertical-align:bottom;
-        display: table-cell;
-        border-radius: 3%;
-        font-family: 'Fira Sans', sans-serif;
-        border-color: #00B259;
-        border-width: 2px;
-        border-style: solid;
-        background-color: #ffffff;
-        color: #000;
-        box-shadow: none;
-        
-
-    }
-
-    label {
-        align-content: center;
-        display: table-cell;
-        width: max-content;
     }
 
     u {
@@ -277,11 +317,6 @@
         color: inherit;
         text-decoration: underline;
         transition: color 0.25s ease;
-    }
-    .button-n01 { 
-        display: table-row;
-        color: #090D1C;
-        align-self: center;
     }
 
     #wrapper {
@@ -425,31 +460,7 @@
         border-bottom-right-radius: inherit;
     }
 
-    .image.style1:not(:first-child) {
-        margin-top: 2rem !important;
-    }
-
-    .image.style1:not(:last-child) {
-        margin-bottom: 2rem !important;
-    }
-
-    .image.style1 .frame {
-        width: 7rem;
-        border-radius: 0%;
-        border-color: #FFFFFF;
-        border-style: solid;
-        border-width: 0px;
-        box-shadow: 0rem 0rem 0rem 0rem #69FFC9;
-        transition: none;
-    }
-
-    .image.style1 .frame img {
-        transition: none;
-    }
-    p {
-        display: table-row;
-    }
-    h1, h2, h3{
+    h1, h2, h3, p {
         direction: var(--site-language-direction);
         position: relative;
     }
@@ -473,6 +484,7 @@
         font-weight: 400;
     }
 
+
     h1.style1 mark, h2.style1 mark, h3.style1 mark, p.style1 mark {
         color: #4D4D4D;
         background-color: transparent;
@@ -493,14 +505,11 @@
     h1.style2, h2.style2, h3.style2, p.style2 {
         color: #FFFFFF;
         font-family: 'Fira Sans', sans-serif;
-        font-size: larger;
         letter-spacing: 0.025rem;
         width: calc(100% + 0.025rem);
         font-size: 1em;
         line-height: 1.875;
-        font-weight: 300;
-        text-align: center;
-        align-self: center;
+        font-weight: 600;
     }
 
     h1.style2 mark, h2.style2 mark, h3.style2 mark, p.style2 mark {
@@ -520,119 +529,85 @@
         margin-top: 1rem;
     }
 
-    hr {
-        border: 0;
-        padding: 0;
-        position: relative;
-        width: 100%;
-    }
-
-    hr:before {
-        content: '';
-        display: inline-block;
-        max-width: 100%;
-        vertical-align: middle;
-    }
-
-    hr.style1:not(:first-child) {
-        margin-top: 2rem !important;
-    }
-
-    hr.style1:not(:last-child) {
-        margin-bottom: 2rem !important;
-    }
-
-    hr.style1:before {
-        width: 4rem;
-        border-top: dotted 5px rgba(255, 255, 255, 0.31);
-        height: 5px;
-        margin-top: -2.5px;
-    }
-
-    .buttons {
-        cursor: default;
+    .icons {
         display: flex;
+        flex-wrap: wrap;
         justify-content: var(--flex-alignment);
         letter-spacing: 0;
         padding: 0;
     }
 
-    .buttons li {
-        max-width: 100%;
+    .icons li {
+        position: relative;
+        z-index: 1;
     }
 
-    .buttons li a {
+    .icons li a {
         align-items: center;
+        display: flex;
         justify-content: center;
-        max-width: 100%;
-        text-align: center;
-        text-decoration: none;
-        vertical-align: middle;
-        white-space: nowrap;
     }
 
-    .buttons.style1 {
-        gap: 1.375rem;
-        flex-direction: row;
-        flex-wrap: wrap;
+    .icons li a svg {
+        display: block;
+        position: relative;
     }
 
-    .buttons.style1 li a {
-        display: inline-flex;
-        width: auto;
-        height: 3.75rem;
-        line-height: 3.75rem;
-        padding: 0 1.875rem;
-        vertical-align: middle;
-        font-family: 'Fira Sans', sans-serif;
-        letter-spacing: 0.025rem;
-        padding-left: calc(0.025rem + 1.875rem);
-        font-size: 1em;
-        font-weight: 600;
+    .icons li a + svg {
+        display: block;
+        height: 100%;
+        left: 0;
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: -1;
+    }
+
+    .icons li a .label {
+        display: none;
+    }
+
+    .icons.style1 {
+        font-size: 1.5em;
+        gap: 1.5rem;
+    }
+
+    .icons.style1 li a {
         border-radius: 2.5rem;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
+        height: 2em;
+        width: 2em;
         transition: transform 0.25s ease, color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
     }
 
-    .buttons.style1 li a svg {
-        display: block;
-        fill: rgba(0, 0, 0, 0.631);
-        flex-grow: 0;
-        flex-shrink: 0;
-        height: 100%;
-        min-width: 16px;
-        width: 1.5em;
-        margin-left: 0.5em;
-        margin-right: calc(-0.125em + 0.025rem);
+    .icons.style1 li a svg {
+        height: 60%;
+        width: 60%;
         transition: fill 0.25s ease;
     }
 
-    .buttons.style1 li a .label {
-        direction: var(--site-language-direction);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        flex-grow: 1;
-        flex-shrink: 1;
-        text-align: left;
-        width: 100%;
+    .icons.style1 a {
+        background-color: rgba(255, 255, 255, 0.31);
     }
 
-    .buttons.style1 .button {
-        background-color: #00B259;
-        color: rgba(0, 0, 0, 0.631);
+    .icons.style1 a svg {
+        fill: rgba(255, 255, 255, 0.761);
     }
 
-    .buttons.style1 .button svg {
-        fill: rgba(0, 0, 0, 0.29);
+    .icons.style1 a:hover {
+        background-color: rgba(255, 255, 255, 0.129) !important;
     }
 
-    .buttons.style1 .button:hover {
-        background-color: #91FFD8 !important;
+    .icons.style1 li a + svg {
+        transition: transform 0.25s ease, fill 0.25s ease, stroke 0.25s ease;
     }
 
-    .buttons.style1 li a:hover {
-        transform: scale(1.0775);
+    .icons.style1 li a:hover {
+        transform: scale(1.1125);
+    }
+
+    .icons.style1 li a:hover + svg {
+        transform: scale(1.1125);
     }
 
     .icc-credits {
@@ -705,14 +680,6 @@
         opacity: 0;
     }
 
-    #buttons01 {
-        column-span: all;
-        display: block;
-        align-items: center;
-        align-self: center;
-        align-content: center;
-    }
-
     .icc-credits span:hover a:after {
         opacity: 0;
     }
@@ -720,15 +687,6 @@
     .icc-credits span:hover::after {
         opacity: 1;
         transform: scale(1.1) translateY(-0.05rem);
-    }
-
-    #submitbutton {
-        size: 10in;
-        background-color: #00B259;
-        color:#000;
-        border-radius: 25%;
-        border-style: solid;
-        border-color: #00B259;
     }
 
     #credits span {
@@ -771,18 +729,6 @@
             --spacing: 1.375rem;
         }
 
-        .image.style1:not(:first-child) {
-            margin-top: 1.5rem !important;
-        }
-
-        .image.style1:not(:last-child) {
-            margin-bottom: 1.5rem !important;
-        }
-
-        .image.style1 .frame {
-            width: 7rem;
-        }
-
         h1.style1, h2.style1, h3.style1, p.style1 {
             letter-spacing: -0.153125rem;
             width: 100%;
@@ -791,53 +737,21 @@
         }
 
         h1.style2, h2.style2, h3.style2, p.style2 {
-            font-family: 'Fira Sans', sans-serif;
             letter-spacing: 0.021875rem;
             width: calc(100% + 0.021875rem);
             font-size: 1em;
             line-height: 1.875;
         }
 
-        hr.style1:not(:first-child) {
-            margin-top: 2rem !important;
-        }
-
-        hr.style1:not(:last-child) {
-            margin-bottom: 2rem !important;
-        }
-
-        hr.style1:before {
-            width: 4rem;
-        }
-
-        .buttons.style1 {
-            gap: 1.375rem;
-        }
-
-        .buttons.style1 li a {
-            letter-spacing: 0.025rem;
-            padding-left: calc(0.025rem + 1.875rem);
-            font-size: 1em;
-        }
-
-        .buttons.style1 li a svg {
-            width: 1.875em;
+        .icons.style1 {
+            font-size: 1.5em;
+            gap: 1.5rem;
         }
     }
 
     @media (max-width: 480px) {
         #main > .inner {
             --spacing: 1.203125rem;
-        }
-
-        .buttons.style1 {
-            flex-direction: column;
-            flex-wrap: nowrap;
-        }
-
-        .buttons.style1 li a {
-            max-width: 32rem;
-            width: 100%;
         }
     }
 
@@ -856,38 +770,20 @@
             font-size: 1em;
         }
 
-        .buttons.style1 {
-            gap: 1.03125rem;
+        .icons.style1 {
+            gap: 1.125rem;
         }
     }
     </style>
-    <noscript>
-        <style>
-        body {
-            overflow: auto !important;
-        }
-
-        body:after {
-            display: none !important;
-        }
-
-        #main > .inner {
-            opacity: 1.0 !important;
-        }
-
-        #main {
-            opacity: 1.0 !important;
-            transform: none !important;
-            transition: none !important;
-            filter: none !important;
-        }
-        </style>
-    </noscript>
+    <style></style>
 </head>
-<body class="is-loading">
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 40 40" display="none" width="0" height="0">
-        <symbol id="icon-b64" viewBox="0 0 40 40">
-            <path d="M31.6,36.5H8.4c-1.7,0-3.1-1.4-3.1-3.1v-4.6c0-3.8,1.8-6.9,5.2-9c1.1-0.7,2.4-1.2,3.8-1.6 c-0.8-0.7-1.5-1.5-2-2.4c-0.8-1.3-1.2-2.9-1.2-4.4c0-4.9,4-8.9,8.9-8.9s8.9,4,8.9,8.9c0,1.6-0.4,3.1-1.2,4.4c-0.5,0.9-1.2,1.7-2,2.4 c1.4,0.4,2.7,1,3.8,1.6c3.4,2,5.2,5.1,5.2,9v4.6C34.7,35.1,33.3,36.5,31.6,36.5z"/>
+<body class="is-ready">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewbox="0 0 40 40" display="none" width="0" height="0">
+        <symbol id="icon-901" viewbox="0 0 40 40">
+            <path d="M34.9,30.5V15.6c-0.4,0.4-0.8,0.9-1.4,1.2c-3.4,2.7-6.2,4.8-8.2,6.6c-0.6,0.5-1.1,0.9-1.6,1.2c-0.4,0.3-0.9,0.6-1.7,0.9 c-0.7,0.3-1.4,0.5-2,0.5l0,0c-0.6,0-1.2-0.2-2-0.5c-0.7-0.3-1.2-0.6-1.7-0.9c-0.4-0.3-0.9-0.7-1.6-1.2c-2.1-1.7-4.8-3.8-8.2-6.6 c-0.5-0.4-0.9-0.8-1.4-1.2v14.9c0,0.2,0.1,0.3,0.2,0.4C5.7,31,5.9,31.1,6,31.1h28.4c0.2,0,0.3-0.1,0.4-0.2 C34.8,30.8,34.9,30.7,34.9,30.5L34.9,30.5z M34.9,10.2V9.7c0,0,0-0.1,0-0.2c0-0.1,0-0.2-0.1-0.2c-0.1,0-0.1,0-0.1-0.2 c0-0.1-0.1-0.2-0.2-0.1c-0.1,0-0.2,0-0.3,0H5.8C5.6,8.9,5.4,9,5.3,9.1C5.2,9.2,5.1,9.3,5.1,9.5c0,2.2,0.9,4,2.8,5.5 c2.5,2,5.1,4,7.7,6.1c0.1,0.1,0.3,0.2,0.7,0.5c0.4,0.3,0.6,0.5,0.9,0.7c0.2,0.2,0.5,0.4,0.8,0.6c0.3,0.2,0.7,0.4,0.9,0.5 c0.3,0.1,0.6,0.2,0.8,0.2l0,0c0.2,0,0.5-0.1,0.8-0.2c0.3-0.1,0.6-0.3,0.9-0.5c0.3-0.2,0.6-0.4,0.8-0.6c0.2-0.2,0.5-0.4,0.9-0.7 c0.4-0.3,0.6-0.5,0.6-0.5c2.7-2.1,5.3-4.2,7.7-6.1c0.7-0.5,1.4-1.2,2-2.2C34.6,11.8,34.9,11,34.9,10.2L34.9,10.2z M37.3,9.5v21 c0,0.8-0.3,1.6-0.9,2.2s-1.4,0.9-2.2,0.9H5.8c-0.8,0-1.6-0.3-2.2-0.9c-0.6-0.6-0.9-1.4-0.9-2.2v-21c0-0.8,0.3-1.6,0.9-2.2 s1.4-0.9,2.2-0.9h28.4c0.8,0,1.6,0.3,2.2,0.9S37.3,8.7,37.3,9.5z"></path>
+        </symbol>
+        <symbol id="icon-90c" viewbox="0 0 40 40">
+            <path d="M22.2,34.9c0-0.6-0.2-1.2-0.7-1.6c-0.4-0.4-1-0.7-1.6-0.7s-1.2,0.2-1.6,0.7c-0.4,0.4-0.7,1-0.7,1.6c0,0.6,0.2,1.2,0.7,1.6 s1,0.7,1.6,0.7c0.6,0,1.2-0.2,1.6-0.7S22.2,35.6,22.2,34.9z M28.2,30.4V10.2c0-0.2-0.1-0.5-0.3-0.6c-0.2-0.2-0.4-0.3-0.6-0.3H12.6 c-0.2,0-0.5,0.1-0.6,0.3c-0.2,0.2-0.3,0.4-0.3,0.6v20.1c0,0.2,0.1,0.5,0.3,0.6c0.2,0.2,0.4,0.3,0.6,0.3h14.6c0.2,0,0.5-0.1,0.6-0.3 C28.1,30.8,28.2,30.6,28.2,30.4z M22.7,6.1c0-0.3-0.2-0.5-0.5-0.5h-4.6c-0.3,0-0.5,0.2-0.5,0.5c0,0.3,0.2,0.5,0.5,0.5h4.6 C22.5,6.6,22.7,6.4,22.7,6.1z M30.9,5.6v29.3c0,1-0.4,1.9-1.1,2.6c-0.7,0.7-1.6,1.1-2.6,1.1H12.6c-1,0-1.9-0.4-2.6-1.1 c-0.7-0.7-1.1-1.6-1.1-2.6V5.6c0-1,0.4-1.9,1.1-2.6C10.8,2.3,11.6,2,12.6,2h14.6c1,0,1.9,0.4,2.6,1.1C30.6,3.8,30.9,4.6,30.9,5.6z"></path>
         </symbol>
     </svg>
     <div class="topnav">
@@ -903,32 +799,51 @@
         
         {% endif %}
       </div>
-      
     <div id="wrapper">
         <div id="main">
             <div class="inner">
 
-                <div id="image01" class="style1 image">
-                    <span class="frame">
-                        <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
+                <h1 id="text02" class="style1" style="opacity: 1; transform: none;"> User: {{ user.first_name }} {{ user.last_name }}</h1>
+                <p id="text07" class="style2" style="opacity: 1; transform: none;">{{ user.driver_profile.student_or_parent }}</p>
+                <p id="text01" class="style2" style="opacity: 1; transform: none;">
+                    <span class="p">
+                        <br>
+                         Email: {{ user.passenger_profile.email_address }}
+                        <br>
+                         Phone number: {{ user.passenger_profile.phone_number }}
+                        <br>
+                         Emergency contact number: {{user.passenger_profile.emergency_contact_number}}
+                        <br>
+                         Emergency contact relationship: {{user.passenger_profile.emergency_contact_relation}}
+                        <br>
+                         Note: {{user.passenger_profile.extra_information}}
+                         <br>
+                         Region: {{user.passenger_profile.region_name}}
+                         <br>
+                         Last authentication update: {{user.get_auth_key_date()}}
+
                     </span>
-                </div>
-                <h1 id="text01" class="style1">{{main_message}}</h1>
-                <hr id="divider02" class="style1">
-                <div id="text02" class="style2">
-                    <p class="style2">
-                        {{sub_message}}
-                    </p>
-                </div>
+                </p>
+                <p id="text02" class="style2" style="opacity: 1; transform: none;"> Actions</p>
                 <ul id="buttons01" class="style1 buttons">
                     <li>
-                        <a href="{{url_for('home_page')}}" class="button n01">
-                            <span class="label">Return Home</span>
+                        <a href="{{url_for('update_user_information_page')}}" class="button n01">
+                            <span class="label"><b>Edit Information</b></span>
                         </a>
+                        <a href="{{url_for('forgot_password_page')}}" class="button n01">
+                            <span class="label"><b>Reset Password</b></span>
+                        </a>
+                        <br>
+                        <a href="{{url_for('manage_carpools_page')}}" class="button n01">
+                            <span class="label"><b>Manage Carpools</b></span>
+                        </a>
+                        <a href="{{url_for('passenger_to_driver_page')}}" class="button n01">
+                            <span class="label"><b>Convert to Driver</b></span>
+                        </a>
+                    
                     </li>
                 </ul>
-           
-            </div>
+                </div>
         </div>
     </div>
         <script>
@@ -1733,19 +1648,11 @@
             state: true,
             replay: false
         });
-        onvisible.add('hr.style1', {
-            style: 'fade-in',
-            speed: 1000,
-            intensity: 5,
-            delay: 0,
-            state: true,
-            replay: false
-        });
-        onvisible.add('.buttons.style1', {
-            style: 'zoom-in',
+        onvisible.add('.icons.style1', {
+            style: 'fade-down',
             speed: 500,
-            intensity: 1,
-            delay: 625,
+            intensity: 2,
+            delay: 0,
             stagger: 125,
             state: true,
             replay: false

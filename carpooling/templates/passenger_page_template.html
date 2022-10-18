@@ -129,7 +129,7 @@
         min-width: 320px;
         overflow-x: hidden;
         word-wrap: break-word;
-        background-color: #090D1C;
+        background-color: #000;
     }
 
     body:before {
@@ -718,7 +718,7 @@
         <div id="main">
             <div class="inner">
 
-                <h1 id="text02" class="style1" style="opacity: 1; transform: none;">{{ passenger.firstname.capitalize() }} {{ passenger.lastname.capitalize() }}</h1>
+                <h1 id="text02" class="style1" style="opacity: 1; transform: none;">{{ passenger.first_name.capitalize() }} {{ passenger.last_name.capitalize() }}</h1>
                 <p id="text07" class="style2" style="opacity: 1; transform: none;"></p>
                 <ul id="icons01" class="style1 icons">
                     <li style="opacity: 1; transform: none;">
@@ -747,7 +747,7 @@
                         <br>
                          Emergency contact number: {{passenger.emergency_contact_number}}
                         <br>
-                         Emergency contact relationship: {{passenger.emergency_contact_relationship}}
+                         Emergency contact relationship: {{passenger.emergency_contact_relation}}
                         <br>
                          Note: {{passenger.extra_information}}
                     </span>

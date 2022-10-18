@@ -1,4 +1,3 @@
-from sys import _clear_type_cache
 from carpooling import app, db
 from carpooling import models
 import os

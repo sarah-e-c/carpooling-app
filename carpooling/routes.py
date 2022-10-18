@@ -1,6 +1,6 @@
 from lib2to3.pgen2 import driver
 from carpooling import db
-from carpooling import app
+from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
 import logging
 import time
@@ -13,13 +13,30 @@ from sqlalchemy import func
 import hashlib
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from flask_mail import Message
+
+
 
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# logFormatter = logging.Formatter(fmt=' %(name)s :: %(levelname)-8s :: %(message)s')
+# logging.RootLogger(logging.DEBUG)
+
+
+# h2 = logging.SMTPHandler(mailhost=app.config['MAIL_SERVER'],
+#                             fromaddr=app.config['MAIL_USERNAME'],
+#                             toaddrs=app.config['MAIL_USERNAME'],
+#                             subject='Carpooling Error',
+#                             credentials=(app.config['MAIL_USERNAME'],app.config['MAIL_PASSWORD']),
+#                             secure=None)
+# h2.setLevel(logging.CRITICAL)
+# h2.setFormatter(logFormatter)
+# logging.getLogger().addHandler(h2)
+
 
 @app.route('/driver/<lastname>/<firstname>')
 def driver_page(lastname, firstname):
@@ -343,8 +360,17 @@ def passenger_carpool_signup_page(carpool_index):
     """
 
     if request.method == 'GET':
-        carpool = Carpool.query.get(carpool_index)
-        return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
+        if current_user.is_authenticated:
+            carpool = Carpool.query.get(carpool_index)
+            if carpool.driver is None:
+                return redirect(url_for('event_page', event_index=carpool.event_index))
+            carpool.passengers.append(current_user.passenger_profile)
+            db.session.commit()
+            logger.info(f'{current_user} signed up for carpool {carpool}')
+            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up for a carpool!', user=current_user)
+        else:
+            carpool = Carpool.query.get(carpool_index)
+            return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
 
 
     if request.method == 'POST':
@@ -366,10 +392,27 @@ def passenger_carpool_signup_page(carpool_index):
                 carpool.passengers.append(new_passenger)
                 db.session.add(new_passenger)
                 db.session.commit()
-                #TODO
-
                 logger.info('new temp passenger created')
+
+                try:
+                    # send email to driver about new passenger
+                    message = Message(
+                        subject='New Passenger Signup',
+                        recipients=[carpool.driver.email_address],
+                        body=f'New passenger {new_passenger} signed up for carpool {carpool}!',
+                        sender=('Carpooling Manager', 'mechtechscarpooling@zohomail.com'),
+                    )
+                    mail.send(message)
+                    logger.info('email sent to driver')
+
+                except Exception as e:
+                    logger.warning(e)
+                    logger.warning('email not sent to driver')
+                
+
                 return render_template('error_page_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
+
+
             except Exception as e:
                 logger.debug(e)
                 return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
@@ -380,6 +423,16 @@ def passenger_carpool_signup_page(carpool_index):
             db.session.add(passenger)
             db.session.commit()
             logger.info('existing passenger added to carpool without sign in')
+
+            # send email to driver about new passenger
+            message = Message(
+                subject='New Passenger Signup',
+                recipients=[carpool.driver.email_address],
+                body=f'New passenger {new_passenger} signed up for carpool {carpool}!',
+                sender=('Carpooling Manager', 'mechtechscarpooling@zohomail.com'),
+            )
+            mail.send(message)
+            logger.info('email sent to driver')
             return render_template('error_page_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
 
 
@@ -548,7 +601,10 @@ def user_profile_page():
     """
     Page that allows for the management of the user profile
     """
-    return render_template('user_profile_page_template.html', user=current_user)
+    if current_user.is_driver() == 'Yes':
+        return render_template('user_profile_page_template.html', user=current_user)
+    else: 
+        return render_template('user_profile_passenger_page_template.html', user=current_user)
 
 
 @login_required
@@ -631,8 +687,18 @@ def manage_carpools_page():
     """
     Page that allows for the management of carpools
     """
-    driver_carpools = Carpool.query.filter_by(driver_index=current_user.driver_id).all() # TODO add the filter for the current time
-    return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools)
+
+    try:
+        driver_carpools = current_user.driver_profile.carpools
+        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_end_time > datetime.datetime.now() + datetime.timedelta(hours=5)]
+    except AttributeError as e:
+        logger.debug('user is not a driver')
+        logger.debug(e)
+        driver_carpools = []
+    passenger_carpools = current_user.passenger_profile.carpools
+    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_end_time > datetime.datetime.now() + datetime.timedelta(hours=5)]
+
+    return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools)
 
 
 @login_required
@@ -643,11 +709,12 @@ def passenger_page(lastname, firstname):
     and has an upcoming carpool with the person in it.
     """
 
-    current_user_carpools = Carpool.query.filter_by(driver_id=current_user.driver_profile.index).all() # TODO:filter by current user and upcoming
+    current_user_carpools = Carpool.query.filter_by(driver_index=current_user.driver_profile.index).all() # TODO:filter by current user and upcoming
+    current_user_carpools = [carpool for carpool in current_user_carpools if carpool.event.event_end_time > datetime.datetime.now() + datetime.timedelta(hours=5)]
 
     # checking if the person is able to see
     for carpool in current_user_carpools:
-        if (carpool.event.start_time) > datetime.datetime.now():
+        if (carpool.event.event_start_time) > datetime.datetime.now():
             for passenger in carpool.passengers:
                 if (passenger.first_name == firstname) and (passenger.last_name == lastname):
                     return render_template('passenger_page_template.html', user=current_user, passenger=passenger)
@@ -667,18 +734,21 @@ def cancel_carpool(carpool_id):
     """
     
     for carpool in current_user.driver_profile.carpools:
-        logger.debug(carpool.index)
-        logger.debug(carpool_id)
-        logger.debug('got here')
         if str(carpool.index) == carpool_id:
             logger.debug('got here')
-            for passenger in carpool.passengers:
-                
-                pass
-                #send_email(passenger.email_address, 'Carpool Cancelled', 'email/carpool_cancelled', user=passenger, carpool=carpool) #TODO: send email to passenger
+            message = Message(
+                subject='Carpool Cancelled',
+                recipients=[passenger.email_address for passenger in carpool.passengers],
+                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                body=f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.'
+            )
+            mail.send(message)
+            logger.info('Email sent to passengers of carpool {} about cancellation'.format(carpool))
+
             carpool.driver = None
             carpool.driver_id = None
             carpool.passengers = []  
+            carpool.destination = carpool.region.dropoff_location
             db.session.commit()
             return redirect(url_for('manage_carpools_page'))
     
@@ -686,29 +756,138 @@ def cancel_carpool(carpool_id):
     return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
 
 @login_required
-@app.route('/change-carpool-name', methods=['POST'])
+@app.route('/leave-carpool/<carpool_id>')
+def leave_carpool(carpool_id):
+    """
+    Route that allows a passenger to leave a carpool
+    """
+    for carpool in current_user.passenger_profile.carpools: # making sure that the current user is in the carpool
+        if str(carpool.index) == carpool_id:
+            try:
+                message = Message('A passenger has left the carpool.', recipients=[carpool.driver.email_address], sender=('Mech Techs Carpooling','mechtechscarpooling@zohomail.com'))
+                message.body = f"""
+                Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
+                {current_user.first_name.capitalize()} {current_user.last_name.capitalize()} has left the carpool. Please check the carpool management page to see if you need to cancel the carpool.
+                """
+                mail.send(message)
+                logger.info('Message sent to a driver.')
+            except Exception as e:
+                logger.warning(e)
+                # maybe send an email to the admin
+            
+            carpool.passengers.remove(current_user.passenger_profile)
+            db.session.commit()
+            logger.info(f'User {current_user} left carpool {carpool}')
+
+    return redirect(url_for('manage_carpools_page'))
+
+
+@login_required
+@app.route('/change-carpool-destination', methods=['GET', 'POST'])
 def change_carpool_destination():
     """
     Page that allows for the change of the destination of a carpool.
     """
-    new_destination = request.header['New-Carpool-Destination']
-    carpool_index = int(request.header['Carpool-Index'])
-    current_user.driver_profile.carpools[carpool_index].destination = new_destination
-    db.session.commit()
-    logger.info('carpool destination changed to {}'.format(new_destination))
-    return redirect(url_for('manage_carpools_page'))
+    if request.method == 'GET':
+        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+    else:
+        logger.info('changing carpool destination')
+        new_destination = request.headers['New-Carpool-Destination']
+        carpool_index = int(request.headers['Carpool-Index'])
+        current_carpool = Carpool.query.filter_by(index=carpool_index).first()
+        old_destination = current_carpool.destination
+        current_carpool.destination = new_destination
+        db.session.commit()
+        logger.info('carpool destination changed to {} by {}'.format(new_destination, current_user))
+
+        message = Message(
+            'Carpool Destination Changed',
+            recipients=[passenger.email_address for passenger in current_carpool.passengers],
+            sender=('Mech Techs Carpooling','mechtechscarpooling@zohomail.com'),
+            body=f"""
+            Hello passengers of carpool for event {current_carpool.event.event_name}, \n\n
+            The driver of the carpool has changed the destination from {old_destination} to {new_destination}. 
+            Please make sure that you are ready to go to {new_destination} at the time of the carpool.
+            """
+        )
+        mail.send(message)
+        logger.info('Message sent to passengers of carpool.')
+        return redirect(url_for('manage_carpools_page'))
 
 
-@app.route('/admin_home')
-def admin_home_page():
-    """
-    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
-    """
-    pass
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password_page():
     """
     Page that allows for the resetting of a password
     """
+    if request.method == 'GET':
+        return render_template('forgot_password_template.html', message='Enter your name to reset your password.', user=current_user)
+    if request.method == 'POST':
+        first_name = request.form['firstname'].lower()
+        last_name = request.form['lastname'].lower()
+        user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
+        if user:
+            logger.info('User {} found'.format(user))
+            message = Message(
+                'Password Reset',
+                recipients=[user.passenger_profile.email_address],
+                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                body=f"""
+                Hello {user.first_name.capitalize()} {user.last_name.capitalize()}, \n\n
+                You have requested a password reset. Please click the link below to reset your password. \n\n
+                {url_for('reset_password_page', user_id=user.id, _external=True, token=user.get_reset_password_token())}
+                """
+            )
+            mail.send(message)
+            logger.info('Password reset link sent to user.')
+            return render_template('forgot_password_template.html', message='Password reset link sent to your email address.', user=current_user)
+        else:
+            return render_template('forgot_password_template.html', message='User not found. Please register or try again.', user=current_user)
+
+@app.route('/reset-password/<user_id>/<token>', methods=['GET', 'POST'])
+def reset_password_page(user_id, token):
+    """
+    Page that allows for the resetting of a password
+    user_id: the id of the user that is resetting their password
+    token: the token that is used to verify that the user is who they say they are
+    """
+    if request.method == 'GET':
+        user = User.query.filter_by(id=user_id).first()
+        if user and user.verify_reset_password_token(token):
+            return render_template('reset_password_template.html', user=current_user, user_id=user_id, token=token)
+        else:
+            return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+    if request.method == 'POST':
+        user = User.query.filter_by(id=user_id).first()
+        if user and user.verify_reset_password_token(token):
+            if request.form['password'] == request.form['confirmpassword']:
+                user.password = generate_password_hash(request.form['password'], method='sha256')
+                db.session.commit()
+                logger.info('Password reset for user {}'.format(user))
+                return redirect(url_for('login_page'))
+            else: return render_template('reset_password_template.html', message='Passwords do not match. Please try again.', user=current_user, user_id=user_id, token=token)
+        else:
+            return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+
+        
+@app.route('/admin_home')
+def admin_home_page():
+    """
+    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
+    """
     pass #TODO
+
+@app.route('/convert-to-driver', methods=['GET', 'POST'])
+@login_required
+def passenger_to_driver_page():
+    pass #TODO
+
+# @app.route('/mailtest')
+# def mail_test():
+#     """
+#     Page that allows for the testing of emails
+#     """
+#     message = Message('Hello', sender= 'mechtechscarpooling@zohomail.com' , recipients=['sarah.beth.crowder@gmail.com'], body='This is a test email')
+#     mail.send(message)
+#     return 'Sent'

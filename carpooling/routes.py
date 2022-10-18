@@ -4,7 +4,7 @@ from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
 import logging
 import time
-from carpooling.utils import PersonAlreadyExistsException
+from carpooling.utils import PersonAlreadyExistsException, driver_required
 from flask import render_template, request, redirect, url_for, make_response, flash, session
 import secrets
 import os
@@ -15,13 +15,11 @@ from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from carpooling.utils import requires_auth_key
 from itsdangerous import URLSafeSerializer
-
+from flask import Blueprint
 from flask_mail import Message
 
-
-
-
 DEFAULT_NUMBER_OF_CARPOOLS = 4
+
 
 logger = logging.getLogger(__name__)
 
@@ -93,23 +91,6 @@ def driver_page(lastname, firstname):
                 
     return render_template('driver_page_template.html', **driver_info, user=current_user)
 
-
-
-@app.route('/get-driver-access/<lastname>/<firstname>', methods=['GET', 'POST'])
-def get_driver_access(lastname, firstname):
-    logger.info('get_driver_access')
-    if request.method == 'GET':
-        return render_template('get_driver_access_template.html', lastname=lastname, firstname=firstname, user=current_user)
-
-    if request.method == 'POST':
-        if request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key:
-            app.__setattr__('driver_access_flag', True)
-            response = make_response(redirect(url_for('driver_page', lastname=lastname, firstname=firstname)))
-            response.set_cookie('driver_access_flag_time', str(time.time()))
-            logger.info('driver access granted')
-            return response
-        else:
-            return render_template('error_page_template.html', main_message='Incorrect key', sub_message='The key you entered was incorrect. Please try again.', user=current_user)
 
 @app.route('/verify_auth_key/<next>/<kwargs_keys>/<kwargs_string>', methods=['GET', 'POST'])
 def verify_auth_key_page(next, kwargs_keys, kwargs_string):
@@ -298,11 +279,8 @@ def valid_auth_keys_page():
     if app.admin_access_flag:
         app.admin_access_flag = False
         auth_keys = AuthKey.query.order_by(AuthKey.date_created).all()
-        return_list = []
-        return_list_2 = []
-        for item in auth_keys:
-            return_list.append(item.key)
-            return_list_2.append(item.date_created)
+        return_list = [item.key for item in auth_keys]
+        return_list_2 = [item.date_created for item in auth_keys]
         
         return (f'Valid auth keys: {return_list} <br> Date created: {return_list_2}')
     else:
@@ -330,7 +308,9 @@ def event_page(event_index):
     return render_template('event_page_template.html', event=event, regions=Region.query.all(), user=current_user)
 
 @app.route('/create-event', methods=['GET', 'POST'])
-def create_event():
+@login_required
+@requires_auth_key
+def create_event_page():
     """
     Create event page. Used for admins to create an event needs
     """
@@ -338,7 +318,7 @@ def create_event():
         message = request.args.get('message')
         if message is None:
             message = 'Create an Event'
-        return render_template('create_event_template.html', message=message, user=current_user)
+        return render_template('create_event_page_template.html', message=message, user=current_user)
 
     
     if request.method == 'POST':
@@ -366,14 +346,16 @@ def create_event():
 
         except Exception as e:
             logger.info(e)
-            return redirect(url_for("create_event", message='Something went wrong. Make sure that all inputs are valid.'))
+            return redirect(url_for("create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
 
-        return render_template('error_page_template.html', main_message='Success!', sub_message='An event has been created! People can now sign up!', user=current_user)
+        return redirect(url_for('events_page'))
     else: 
         return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 
 @app.route('/driver-signup/<carpool_index>', methods=['GET', 'POST'])
+@driver_required
+@requires_auth_key
 def driver_carpool_signup_page(carpool_index):
     """
     Page that drivers go to when they are signing up for a carpool. Still needs a check for sign in
@@ -746,8 +728,9 @@ def update_user_information_page():
 
 
 
-@login_required
+
 @app.route('/manage-carpools', methods=['GET', 'POST'])
+@login_required
 def manage_carpools_page():
     """
     Page that allows for the management of carpools
@@ -766,8 +749,10 @@ def manage_carpools_page():
     return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools)
 
 
-@login_required
+
 @app.route('/passenger/<lastname>/<firstname>')
+@login_required
+@requires_auth_key
 def passenger_page(lastname, firstname):
     """
     Page that allows for the viewing of passenger information. Is only accessible if the person is logged in 
@@ -820,8 +805,9 @@ def cancel_carpool(carpool_id):
     logger.debug(f'{current_user.driver_profile.carpools}')
     return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
 
-@login_required
+
 @app.route('/leave-carpool/<carpool_id>')
+@login_required
 def leave_carpool(carpool_id):
     """
     Route that allows a passenger to leave a carpool
@@ -847,8 +833,9 @@ def leave_carpool(carpool_id):
     return redirect(url_for('manage_carpools_page'))
 
 
-@login_required
+
 @app.route('/change-carpool-destination', methods=['GET', 'POST'])
+@login_required
 def change_carpool_destination():
     """
     Page that allows for the change of the destination of a carpool.
@@ -946,7 +933,36 @@ def admin_home_page():
 @app.route('/convert-to-driver', methods=['GET', 'POST'])
 @login_required
 def passenger_to_driver_page():
-    pass #TODO
+    if request.method == 'GET':
+        return render_template('passenger_to_driver_template.html', user=current_user)
+    if request.method == 'POST':
+        new_driver = Driver(
+            first_name = current_user.first_name,
+            last_name = current_user.last_name,
+            email_address = current_user.passenger_profile.email_address,
+            phone_number = current_user.passenger_profile.phone_number,
+            num_seats = request.form['numberofseats'],
+            num_years_with_license = request.form['licenseyears'],
+            car_type_1 = request.form['cartype1'],
+            car_type_2 = request.form['cartype2'],
+            car_color_1 = request.form['carcolor1'],
+            car_color_2 = request.form['carcolor2'],
+            emergency_contact_number = current_user.passenger_profile.emergency_contact_number,
+            emergency_contact_relation = current_user.passenger_profile.emergency_contact_relation,
+            student_or_parent = request.form['studentorparent'],
+        )
+        db.session.add(new_driver)
+        db.session.commit()
+        logger.info('New driver created: {}'.format(new_driver))
+        current_user.driver_id = new_driver.index
+        current_user.driver_profile = new_driver
+        db.session.commit()
+        logger.info('User {} converted to driver'.format(current_user))
+        return redirect(url_for('home_page'))
+        
+@app.route('/422')
+def team_422():
+    pass # TODO
 
 # @app.route('/mailtest')
 # def mail_test():

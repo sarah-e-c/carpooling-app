@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from flask_login import UserMixin
 from itsdangerous import URLSafeSerializer
 import logging
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +241,14 @@ class User(UserMixin, db.Model):
         except Exception as e:
             logger.critical(f'Error verifying reset password token: {e}')
             return False
+
+    def get_auth_key_date(self):
+        """
+        Method to get the date the auth key was created
+        """
+        if self.team_auth_key == '0':
+            return 'Not team verified'
+        return datetime.datetime.strftime(AuthKey.query.filter_by(key=self.team_auth_key).one().date_created, '%m-%d-%Y')
 
 
     def __repr__(self):

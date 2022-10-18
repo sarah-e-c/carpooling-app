@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-    <title>Mech Techs Carpooling Validation Key Check</title>
+    <title>Mech Techs Carpooling Driver Sign Up</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="description" content="driver key check"/>
-    <meta property="og:site_name" content="Mech Techs Carpooling Validation"/>
-    <meta property="og:title" content="Mech Techs Carpooling Validation"/>
+    <meta name="description" content="driver sign up"/>
+    <meta property="og:site_name" content="Mech Techs Carpooling"/>
+    <meta property="og:title" content="Driver Sign Up"/>
     <meta property="og:type" content="website"/>
-    <meta property="og:description" content="driver sign up"/>
+    <meta property="og:description" content="Driver sign up"/>
     <meta property="og:image" content="https://mechtechsignup.carrd.co/assets/images/card.jpg?v=33337d93"/>
     <meta property="og:image:type" content="image/jpeg"/>
     <meta property="og:image:width" content="1280"/>
@@ -318,6 +318,48 @@
         border-bottom-right-radius: inherit;
         margin-bottom: calc(var(--padding-vertical) * -1) !important;
     }
+    .topnav {
+        background-color: #333;
+        overflow: hidden;
+      }
+      
+      /* Style the links inside the navigation bar */
+      .topnav a {
+        float: left;
+        color: #ffffff;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        font-family: 'Fira Sans', sans-serif;
+      }
+      
+      /* Change the color of links on hover */
+      .topnav a:hover {
+        background-color: #ddd;
+        color: black;
+      }
+      
+      /* Add a color to the active/current link */
+      .topnav a.active {
+        background-color: #00B259;
+        color: white;
+      }
+    
+      .topnav a.user-info {
+        float: right;
+        color: #ffffff;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        font-family: 'Fira Sans', sans-serif;
+      }
+    
+      .topnav a.user-info:hover {
+        background-color: #ddd;
+        color: black;
+      }
 
     #main > .inner > .full.screen {
         border-radius: 0 !important;
@@ -592,48 +634,6 @@
     .buttons.style1 li a:hover {
         transform: scale(1.0775);
     }
-    .topnav {
-        background-color: #333;
-        overflow: hidden;
-      }
-      
-      /* Style the links inside the navigation bar */
-      .topnav a {
-        float: left;
-        color: #ffffff;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-        font-family: 'Fira Sans', sans-serif;
-      }
-      
-      /* Change the color of links on hover */
-      .topnav a:hover {
-        background-color: #ddd;
-        color: black;
-      }
-      
-      /* Add a color to the active/current link */
-      .topnav a.active {
-        background-color: #00B259;
-        color: white;
-      }
-    
-      .topnav a.user-info {
-        float: right;
-        color: #ffffff;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-        font-family: 'Fira Sans', sans-serif;
-      }
-    
-      .topnav a.user-info:hover {
-        background-color: #ddd;
-        color: black;
-      }
 
     .icc-credits {
         display: block;
@@ -913,18 +913,53 @@
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
                     </span>
                 </div>
-                <h1 id="text01" class="style1">Verify Access Key</h1>
-                <h2 class="style2">{{message}}</h2>
+                <h1 id="text01" class="style1">Driver Sign up</h1>
+                <h2 id="text07" class="style2">{{ message }}</h2>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
-                    <form action="{{url_for('verify_auth_key_page', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string)}}" method="post" class="style1" id="formtable">
+                    <form action="{{url_for("passenger_to_driver_page")}}" method="post">
+                        <div id="formtable">
                         <p>
-                        <label for="key">Access Key</label>
-                        <input type="text" name="key" id="key" value=""/>
+                        <label for="studentorparent">Student or Parent</label>
+                        
+                        <input type="text" id="studentorparent" name="studentorparent" placeholder="Parent" class="input1" required="required">
                         </p>
+                        <br>
+                        <p>
+                        <label for="licenseyears">Number of Years with License (if student)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                        <input type="text" id="licenseyears" name="licenseyears" placeholder="1" class="input1">
+                        </p>
+                        <br>
+                        <p>
+                            <label for="numberofseats">Max Number of Passengers</label>
+                            <input type="text" id="numberofseats" name="numberofseats" placeholder="3" class="input1" required="required">
+                        </p>
+                        <br>
+                        <p>
+                        <label for="cartype1">Primary Car Type</label>
+                        <input type="text" id="cartype1" name="cartype1" placeholder="Tesla Model X" class="input1" required="required">
+                        </p>
+                        <br>
+                        <p>
+                        <label for="carcolor1">Primary Car Color</label>
+                        <input type="text" id="carcolor1" name="carcolor1" placeholder="Silver" class="input1" required="required">
+                        </p>
+                        <br>
+                        <p>
+                            <label for="cartype2">Secondary Car Type</label>
+                            <input type="text" id="cartype2" name="cartype2" placeholder="Tesla Model Y" class="input1">
+                            </p>
+                        <br>
+                        <p>
+                            <label for="carcolor2">Secondary Car Color</label>
+                            <input type="text" id="carcolor2" name="carcolor2" placeholder="Gold" class="input1">
+                        </p>
+                        <br>
+                        
 
+                        </div>
                         <ul id = "buttons01" class="style1 buttons">
-                            <input type="submit" value="Verify" class="style1" id="submitbutton"> 
+                            <input type="submit" value="Submit" class="style1" id="submitbutton"> 
                         </ul>
                         <br>
                     </form>
@@ -949,7 +984,6 @@
             e.preventDefault();
         }
     }
-
     (function() {
         var on = addEventListener,
             $ = function(q) {

@@ -896,6 +896,7 @@
         {% if user.is_authenticated %}
         <a class="user-info" href = "{{ url_for('user_profile_page', user_id=user.id) }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
         <a class="user-info" onclick="confirm_logout(event)" href="{{ url_for('home_page', logout=True) }}">Logout</a>
+<a class="user-info" href="{{url_for('manage_carpools_page')}}">Manage Carpools </a>
         {% else %}
         <a class="user-info" href="{{ url_for('login_page') }}">Login</a>
         <a class="user-info" href="{{url_for('generic_register_page')}}">Register/Update</a>
@@ -912,11 +913,11 @@
                         <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
                     </span>
                 </div>
-                <h1 id="text01" class="style1">Driver Sign up</h1>
+                <h1 id="text01" class="style1">Create New Event</h1>
                 <h2 id="text07" class="style2">{{ message }}</h2>
                 <hr id="divider02" class="style1">
                 <div id="text02" class="style2">
-                    <form action="{{url_for("create_event")}}" method="post">
+                    <form action="{{url_for("create_event_page")}}" method="post">
                         <div id="formtable">
                         <p>
                         <label for="eventname">Event Name</label>

@@ -5,6 +5,7 @@ import os
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_session import Session
+from flask import Blueprint
 
 
 app = Flask(__name__)
@@ -28,7 +29,7 @@ mail = Mail(app)
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'login_page'
 login_manager.init_app(app)
 
 
@@ -38,4 +39,6 @@ from carpooling.models import User
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
 

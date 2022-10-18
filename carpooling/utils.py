@@ -1,4 +1,66 @@
+
+from carpooling.models import User, AuthKey
+from carpooling import app
+from flask import redirect, url_for, session, request
+from flask_login import current_user
+from functools import wraps
+from itsdangerous import URLSafeSerializer
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 class PersonAlreadyExistsException(Exception):
     """Exception for a person already existing """
     def __init__():
         super().__init__()
+
+def critical_error():
+    """Critical error function"""
+    logger.critical('Critical error')
+    return 'Critical error'
+
+def check_cookie():
+    pass
+
+
+def requires_auth_key(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if current_user.is_authenticated:
+            try:
+                if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key) or (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key):
+                # encoding the key word args for the url
+                    kwargs_keys = '--'.join(kwargs)
+                    kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+                    return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+            except:
+                if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key):
+                # encoding the key word args for the url
+                    kwargs_keys = '--'.join(kwargs)
+                    kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+                    return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+        else:
+            s = URLSafeSerializer(app.secret_key)
+            try:
+                try:
+                    if s.loads(request.cookies.get('driver-access'))[0] == 'access granted':
+                        logger.info('Access granted')
+                        return function(*args, **kwargs)
+                    else:
+                        kwargs_keys = '--'.join(kwargs)
+                        kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+                        return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+                except Exception as e:
+                    logger.warning(e)
+                    raise e
+            except TypeError as e: # this is very awful
+                logger.debug(e)
+                kwargs_keys = '--'.join(kwargs)
+                kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+                return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+
+        return function(*args, **kwargs)
+    return wrapper
+
+

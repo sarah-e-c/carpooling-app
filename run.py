@@ -129,5 +129,5 @@ def test_set_up():
 
 if __name__ == '__main__': # run app
     #test_set_up()
-    
+    logging.basicConfig(level=logging.DEBUG)
     app.run(debug=True)

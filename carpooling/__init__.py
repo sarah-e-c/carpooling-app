@@ -1,14 +1,14 @@
 import flask_sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from flask import Flask, session
 import os
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_session import Session
+
 
 app = Flask(__name__)
-
 #database_url = os.environ.get('DATABASE_URL')
-
 
 database_url = 'sqlite:///test.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://', 1)
@@ -21,6 +21,8 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True 
 app.config['MAIL_USERNAME'] = os.environ['MAIL_USERNAME']
 app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -29,7 +31,6 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.init_app(app)
 
-app.secret_key = os.environ.get('SECRET_KEY')
 
 import carpooling.routes
 from carpooling.models import User

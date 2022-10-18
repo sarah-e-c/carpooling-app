@@ -13,6 +13,8 @@ from sqlalchemy import func
 import hashlib
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
+from carpooling.utils import requires_auth_key
+from itsdangerous import URLSafeSerializer
 
 from flask_mail import Message
 
@@ -38,31 +40,36 @@ logger = logging.getLogger(__name__)
 # logging.getLogger().addHandler(h2)
 
 
+
+
 @app.route('/driver/<lastname>/<firstname>')
+@requires_auth_key
 def driver_page(lastname, firstname):
-    """
-    View a driver's page
-    """
-    logger.info('driver_page')
-    if app.driver_access_flag:
-        logger.info('access granted')
-        app.driver_access_flag = False
-    else:
-        try:
-            driver_access_key_time = float(request.cookies.get('driver_access_key_time'))
-            if time.time() - driver_access_key_time  > 60*60*24*30:
-                logger.info('redirecting to driver_login')
-                logger.info(time.time() - driver_access_key_time)
-                return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-        except ValueError as e:
-            return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-        except TypeError as e:
-            return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
+    logger.info('driver page')
+    # """
+    # View a driver's page
+    # """
+    # logger.info('driver_page')
+    # if app.driver_access_flag:
+    #     logger.info('access granted')
+    #     app.driver_access_flag = False
+    # else:
+    #     try:
+    #         driver_access_key_time = float(request.cookies.get('driver_access_key_time'))
+    #         if time.time() - driver_access_key_time  > 60*60*24*30:
+    #             logger.info('redirecting to driver_login')
+    #             logger.info(time.time() - driver_access_key_time)
+    #             return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
+    #     except ValueError as e:
+    #         return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
+    #     except TypeError as e:
+    #         return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
     
-    logger.info('driver access granted in driver page')
+    # logger.info('driver access granted in driver page')
     try:
         driver = Driver.query.filter_by(last_name=lastname, first_name=firstname).one()
     except:
+        logger.info('no driver was found')
         return 'No driver was found.'
     
     logger.info('driver found')
@@ -103,6 +110,64 @@ def get_driver_access(lastname, firstname):
             return response
         else:
             return render_template('error_page_template.html', main_message='Incorrect key', sub_message='The key you entered was incorrect. Please try again.', user=current_user)
+
+@app.route('/verify_auth_key/<next>/<kwargs_keys>/<kwargs_string>', methods=['GET', 'POST'])
+def verify_auth_key_page(next, kwargs_keys, kwargs_string):
+    """
+    Page that users are redirected to if they need to get an auth key
+    """
+    if request.method == 'GET':
+        # this is how the things are encoded
+        # kwargs_keys = '--'.join(kwargs)
+        # kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+        return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user)
+    if request.method == 'POST':
+        try:
+            if request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key:
+                if current_user.is_authenticated:
+                    current_user.team_auth_key = AuthKey.query.order_by(AuthKey.index.desc()).first().key
+                    db.session.commit()
+                    logger.info('Driver access granted to user {}'.format(current_user))
+                
+                # re-encoding the keys
+                kwargs = {}
+                for kwarg_key, kwarg in zip(kwargs_keys.split('--'), kwargs_string.split('--')):
+                    kwargs[kwarg_key] = kwarg
+                
+                response = make_response(redirect(url_for(next, **kwargs)))
+                s = URLSafeSerializer(app.secret_key)
+                logger.info('setting cookie')
+                response.set_cookie('driver-access', s.dumps(['access granted']), max_age=datetime.timedelta(seconds=60))
+                return response
+            else:
+                flash('Invalid Auth Key')
+                return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
+        except IndexError as e:
+            # basically the same thing, but there's only one key
+            if request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key:
+                if current_user.is_authenticated:
+                    current_user.team_auth_key = AuthKey.query.order_by(AuthKey.index.desc()).first().key
+                    db.session.commit()
+                    logger.info('Driver access granted to user {}'.format(current_user))
+                
+                logger.info('Access granted')
+                # re-encoding the keys
+                kwargs = {}
+                for kwarg_key, kwarg in zip(kwargs_keys.split('--'), kwargs_string.split('--')):
+                    kwargs[kwarg_key] = kwarg
+                
+                response = make_response(redirect(url_for(next, **kwargs)))
+                s = URLSafeSerializer(app.secret_key)
+                logger.info('setting cookie')
+                response.set_cookie('driver-access', s.dumps(['access granted']), max_age=datetime.timedelta(seconds=60))
+                return response
+
+            else:
+                flash('Invalid Auth Key')
+                logger.info('access denied')
+                return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
+
+
 
 
 

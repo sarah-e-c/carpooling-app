@@ -4,7 +4,7 @@ from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
 import logging
 import time
-from carpooling.utils import PersonAlreadyExistsException, driver_required
+from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required
 from flask import render_template, request, redirect, url_for, make_response, flash, session
 import secrets
 import os
@@ -205,9 +205,7 @@ def register_new_driver_page():
         }
         try:
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
-                raise PersonAlreadyExistsException()
-            if (Passenger.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
-                raise PersonAlreadyExistsException()
+                raise PersonAlreadyExistsException
             
             new_driver = Driver(**driver_info)
 
@@ -220,7 +218,7 @@ def register_new_driver_page():
             del driver_info['car_type_2']
             del driver_info['car_color_2']
 
-
+            
             new_passenger = Passenger(**driver_info)
             db.session.add(new_passenger)
             db.session.add(new_driver)
@@ -252,39 +250,18 @@ def register_new_driver_page():
     else: 
         return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin_login_page():
-    """
-    Admin login page
-    """
-    if request.method == 'GET':
-        return render_template('admin.html', user=current_user)
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username == os.environ['ADMIN_USERNAME'] and password == os.environ['ADMIN_PASSWORD']:
-            app.admin_access_flag = True
-            return redirect(url_for('valid_auth_keys_page'))
-        else:
-            return render_template('error_page_template.html', main_message='Incorrect username or password', sub_message='The username or password you entered was incorrect. Please try again.', user=current_user)
-
-
 @app.route('/valid-auth-keys')
+@admin_required
 def valid_auth_keys_page():
     """
     This page is only accessible if the admin has logged in.
     Page for admins to see all valid auth keys and when they were created.
     """
-    if app.admin_access_flag:
-        app.admin_access_flag = False
-        auth_keys = AuthKey.query.order_by(AuthKey.date_created).all()
-        return_list = [item.key for item in auth_keys]
-        return_list_2 = [item.date_created for item in auth_keys]
-        
-        return (f'Valid auth keys: {return_list} <br> Date created: {return_list_2}')
-    else:
-        return 'You are not authorized to view this page.'
+    auth_keys = AuthKey.query.order_by(AuthKey.date_created).all()
+    return_list = [item.key for item in auth_keys]
+    return_list_2 = [item.date_created for item in auth_keys]
+    
+    return (f'Valid auth keys: {return_list} <br> Date created: {return_list_2}')
 
 @app.route('/events')
 def events_page():
@@ -396,8 +373,6 @@ def driver_carpool_signup_page(carpool_index):
             db.session.commit()
             logger.info(f'Driver {driver} signed up for carpool {carpool}')
             return render_template('error_page_template.html', main_message='Success!', sub_message='You have successfully signed up for a carpool!', user=current_user)
-
-
 
 
 @app.route('/passenger-signup/<carpool_index>', methods=['GET', 'POST'])
@@ -772,10 +747,6 @@ def passenger_page(lastname, firstname):
     # if the person is not able to see
     return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to see the passenger.', user=current_user)
 
-
-
-
-
 @login_required
 @app.route('/cancel-carpool/<carpool_id>')
 def cancel_carpool(carpool_id):
@@ -831,7 +802,6 @@ def leave_carpool(carpool_id):
             logger.info(f'User {current_user} left carpool {carpool}')
 
     return redirect(url_for('manage_carpools_page'))
-
 
 
 @app.route('/change-carpool-destination', methods=['GET', 'POST'])
@@ -922,17 +892,12 @@ def reset_password_page(user_id, token):
         else:
             return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
-        
-@app.route('/admin_home')
-def admin_home_page():
-    """
-    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
-    """
-    pass #TODO
-
 @app.route('/convert-to-driver', methods=['GET', 'POST'])
 @login_required
 def passenger_to_driver_page():
+    """
+    Page to change a passenger to a driver
+    """
     if request.method == 'GET':
         return render_template('passenger_to_driver_template.html', user=current_user)
     if request.method == 'POST':
@@ -959,6 +924,17 @@ def passenger_to_driver_page():
         db.session.commit()
         logger.info('User {} converted to driver'.format(current_user))
         return redirect(url_for('home_page'))
+
+        
+@app.route('/admin')
+@admin_required
+def admin_home_page():
+    """
+    Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
+    """
+
+    pass #TODO
+
         
 @app.route('/422')
 def team_422():

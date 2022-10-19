@@ -964,7 +964,7 @@ def manage_users_page():
     """
     Admin page that allows for the management of users
     """
-    return render_template('manage_users_page_template.html', users=User.query.all(), user=current_user)
+    return render_template('manage_users_page_template.html', users=User.query.order_by(User.is_admin.desc()).all(), user=current_user)
 
 @app.route('/admin-delete-user/<user_id>')
 @admin_required
@@ -1075,14 +1075,51 @@ def give_admin(user_id):
     """
     Method to give someone (regular) admin
     """
-    pass
+    user_to_change = User.query.get(user_id)
+    # checking that they are not already super admin (that would be bad)
+    if user_to_change.is_admin > 1:
+        logger.info('User {} is already super admin'.format(user_to_change))
+        return redirect(url_for('manage_users_page'))
+
+    user_to_change.is_admin = 1
+    db.session.commit()
+    logger.info('User {} {} given admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    return redirect(url_for('manage_users_page'))
 
 @app.route('/give_super_admin/<user_id>')
+@admin_required
 def give_super_admin(user_id):
     """
     Method to give someone super admin
+    user_id: the id of the user to give super admin
     """
-    pass
+    user_to_change = User.query.get(user_id)
+    user_to_change.is_admin = 2
+    db.session.commit()
+    logger.info('User {} {} given super admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    return redirect(url_for('manage_users_page'))
+
+@app.route('/remove-admin/<user_id>')
+@admin_required
+def remove_admin(user_id):
+    """
+    Method to remove someone from admin
+    user_id: id of user to remove admin from
+    """
+    user_to_change = User.query.get(user_id)
+    # checking that the person removing is of higher admin than user
+    if user_to_change.is_admin >= current_user.is_admin:
+        logger.info('User {} {} is of higher admin than user {} {}'.format(current_user.first_name.capitalize(), current_user.last_name.capitalize(), user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+        return redirect(url_for('manage_users_page'))
+
+    if user_to_change.is_admin > 1:
+        logger.info('User {} is already super admin'.format(user_to_change))
+        return redirect(url_for('manage_users_page'))
+
+    user_to_change.is_admin = 0
+    db.session.commit()
+    logger.info('User {} {} removed from admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    return redirect(url_for('manage_users_page'))
 
 
 @app.route('/safety')

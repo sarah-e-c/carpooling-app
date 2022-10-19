@@ -4,8 +4,8 @@ from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
 import logging
 import time
-from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required
-from flask import render_template, request, redirect, url_for, make_response, flash, session
+from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException
+from flask import render_template, request, redirect, url_for, make_response, flash, session, send_file
 import secrets
 import os
 import datetime
@@ -15,7 +15,6 @@ from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from carpooling.utils import requires_auth_key
 from itsdangerous import URLSafeSerializer
-from flask import Blueprint
 from flask_mail import Message
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
@@ -204,10 +203,15 @@ def register_new_driver_page():
             'num_seats': request.form['numberofseats']
         }
         try:
-            if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
+            if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
                 raise PersonAlreadyExistsException
             
             new_driver = Driver(**driver_info)
+
+            try:
+                _ = int(request.form['numberofseats'])
+            except ValueError:
+                raise InvalidNumberOfSeatsException
 
             # deleting the unneeded rows so it can also be converted to passenger
             del driver_info['student_or_parent']
@@ -243,6 +247,9 @@ def register_new_driver_page():
         except PersonAlreadyExistsException as e:
             logger.info(e)
             return redirect(url_for("register_new_driver_page", message='A person with that name already exists.'))
+        except InvalidNumberOfSeatsException as e:
+            logger.info(e)
+            return redirect(url_for("register_new_driver_page", message='The number of seats must be an integer.'))
         except Exception as e:
             logger.info(e)
             return redirect(url_for("register_new_driver_page", message='Something went wrong. Make sure that all inputs are valid.'))
@@ -477,11 +484,19 @@ def register_passenger_page():
         if request.form['password'] != request.form['confirmpassword']: # the form password is unequal to this password
             regions = Region.query.all()
             return render_template('passenger_sign_up_template.html', message='Passwords do not match. Please try again.', regions=regions, user=current_user)
-
+        
+        # doesn't really work
         studentandregion = StudentAndRegion.query.filter_by(student_first_name=request.form['firstname'], student_last_name=request.form['lastname']).first()
         if studentandregion is None:
             region_name = request.form['region']
-            
+        
+        if User.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
+            regions = Region.query.all()
+            return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
+        
+        if Driver.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
+            regions = Region.query.all()
+            return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
 
         else:
             region_name = studentandregion.region_name
@@ -647,6 +662,7 @@ def update_user_information_page():
         return render_template('update_user_information_template_passenger.html', user=current_user, regions=regions)
     elif request.method == 'POST':
         region = Region.query.filter_by(name=request.form['region']).first()
+        logger.debug(request.form['region'])
         driver_info = {
             'first_name':request.form['firstname'].lower(),
             'last_name': request.form['lastname'].lower(),
@@ -662,7 +678,7 @@ def update_user_information_page():
             'emergency_contact_relation': request.form['emergencycontactrelation'],
             'extra_information': request.form['note'],
             'num_seats': request.form['numberofseats'],
-            'region': region,
+            'region_name': region.name
         }
         try:
             existing_driver = current_user.driver_profile
@@ -713,13 +729,17 @@ def manage_carpools_page():
 
     try:
         driver_carpools = current_user.driver_profile.carpools
-        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_end_time > datetime.datetime.now() + datetime.timedelta(hours=5)]
+        logger.debug(driver_carpools)
+        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_date > datetime.datetime.now() + datetime.timedelta(hours=10)]
+        logger.debug(driver_carpools)
     except AttributeError as e:
         logger.debug('user is not a driver')
         logger.debug(e)
         driver_carpools = []
     passenger_carpools = current_user.passenger_profile.carpools
-    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_end_time > datetime.datetime.now() + datetime.timedelta(hours=5)]
+    logger.debug(passenger_carpools)
+    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_date > datetime.datetime.now() + datetime.timedelta(hours=10)]
+    logger.debug(passenger_carpools)
 
     return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools)
 
@@ -757,13 +777,16 @@ def cancel_carpool(carpool_id):
     for carpool in current_user.driver_profile.carpools:
         if str(carpool.index) == carpool_id:
             logger.debug('got here')
-            message = Message(
-                subject='Carpool Cancelled',
-                recipients=[passenger.email_address for passenger in carpool.passengers],
-                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
-                body=f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.'
-            )
-            mail.send(message)
+            try:
+                message = Message(
+                    subject='Carpool Cancelled',
+                    recipients=[passenger.email_address for passenger in carpool.passengers],
+                    sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                    body=f'Hello passengers, \n\n Your carpool for {carpool.event.event_name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.'
+                )
+                mail.send(message)
+            except AssertionError as e:
+                logger.debug('No passengers were on the carpool')
             logger.info('Email sent to passengers of carpool {} about cancellation'.format(carpool))
 
             carpool.driver = None
@@ -936,9 +959,9 @@ def admin_home_page():
     pass #TODO
 
         
-@app.route('/422')
-def team_422():
-    pass # TODO
+@app.route('/safety')
+def safety():
+    return render_template('safety.html')
 
 # @app.route('/mailtest')
 # def mail_test():

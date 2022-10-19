@@ -57,7 +57,7 @@ class Carpool(db.Model):
     driver_index = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
     driver = db.relationship('Driver', backref=db.backref('carpools', lazy=True))
     num_passengers = db.Column(db.Integer, nullable=False)
-    event_index = db.Column(db.String, db.ForeignKey('events.index'), nullable=False)
+    event_index = db.Column(db.Integer, db.ForeignKey('events.index'), nullable=False)
     event = db.relationship('Event', backref=db.backref('carpools', lazy=True))
     destination = db.Column(db.String, nullable=False)
     extra_information = db.Column(db.String)

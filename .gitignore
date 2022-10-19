@@ -5,3 +5,4 @@ env/
 testing.py
 .env
 venv
+latest.dump

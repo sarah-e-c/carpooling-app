@@ -12,8 +12,12 @@ logger = logging.getLogger(__name__)
 
 class PersonAlreadyExistsException(Exception):
     """Exception for a person already existing """
-    def __init__():
-        super().__init__()
+    pass
+
+class InvalidNumberOfSeatsException(Exception):
+    """Exception for an invalid number of seats"""
+    pass
+
 
 def critical_error():
     """Critical error function"""
@@ -108,4 +112,9 @@ def driver_required(function):
     return wrapper
 
 
+def initial_set_up():
+    """
+    Function for setting up the initial admin user.
+    """
 
+    

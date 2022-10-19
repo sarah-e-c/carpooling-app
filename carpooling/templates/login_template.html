@@ -1,19 +1,20 @@
 {% extends 'bases/carrd_base.html' %}
 
-{% block title %}Forgot Password{% endblock %}
-{% set active_page='login_help' %}
+{% block title %}Log In{% endblock %}
+{% set active_page='login' %}
 
 {% block main %}
+
 <div id="image01" class="style1 image">
     <span class="frame">
         <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
     </span>
 </div>
-<h1 id="text01" class="style1">Reset Passord</h1>
+<h1 id="text01" class="style1">User Log In</h1>
 <h2 id="text02" class="style2">{{message}}</h2>
 <hr id="divider02" class="style1">
 <div id="text02" class="style2">
-    <form action="{{url_for("forgot_password_page")}}" method="post" class="style1" id="formtable">
+    <form action="{{url_for("login_page")}}" method="post" class="style1" id="formtable">
         <p>
         <label for="firstname">First Name</label>
         <input type="text" name="firstname" id="firstname" value="" />
@@ -23,6 +24,18 @@
         <label for="lastname">Last Name</label>
         <input type="text" name="lastname" id="lastname" value=""/>
         </p>
+        <br>
+        <p>
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" value=""/>
+            </p>
+        <br>
+
+        <p>
+            <label for="remember">Remember Me </label>
+            <input type="checkbox" name="remember" id="remember" value=""/>
+        </p>
+        <br>
 
         <ul id = "buttons01" class="style1 buttons">
             <input type="submit" value="Login" class="style1" id="submitbutton"> 
@@ -30,5 +43,4 @@
         <br>
     </form>
 </div>
-
 {% endblock %}

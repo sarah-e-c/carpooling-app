@@ -1,0 +1,99 @@
+{% extends 'bases/webflow_base.html' %}
+
+
+{% set title='Manage Users' %}
+
+{% block subtitle %} Upgrade and delete users {% endblock %}
+
+{% block main %}
+{% for user_ in users%}
+<div class="regiondiv">
+    <h3 class="style2">
+        {% if user_.is_admin > 1 %}
+        Super Admin: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
+        {% elif user_.is_admin > 0 %}
+        Admin: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
+        {% else %}
+        User: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
+        {% endif %}
+    </h3>
+    <p class="style2"> Actions </p>
+    <div class="style1">
+        <ul class="style1 buttons">
+            {% if (user.is_admin > user_.is_admin) %}
+            <li>
+                <a href="{{ url_for('admin_delete_user', user_id = user_.id)}}"
+                    onclick="confirm_delete_user(event)" class="button n01">
+                    <span class="label">Delete User</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if (user_.is_admin < 1) %} 
+            <li>
+                <a href="{{ url_for('give_admin', user_id = user_.id)}}"
+                    onclick="confirm_make_admin(event)" class="button n01">
+                    <span class="label">Make Basic Admin</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if (user_.is_admin < 2) and (user.is_admin> 1) %}
+                <li>
+                    <a href="{{ url_for('give_super_admin', user_id = user_.id)}}"
+                        onclick="confirm_make_super_admin(event)" class="button n01">
+                        <span class="label">Make Super Admin</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% if (user_.is_admin > 0) and (user.is_admin > user_.is_admin) %}
+            <li>
+                <a href="{{ url_for('remove_admin', user_id = user_.id)}}"
+                    onclick="confirm_remove_admin(event)" class="button n01">
+                    <span class="label">Remove Admin rivileges</span>
+                </a>
+            </li>
+        {% endif %}
+
+        </ul>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirm_valid_driver(e) {
+        if ("{{user.is_authenticated }}" == "False") {
+            e.preventDefault();
+            alert("You must be logged in to drive a carpool!");
+        }
+
+    }
+
+    function confirm_delete_user(e) {
+        if (!confirm("Are you sure you want to delete this user?")) {
+            e.preventDefault();
+        }
+    }
+    function confirm_logout(e) {
+
+        if (!confirm("Are you sure you want to logout?")) {
+            e.preventDefault();
+        }
+    }
+    function confirm_make_admin(e) {
+        if (!confirm("Are you sure you want to make this user an admin?")) {
+            e.preventDefault();
+        }
+    }
+    function confirm_make_super_admin(e) {
+        if (!confirm("Are you sure you want to make this user a super admin?")) {
+            e.preventDefault();
+        }
+    }
+    function confirm_remove_admin(e) {
+        if (!confirm("Are you sure you want to remove admin privileges from this user?")) {
+            e.preventDefault();
+        }
+    }
+</script>
+{% endblock %}

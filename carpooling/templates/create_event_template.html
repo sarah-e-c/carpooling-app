@@ -1,0 +1,66 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% block title %}Create New Event{% endblock %}
+
+{% set active_page='events' %}
+
+{% block main %}
+
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+    </span>
+</div>
+<h1 id="text01" class="style1">Create New Event</h1>
+<h2 id="text07" class="style2">{{ message }}</h2>
+<hr id="divider02" class="style1">
+<div id="text02" class="style2">
+    <form action="{{url_for("create_event_page")}}" method="post">
+        <div id="formtable">
+        <p>
+        <label for="eventname">Event Name</label>
+        
+        <input type="text" id="eventname" name="eventname" placeholder="Friday Meeting" class="input1" required="required">
+        </p>
+        <br>
+
+        <p>
+            <label for="eventdate">Event Date  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="input1" required="required">
+            </p>
+            <br>
+        <p>
+
+        <label for="eventstarttime">Event Start Time &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+        <input type="time" id="eventstarttime" name="eventstarttime" placeholder="4:00" class="input1" required="required">
+        </p>
+        <br>
+
+        <p>
+            <label for="eventendtime">Event End Time</label>
+            <input type="time" id="eventendtime" name="eventendtime" placeholder="8:30" class="input1" required="required">
+        </p>
+        <br>
+
+        <p>
+        <label for="eventlocation">Event Location</label>
+        <input type="text" id="eventlocation" name="eventlocation" placeholder="Maggie L. Walker Governor's School" class="input1">
+        </p>
+        <br>
+
+        <p>
+            <label for="eventdescription">Event Description</label>
+            <input type="text" id="eventdescription" name="eventdescription" placeholder="Normal Friday Meeting" class="input1">
+            </p>
+            <br>
+
+        <p>
+      
+        <ul id = "buttons01" class="style1 buttons">
+            <input type="submit" value="Create" class="style1" id="submitbutton"> 
+        </ul>
+        <br>
+    </form>
+</div>
+
+{% endblock %}

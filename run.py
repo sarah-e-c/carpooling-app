@@ -195,9 +195,9 @@ def make_admin(first_name, last_name):
     db.session.commit()
 
 if __name__ == '__main__': # run app
-    # with app.app_context() as f:
-    # #     db.create_all()
-    # #     initial_set_up()
-    #     make_admin('sarah', 'crowder')
+    with app.app_context() as f:
+        # db.create_all()
+        # initial_set_up()
+        make_admin('sarah', 'crowder')
     logging.basicConfig(level=logging.DEBUG)
     app.run(debug=True)

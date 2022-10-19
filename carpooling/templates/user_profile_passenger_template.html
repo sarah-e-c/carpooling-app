@@ -1,0 +1,48 @@
+{% extends 'bases/carrd_base.html'%}
+
+{% set active_page='user_profile'%}
+
+{% block title %}{{ user.first_name.capitalize() }} {{ user.last_name.capitalize() }}{% endblock %}
+
+{% block main %}
+<h1 id="text02" class="style1" style="opacity: 1; transform: none;"> User: {{ user.first_name }} {{ user.last_name }}</h1>
+<p id="text07" class="style2" style="opacity: 1; transform: none;">{{ user.driver_profile.student_or_parent }}</p>
+<p id="text01" class="style2" style="opacity: 1; transform: none;">
+    <span class="p">
+        <br>
+         Email: {{ user.passenger_profile.email_address }}
+        <br>
+         Phone number: {{ user.passenger_profile.phone_number }}
+        <br>
+         Emergency contact number: {{user.passenger_profile.emergency_contact_number}}
+        <br>
+         Emergency contact relationship: {{user.passenger_profile.emergency_contact_relation}}
+        <br>
+         Note: {{user.passenger_profile.extra_information}}
+         <br>
+         Region: {{user.passenger_profile.region_name}}
+         <br>
+         Last authentication update: {{user.get_auth_key_date()}}
+
+    </span>
+</p>
+<p id="text02" class="style2" style="opacity: 1; transform: none;"> Actions</p>
+<ul id="buttons01" class="style1 buttons">
+    <li>
+        <a href="{{url_for('update_user_information_page')}}" class="button n01">
+            <span class="label"><b>Edit Information</b></span>
+        </a>
+        <a href="{{url_for('forgot_password_page')}}" class="button n01">
+            <span class="label"><b>Reset Password</b></span>
+        </a>
+        <br>
+        <a href="{{url_for('manage_carpools_page')}}" class="button n01">
+            <span class="label"><b>Manage Carpools</b></span>
+        </a>
+        <a href="{{url_for('passenger_to_driver_page')}}" class="button n01">
+            <span class="label"><b>Convert to Driver</b></span>
+        </a>
+    
+    </li>
+</ul>
+{% endblock %}

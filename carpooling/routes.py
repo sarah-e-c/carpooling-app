@@ -20,7 +20,7 @@ from flask_mail import Message
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
 
-
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # logFormatter = logging.Formatter(fmt=' %(name)s :: %(levelname)-8s :: %(message)s')
@@ -89,7 +89,7 @@ def driver_page(lastname, firstname):
                     'extra_information': driver.extra_information}
 
                 
-    return render_template('driver_page_template.html', **driver_info, user=current_user)
+    return render_template('driver_template.html', **driver_info, user=current_user)
 
 
 @app.route('/verify_auth_key/<next>/<kwargs_keys>/<kwargs_string>', methods=['GET', 'POST'])
@@ -185,7 +185,7 @@ def register_new_driver_page():
         message = request.args.get('message')
         if message is None:
             message = 'Register to be a driver for team 422!'
-        return render_template('driver_sign_up_template.html', message=message, user=current_user)
+        return render_template('driver_signup_template.html', message=message, user=current_user)
     if request.method == 'POST':
         driver_info = {
             'first_name':request.form['firstname'].lower(),
@@ -254,9 +254,9 @@ def register_new_driver_page():
         except Exception as e:
             logger.info(e)
             return redirect(url_for("register_new_driver_page", message='Something went wrong. Make sure that all inputs are valid.'))
-        return render_template('error_page_template.html', main_message='Success!', sub_message='Thank you for helping team 422!', user=current_user)
+        return render_template('error_template.html', main_message='Success!', sub_message='Thank you for helping team 422!', user=current_user)
     else: 
-        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 @app.route('/valid-auth-keys')
 @admin_required
@@ -279,7 +279,7 @@ def events_page():
     current_events = Event.query.filter(Event.event_date >= datetime.datetime.now()).all()
     print(current_events)
     
-    return render_template('events_page_template.html', events=current_events, user=current_user)
+    return render_template('events_template.html', events=current_events, user=current_user)
 
 @app.route('/event/<event_index>')
 def event_page(event_index):
@@ -290,7 +290,7 @@ def event_page(event_index):
     logger.info(Event.query.all()[0].index)
     logger.info(event)
    
-    return render_template('event_page_template.html', event=event, regions=Region.query.all(), user=current_user)
+    return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
 
 @app.route('/create-event', methods=['GET', 'POST'])
 @login_required
@@ -303,7 +303,7 @@ def create_event_page():
         message = request.args.get('message')
         if message is None:
             message = 'Create an Event'
-        return render_template('create_event_page_template.html', message=message, user=current_user)
+        return render_template(' create_event_template.html', message=message, user=current_user)
 
     
     if request.method == 'POST':
@@ -335,7 +335,7 @@ def create_event_page():
 
         return redirect(url_for('events_page'))
     else: 
-        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 
 @app.route('/driver-signup/<carpool_index>', methods=['GET', 'POST'])
@@ -356,7 +356,7 @@ def driver_carpool_signup_page(carpool_index):
             carpool.driver_index = current_user.driver_profile.index
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
-            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up to drive! Thank you for helping the team!', user=current_user) 
+            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up to drive! Thank you for helping the team!', user=current_user) 
 
         carpool = Carpool.query.get(carpool_index)
         return render_template('driver_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
@@ -380,7 +380,7 @@ def driver_carpool_signup_page(carpool_index):
 
             db.session.commit()
             logger.info(f'Driver {driver} signed up for carpool {carpool}')
-            return render_template('error_page_template.html', main_message='Success!', sub_message='You have successfully signed up for a carpool!', user=current_user)
+            return render_template('error_template.html', main_message='Success!', sub_message='You have successfully signed up for a carpool!', user=current_user)
 
 
 @app.route('/passenger-signup/<carpool_index>', methods=['GET', 'POST'])
@@ -397,10 +397,10 @@ def passenger_carpool_signup_page(carpool_index):
             carpool.passengers.append(current_user.passenger_profile)
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
-            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up for a carpool!', user=current_user)
+            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up for a carpool!', user=current_user)
         else:
             carpool = Carpool.query.get(carpool_index)
-            return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
+            return render_template('passenger_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
 
 
     if request.method == 'POST':
@@ -440,12 +440,12 @@ def passenger_carpool_signup_page(carpool_index):
                     logger.warning('email not sent to driver')
                 
 
-                return render_template('error_page_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
+                return render_template('error_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
 
 
             except Exception as e:
                 logger.debug(e)
-                return render_template('passenger_carpool_sign_up_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
+                return render_template('passenger_carpool_signup_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
 
         else:
             passenger.extra_information = request.form['note']
@@ -463,7 +463,7 @@ def passenger_carpool_signup_page(carpool_index):
             )
             mail.send(message)
             logger.info('email sent to driver')
-            return render_template('error_page_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
+            return render_template('error_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
 
 
     carpool  = Carpool.query.get(carpool_index)
@@ -487,8 +487,10 @@ def register_passenger_page():
             return render_template('passenger_sign_up_template.html', message='Passwords do not match. Please try again.', regions=regions, user=current_user)
         
         # doesn't really work
-        region_name = request.form['region']
+        region_name = request.form.get('region')
         
+
+
         if User.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
             regions = Region.query.all()
             return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
@@ -529,11 +531,12 @@ def register_passenger_page():
 
 
         except Exception as urMom:
-            logger.info(urMom)
-            return render_template('passenger_sign_up_template.html', message='There was an error', user=current_user)
+            regions = Region.query.all()
+            logger.debug(urMom)
+            return render_template('passenger_sign_up_template.html', message='There was an error', user=current_user, regions=regions)
         
     
-        return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up!', user=current_user)
+        return render_template('error_template.html', main_message='Success!', sub_message='You have signed up!', user=current_user)
 
 
         
@@ -578,7 +581,7 @@ def legacy_driver_to_login_page():
             )
             db.session.add(new_user)
             db.session.commit()
-            return render_template('error_page_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
+            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
         except Exception as e:
             logger.debug(e)
             return render_template('legacy_driver_to_login_template.html', message='There was an error. Please try again.', user=current_user)
@@ -593,15 +596,15 @@ def login_page():
     Login page for drivers and passengers.
     """
     if request.method == 'GET':
-        return render_template('login.html', message='Login!', user=current_user)
+        return render_template('login_template.html', message='Login!', user=current_user)
     if request.method == 'POST':
         user = User.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
         if user is None:
             logger.debug('attempted user does not exist')
-            return render_template('login.html', message='That user does not exist. Please try again.', user=current_user)
+            return render_template('login_template.html', message='That user does not exist. Please try again.', user=current_user)
         if user.password is None:
             logger.debug('attempted user is probably a legacy driver')
-            return render_template('error_page_template.html', main_message='Not registered', sub_message='The user exists in the database but is not registered to a user. Please use update/register.', user=current_user)
+            return render_template('error_template.html', main_message='Not registered', sub_message='The user exists in the database but is not registered to a user. Please use update/register.', user=current_user)
 
         if check_password_hash(user.password, request.form['password']):
             try:
@@ -611,7 +614,7 @@ def login_page():
             login_user(user, remember=remember)
             return redirect(url_for('home_page'))
         else:
-            return render_template('login.html', message='Incorrect password. Please try again.', user=current_user)
+            return render_template('login_template.html', message='Incorrect password. Please try again.', user=current_user)
 
 
 @app.route('/generic-register', methods=['GET', 'POST'])
@@ -628,7 +631,7 @@ def login_help_page():
     """
     Page for people to go to to change their password, see if they exist, or other
     """
-    return render_template('login_help_page_template.html', user=current_user)
+    return render_template('login_help_template.html', user=current_user)
 
 
 
@@ -639,9 +642,9 @@ def user_profile_page():
     Page that allows for the management of the user profile
     """
     if current_user.is_driver() == 'Yes':
-        return render_template('user_profile_page_template.html', user=current_user)
+        return render_template('user_profile_template.html', user=current_user)
     else: 
-        return render_template('user_profile_passenger_page_template.html', user=current_user)
+        return render_template('user_profile_passenger_template.html', user=current_user)
 
 
 @login_required
@@ -714,7 +717,7 @@ def update_user_information_page():
             logger.debug(e)
             return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user)
     else: 
-        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 
 
@@ -761,10 +764,10 @@ def passenger_page(lastname, firstname):
         if (carpool.event.event_start_time) > datetime.datetime.now():
             for passenger in carpool.passengers:
                 if (passenger.first_name == firstname) and (passenger.last_name == lastname):
-                    return render_template('passenger_page_template.html', user=current_user, passenger=passenger)
+                    return render_template('passenger_template.html', user=current_user, passenger=passenger)
 
     # if the person is not able to see
-    return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to see the passenger.', user=current_user)
+    return render_template('error_template.html', main_message='Go Away', sub_message='You do not have access to see the passenger.', user=current_user)
 
 @login_required
 @app.route('/cancel-carpool/<carpool_id>')
@@ -796,7 +799,7 @@ def cancel_carpool(carpool_id):
             return redirect(url_for('manage_carpools_page'))
     
     logger.debug(f'{current_user.driver_profile.carpools}')
-    return render_template('error_page_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
+    return render_template('error_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
 
 
 @app.route('/leave-carpool/<carpool_id>')
@@ -833,7 +836,7 @@ def change_carpool_destination():
     Page that allows for the change of the destination of a carpool.
     """
     if request.method == 'GET':
-        return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
     else:
         logger.info('changing carpool destination')
         new_destination = request.headers['New-Carpool-Destination']
@@ -901,7 +904,7 @@ def reset_password_page(user_id, token):
         if user and user.verify_reset_password_token(token):
             return render_template('reset_password_template.html', user=current_user, user_id=user_id, token=token)
         else:
-            return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+            return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
     if request.method == 'POST':
         user = User.query.filter_by(id=user_id).first()
         if user and user.verify_reset_password_token(token):
@@ -912,7 +915,7 @@ def reset_password_page(user_id, token):
                 return redirect(url_for('login_page'))
             else: return render_template('reset_password_template.html', message='Passwords do not match. Please try again.', user=current_user, user_id=user_id, token=token)
         else:
-            return render_template('error_page_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+            return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 @app.route('/convert-to-driver', methods=['GET', 'POST'])
 @login_required
@@ -964,7 +967,7 @@ def manage_users_page():
     """
     Admin page that allows for the management of users
     """
-    return render_template('manage_users_page_template.html', users=User.query.order_by(User.is_admin.desc()).all(), user=current_user)
+    return render_template('manage_users_template.html', users=User.query.order_by(User.is_admin.desc()).all(), user=current_user)
 
 @app.route('/admin-delete-user/<user_id>')
 @admin_required
@@ -1127,13 +1130,4 @@ def safety():
     """
     Be safe
     """
-    return render_template('safety.html')
-
-# @app.route('/mailtest')
-# def mail_test():
-#     """
-#     Page that allows for the testing of emails
-#     """
-#     message = Message('Hello', sender= 'mechtechscarpooling@zohomail.com' , recipients=['sarah.beth.crowder@gmail.com'], body='This is a test email')
-#     mail.send(message)
-#     return 'Sent'
+    return render_template('safety.html', user=current_user)

@@ -1,0 +1,52 @@
+{% extends 'bases/driver_info_base.html' %}
+
+{% block title %}{{ firstname }} {{ lastname }}{% endblock %}
+
+{% block main %}
+
+<h1 id="text02" class="style1" style="opacity: 1; transform: none;">{{ firstname }} {{ lastname }}</h1>
+<p id="text07" class="style2" style="opacity: 1; transform: none;">{{ student_or_parent }}</p>
+<ul id="icons01" class="style1 icons">
+    <li style="opacity: 1; transform: none;">
+        <a class="n01" href= {{ email_string }}>
+            <svg>
+                <use xlink:href="#icon-901"></use>
+            </svg>
+            <span class="label">Email (Alt)</span>
+        </a>
+    </li>
+    <li style="opacity: 1; transform: none;">
+        <a class="n02" href={{phone_number_string}}>
+            <svg>
+                <use xlink:href="#icon-90c"></use>
+            </svg>
+            <span class="label">Mobile</span>
+        </a>
+    </li>
+</ul>
+<p id="text01" class="style2" style="opacity: 1; transform: none;">
+    <span class="p">
+        Number of seats: {{ number_seats }}
+        <br>
+        Years with license {{licenseyears}}
+        <br>
+         Car type: {{ car_type_1 }}
+        <br>
+         Car color: {{ car_color_1}}
+        <br>
+         Email: {{ email }}
+        <br>
+         Phone number: {{ phone_number }}
+        <br>
+         Secondary car type: {{ car_type_2}}
+        <br>
+         Secondary car color: {{car_color_2}}
+        <br>
+         Emergency contact number: {{emergencycontact}}
+        <br>
+         Emergency contact relationship: {{emergencycontactrelation}}
+        <br>
+         Note: {{extra_information}}
+    </span>
+</p>
+{% endblock %}

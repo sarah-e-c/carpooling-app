@@ -6,3 +6,4 @@ testing.py
 .env
 venv
 latest.dump
+instance

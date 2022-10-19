@@ -1,20 +1,38 @@
 {% extends 'bases/carrd_base.html' %}
 
+{% block title %}Driver Sign Up{% endblock %}
+
 {% set active_page='register' %}
-{% block title %}Passenger Sign Up {% endblock %}
 
 {% block main %}
+
 <div id="image01" class="style1 image">
     <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+        <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
     </span>
 </div>
-<h1 id="text01" class="style1">Passenger Sign up</h1>
+<h1 id="text01" class="style1">Driver Sign up</h1>
 <h2 id="text07" class="style2">{{ message }}</h2>
 <hr id="divider02" class="style1">
 <div id="text02" class="style2">
-    <form action="{{url_for('register_passenger_page')}}" method="post">
+    <form action="{{url_for("register_new_driver_page")}}" method="post">
         <div id="formtable">
+        <p>
+        <label for="studentorparent">Student or Parent</label>
+        
+        <input type="text" id="studentorparent" name="studentorparent" placeholder="Parent" class="input1" required="required">
+        </p>
+        <br>
+        <p>
+        <label for="licenseyears">Number of Years with License (if student)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+        <input type="text" id="licenseyears" name="licenseyears" placeholder="1" class="input1">
+        </p>
+        <br>
+        <p>
+            <label for="numberofseats">Max Number of Passengers</label>
+            <input type="text" id="numberofseats" name="numberofseats" placeholder="3" class="input1" required="required">
+        </p>
+        <br>
         <p>
         <label for="firstname">First Name</label>
         <input type="text" id="firstname" name="firstname" placeholder="John" class="input1" required="required">
@@ -25,7 +43,26 @@
         <input type="text" id="lastname" name="lastname" placeholder="Doe" class="input1" required="required">
         </p>
         <br>
-
+        <p>
+        <label for="cartype1">Primary Car Type</label>
+        <input type="text" id="cartype1" name="cartype1" placeholder="Tesla Model X" class="input1" required="required">
+        </p>
+        <br>
+        <p>
+        <label for="carcolor1">Primary Car Color</label>
+        <input type="text" id="carcolor1" name="carcolor1" placeholder="Silver" class="input1" required="required">
+        </p>
+        <br>
+        <p>
+            <label for="cartype2">Secondary Car Type</label>
+            <input type="text" id="cartype2" name="cartype2" placeholder="Tesla Model Y" class="input1">
+            </p>
+        <br>
+        <p>
+            <label for="carcolor2">Secondary Car Color</label>
+            <input type="text" id="carcolor2" name="carcolor2" placeholder="Gold" class="input1">
+        </p>
+        <br>
         <p>
         <label for="email">Email Address</label>
         <input type="text" id="email" name="email" placeholder="johndoe@example.com" class="input1" required="required">
@@ -46,13 +83,11 @@
             <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" placeholder="Mother" class="input1" required="required">
         </p>
         <br>
-
         <p>
         <label for="note">Note</label>
         <input type="text" id="note" name="note" placeholder="I like dogs!" class="input1">
         </p>
         <br>
-
         <p>
             <label for="password">Password</label>
             <input type="password" id="password" name="password" class="input1">
@@ -65,22 +100,12 @@
         </p>
         <br>
 
-        <p>
-            <label for="region">Region</label>
-            <select name="region"> 
-                {% for region in regions%}
-                <option value="{{region.name}}" selected> {{region.name}}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <br>
-
         </div>
-
         <ul id = "buttons01" class="style1 buttons">
             <input type="submit" value="Submit" class="style1" id="submitbutton"> 
         </ul>
         <br>
     </form>
 </div>
+
 {% endblock %}

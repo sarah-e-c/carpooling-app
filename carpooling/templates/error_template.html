@@ -1,0 +1,27 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% set active_page='home' %}
+
+{% block title %}{{main_message}}{% endblock %}
+
+{% block main %}
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+    </span>
+</div>
+<h1 id="text01" class="style1">{{main_message}}</h1>
+<hr id="divider02" class="style1">
+<div id="text02" class="style2">
+    <p class="style2">
+        {{sub_message}}
+    </p>
+</div>
+<ul id="buttons01" class="style1 buttons">
+    <li>
+        <a href="{{url_for('home_page')}}" class="button n01">
+            <span class="label">Return Home</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}

@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Safety</title>
-</head>
-<body>
-    <img src="{{ url_for('static', filename='safety.jpg') }}" alt="User Image">
-</body>
-</html>
+{% extends 'bases/carrd_base.html' %}
+
+{% set active_page='home' %}
+
+{% block title %}Safety{% endblock %}
+
+{% block main %}
+<h1 class="style1"> Safety </h1>
+<img style="width: 500px" src="{{ url_for('static', filename='safety.jpg') }}" alt="User Image">
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% set active_page='events' %}
+
+{% block title %}Passenger Sign Up{% endblock %}
+
+{% block main %}
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt="" />
+    </span>
+</div>
+<h1 id="text01" class="style1">{{carpool.event.event_name.capitalize()}}Passenger Sign Up</h1>
+<h2 id="text07" class="style2">{{ message }}</h2>
+<hr id="divider02" class="style1">
+<div id="text02" class="style2">
+    <form action="{{url_for(" passenger_carpool_signup_page", carpool_index=carpool.index)}}" method="post">
+        <div id="formtable">
+            <p>
+                <label for="firstname">First Name</label>
+
+                <input type="text" id="firstname" name="firstname" placeholder="John" class="input1"
+                    required="required">
+            </p>
+            <br>
+
+            <p>
+                <label for="lastname">Last Name
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="text" id="lastname" name="lastname" placeholder="Cena" class="input1">
+            </p>
+            <br>
+
+            <p>
+                <label for="phonenumber">Phone Number
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="text" id="phonenumber" name="phonenumber" placeholder="8045553333" class="input1">
+            </p>
+            <br>
+
+            <p>
+                <label for="email">Email Address
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="text" id="email" name="email" placeholder="example@example.com" class="input1">
+            </p>
+            <br>
+
+            <p>
+                <label for="emergencycontact">Emergency Contact Phone Number
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="text" id="emergencycontact" name="emergencycontact" placeholder="8045554444"
+                    class="input1">
+            </p>
+            <br>
+
+            <p>
+                <label for="emergencycontactrelation">Emergency Contact Relationship
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" placeholder="Mother"
+                    class="input1">
+            </p>
+            <br>
+
+            <p>
+                <label for="note">Note &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                </label>
+                <input type="text" id="note" name="note" placeholder="Mother" class="input1">
+            </p>
+            <br>
+
+        </div>
+        <ul id="buttons01" class="style1 buttons">
+            <input type="submit" value="Submit" class="style1" id="submitbutton">
+        </ul>
+        <br>
+    </form>
+    <br>
+    <h2 class="style2">Not registered?</h2>
+    <ul id="buttons02" class="style1 buttons">
+        <li style="opacity: 1; transform: none; size: 10px;">
+            <a href="{{url_for('register_passenger_page')}}" class="button n01" style="size:10px">
+                <svg>
+                    <use xlink:href="#icon-b64">
+                        Shadow Content (User Agent)
+                    </use>
+                </svg>
+                <span class="label">Register Now</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+{% endblock %}

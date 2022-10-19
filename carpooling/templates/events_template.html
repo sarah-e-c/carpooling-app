@@ -1,0 +1,38 @@
+{% extends 'bases/webflow_base.html' %}
+
+{% set title = 'Upcoming Events'%}
+{% set active_page='events' %}
+
+{% block subtitle %}Sign up to drive or ride! {% endblock %}
+
+{% block title %}{{main_message}}{% endblock %}
+
+{% block main %}
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<ul id="buttons01" class="style1 buttons">
+    
+    <li>
+        {% for event in events %}
+        <a href="{{url_for('event_page', event_index=event.index)}}" class="button n01">
+            <span class="label">{{event.event_name.capitalize()}} {{event.event_date.strftime('%m/%d/%Y')}}</span>
+        {% endfor %}
+        </a>
+    </li>
+</ul>
+<br>
+<br>
+<h3 class="style2" style="align-self: center">Don't see the event you want?</h3>
+<ul id="buttons01" class="style1 buttons">
+    <li>
+        <a href="{{url_for('create_event_page')}}" class="button n01">
+            <span class="label">Create Event</span>
+        </a>
+    </li>
+</ul>
+
+{% endblock %}

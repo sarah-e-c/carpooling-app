@@ -6,10 +6,11 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_session import Session
 from flask import Blueprint
-
+import logging
 
 app = Flask(__name__)
 database_url = os.environ.get('DATABASE_URL')
+logging.basicConfig(level=logging.DEBUG)
 
 #database_url = 'sqlite:///test.db' # for testing
 

@@ -35,6 +35,8 @@ def requires_auth_key(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if current_user.is_authenticated:
+            if current_user.is_admin > 0: # admins don't need auth keys
+                return function(*args, **kwargs) 
             try:
                 if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key) or (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key):
                 # encoding the key word args for the url
@@ -94,6 +96,21 @@ def admin_required(function):
             return redirect(url_for('home_page'))
     return wrapper
 
+def super_admin_required():
+    """
+    Decorator for checking if a user is a super admin. If they are not, they are redirected to the home page.
+    """
+    
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if current_user.is_authenticated:
+            if current_user.is_admin > 1:
+                return function(*args, **kwargs)
+            else:
+                return redirect(url_for('home_page'))
+        else:
+            return redirect(url_for('home_page'))
+    return wrapper
 
 def driver_required(function):
     """

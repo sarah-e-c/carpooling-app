@@ -1,10 +1,11 @@
 from lib2to3.pgen2 import driver
+from multiprocessing.sharedctypes import Value
 from carpooling import db
 from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
 import logging
 import time
-from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException
+from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException, super_admin_required
 from flask import render_template, request, redirect, url_for, make_response, flash, session, send_file
 import secrets
 import os
@@ -486,9 +487,7 @@ def register_passenger_page():
             return render_template('passenger_sign_up_template.html', message='Passwords do not match. Please try again.', regions=regions, user=current_user)
         
         # doesn't really work
-        studentandregion = StudentAndRegion.query.filter_by(student_first_name=request.form['firstname'], student_last_name=request.form['lastname']).first()
-        if studentandregion is None:
-            region_name = request.form['region']
+        region_name = request.form['region']
         
         if User.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
             regions = Region.query.all()
@@ -497,9 +496,6 @@ def register_passenger_page():
         if Driver.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
             regions = Region.query.all()
             return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
-
-        else:
-            region_name = studentandregion.region_name
 
         try:
             passenger_information = {
@@ -608,7 +604,11 @@ def login_page():
             return render_template('error_page_template.html', main_message='Not registered', sub_message='The user exists in the database but is not registered to a user. Please use update/register.', user=current_user)
 
         if check_password_hash(user.password, request.form['password']):
-            login_user(user, remember=request.form['remember'])
+            try:
+                remember = request.form.get('remember')
+            except ValueError:
+                remember = False
+            login_user(user, remember=remember)
             return redirect(url_for('home_page'))
         else:
             return render_template('login.html', message='Incorrect password. Please try again.', user=current_user)
@@ -704,11 +704,10 @@ def update_user_information_page():
             logger.info(f'Passenger Data modified: {existing_passenger}')
 
             # updating the user information
-            existing_user = current_user
-            existing_user.first_name = request.form['firstname'].lower()
-            existing_user.last_name = request.form['lastname'].lower()
+            current_user.first_name = request.form['firstname'].lower()
+            current_user.last_name = request.form['lastname'].lower()
             db.session.commit()
-            logger.info(f'User Data modified: {existing_user}')
+            logger.info(f'User Data modified: {current_user}')
 
             return redirect(url_for("user_profile_page"))
         except Exception as e:
@@ -958,9 +957,139 @@ def admin_home_page():
 
     pass #TODO
 
-        
+
+@app.route('/manage-users')
+@admin_required
+def manage_users_page():
+    """
+    Admin page that allows for the management of users
+    """
+    return render_template('manage_users_page_template.html', users=User.query.all(), user=current_user)
+
+@app.route('/admin-delete-user/<user_id>')
+@admin_required
+def admin_delete_user(user_id):
+    """
+    Method to delete a user
+    """
+
+    # grabbing the user
+    user_to_delete = User.query.get(user_id)
+    logger.info('Delete requested for user {} {}'.format(user_to_delete.first_name, user_to_delete.last_name))
+
+    # checking that the user being deleted is not of a higher level than the current one
+    if user_to_delete.is_admin >= current_user.is_admin:
+        return redirect(url_for('manage_users_page'))
+
+    # notifying the user that they are being deleted
+    try:
+        message = Message (
+            subject='Your Account has been deleted',
+            recipients= [user_to_delete.passenger_profile.email_address],
+            sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+            body=f"""
+            Hello {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()}, \n\n
+            Your account has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+            """,
+        )
+        mail.send(message)
+        logger.info('User {} notified of deletion'.format(user_to_delete))
+    except Exception as e:
+        logger.warning('User {} not notified of deletion, probably due to invalid email address'.format(user_to_delete))
+        logger.debug(e)
+
+    # notifying their passengers (if any) that they are being deleted
+    try:
+        user_to_delete_upcoming_carpools = [carpool for carpool in user_to_delete.driver_profile.carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(days=1)]
+    except AttributeError as e:
+        logger.debug(e)
+        user_to_delete_upcoming_carpools = []
+    
+    for carpool in user_to_delete_upcoming_carpools:
+        for passenger in carpool.passengers:
+            try:
+                message = Message (
+                    subject='Your Driver has been deleted',
+                    recipients= [passenger.passenger_profile.email_address],
+                    sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com')
+                    )
+                message.body = f"""
+                Hello {passenger.first_name.capitalize()} {passenger.last_name.capitalize()}, \n\n
+                Your driver {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+                """
+                mail.send(message)
+                logger.info('Passenger {} notified of driver deletion'.format(passenger))
+            except Exception as e:
+                logger.warning('Passenger {} not notified of driver deletion, probably due to invalid email address'.format(passenger))
+                logger.debug(e)
+
+    # notifying their drivers (if any) that they are being deleted
+    user_to_delete_upcoming_carpools = [carpool for carpool in user_to_delete.passenger_profile.carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(days=1)]
+    for carpool in user_to_delete_upcoming_carpools:
+        try:
+            message = Message (
+                subject='Your Passenger has been deleted',
+                recipients= [carpool.driver.passenger_profile.email_address],
+                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                body=f"""
+                Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
+                Your passenger {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+                """
+            )
+        except Exception as e:
+            logger.warning('Driver {} not notified of passenger deletion, probably due to invalid email address'.format(carpool.driver))
+            logger.debug(e)
+
+
+    # deleting the user and their carpools
+    if user_to_delete.driver_profile is not None:
+        for carpool in user_to_delete.driver_profile.carpools:
+            carpool.driver = None
+            carpool.driver_index = None
+
+    for carpool in user_to_delete.passenger_profile.carpools:
+        try:
+            carpool.passengers.remove(user_to_delete)
+        except ValueError as e: # this means that the user was not in the carpool
+            logger.debug(e)
+            pass
+
+    db.session.commit()
+    db.session.delete(user_to_delete.passenger_profile)
+    try:
+        db.session.delete(user_to_delete.driver_profile)
+    except Exception as e:
+        logger.debug(e) # passing after this
+
+    db.session.delete(user_to_delete)
+    db.session.commit()
+
+    # redirecting back to the admin user page
+    logger.info('User deleted.')
+    return redirect(url_for('manage_users_page'))
+
+
+@app.route('/give-admin/<user_id>')
+@admin_required
+def give_admin(user_id):
+    """
+    Method to give someone (regular) admin
+    """
+    pass
+
+@app.route('/give_super_admin/<user_id>')
+def give_super_admin(user_id):
+    """
+    Method to give someone super admin
+    """
+    pass
+
+
 @app.route('/safety')
 def safety():
+    """
+    Be safe
+    """
     return render_template('safety.html')
 
 # @app.route('/mailtest')

@@ -303,7 +303,7 @@ def create_event_page():
         message = request.args.get('message')
         if message is None:
             message = 'Create an Event'
-        return render_template(' create_event_template.html', message=message, user=current_user)
+        return render_template('create_event_template.html', message=message, user=current_user)
 
     
     if request.method == 'POST':

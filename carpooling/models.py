@@ -27,6 +27,14 @@ class Driver(db.Model):
     emergency_contact_relation = db.Column(db.String, nullable=False)
     # carpools = db.relationship('Carpool', backref='driver_index', lazy=True)
     extra_information = db.Column(db.String)
+    region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=True)
+    region = db.relationship('Region', backref=db.backref('drivers', lazy=True))
+    # # address TODO add addresses
+    address_line_1 = db.Column(db.String, nullable=True)
+    address_line_2 = db.Column(db.String, nullable=True)
+    city = db.Column(db.String, nullable=True)
+    zip_code = db.Column(db.String, nullable=True)
+
 
 
     def __repr__(self):
@@ -36,6 +44,15 @@ class Driver(db.Model):
     def get_by_name(full_name):
         first_name, last_name = full_name.split(' ')
         return Driver.query.filter_by(first_name=first_name, last_name=last_name).first()
+    
+    def get_address(self):
+        """
+        Gives a pretty version of the address
+        """
+        if not self.address_line_2:
+            return f'{self.address_line_1}, {self.city}, VA {self.zip_code}'
+        else:
+            return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
         
 
 
@@ -114,6 +131,11 @@ class Event(db.Model):
     event_end_time = db.Column(db.DateTime, nullable=False)
     event_location = db.Column(db.String, nullable=False, default='Maggie Walker Governor\'s School')
     event_description = db.Column(db.String, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user = db.relationship('User', backref=db.backref('events', lazy=True))
+    passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
+
+
     #carpools = db.relationship('Carpool', backref='event', lazy=True)
 
     def get_description(self):
@@ -165,10 +187,24 @@ class Passenger(db.Model):
     region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=True)
     region = db.relationship('Region', backref=db.backref('passengers'))
     carpools = db.relationship('Carpool', secondary='passenger_carpool_links', overlaps='passengers')
+    # # address TODO add addresses
+    address_line_1 = db.Column(db.String, nullable=True)
+    address_line_2 = db.Column(db.String, nullable=True)
+    city = db.Column(db.String, nullable=True)
+    zip_code = db.Column(db.String, nullable=True)
 
 
     def __repr__(self):
         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
+
+    def get_address(self):
+        """
+        Gives a pretty version of the address
+        """
+        if not self.address_line_2:
+            return f'{self.address_line_1}, {self.city}, VA {self.zip_code}'
+        else:
+            return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
 
 class PassengerCarpoolLink(db.Model):
     """
@@ -182,6 +218,17 @@ class PassengerCarpoolLink(db.Model):
     def __repr__(self):
         return f'PassengerCarpoolLink: {self.passenger_id} {self.carpool_id}'
 
+class PassengerEventLink(db.Model):
+    """
+    Table to link passengers that need carpools to events
+    """
+    __tablename__ = 'passenger_event_links'
+    index = db.Column(db.Integer, primary_key=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'))
+    event_id = db.Column(db.Integer, db.ForeignKey('events.index'))
+
+    def __repr__(self):
+        return f'PassengerEventLink: {self.passenger_id} {self.event_id}'
 
 class StudentAndRegion(db.Model):
     """

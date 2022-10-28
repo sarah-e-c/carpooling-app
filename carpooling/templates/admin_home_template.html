@@ -1,0 +1,32 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% set active_page='home' %}
+
+{% block title %}Admin Actions{% endblock %}
+
+{% block main %}
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+    </span>
+</div>
+<h1 class="style1"> Admin Actions </h1>
+<ul id="buttons01" class="style1 buttons">
+    <li>
+        <a href="{{url_for('valid_auth_keys_page')}}" class="button n01">
+            <svg>
+                <use xlink:href="#icon-b64"></use>
+            </svg>
+            <span class="label">Valid Authorization Keys</span>
+        </a>
+        <a href="{{url_for('manage_users_page')}}" class="button n01">
+            <svg>
+                <use xlink:href="#icon-b64"></use>
+            </svg>
+            <span class="label">Manage Users</span>
+        </a>
+    </li>
+</ul>
+
+
+{% endblock %}

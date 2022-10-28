@@ -1,0 +1,81 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% set active_page='home' %}
+
+{% block title %}Request A Carpool{% endblock %}
+
+{% block main %}
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+    </span>
+</div>
+<h1 class="style1">Request A Carpool</h1>
+<form action="{{url_for('passenger_carpool_request_page', event_index=event.index)}}" method="post">
+    <div id="formtable">
+        <p>
+            <label for="firstname">First Name</label>
+
+            <input type="text" id="firstname" name="firstname" placeholder="John" class="input1"
+                required="required">
+        </p>
+        <br>
+        <p>
+            <label for="lastname">Last Name
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="text" id="lastname" name="lastname" placeholder="Cena" class="input1">
+        </p>
+        <br>
+        <p>
+            <label for="phonenumber">Phone Number
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="text" id="phonenumber" name="phonenumber" placeholder="8045553333" class="input1">
+        </p>
+        <br>
+
+        <p>
+            <label for="email">Email Address
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="text" id="email" name="email" placeholder="example@example.com" class="input1">
+        </p>
+        <br>
+
+        <p>
+            <label for="emergencycontact">Emergency Contact Phone Number
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="text" id="emergencycontact" name="emergencycontact" placeholder="8045554444"
+                class="input1">
+        </p>
+        <br>
+        <p>
+            <label for="emergencycontactrelation">Emergency Contact Relationship
+                &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" placeholder="Mother"
+                class="input1">
+        </p>
+        <br>
+        <p>
+                <label for="region">Region</label>
+                <select name="region"> 
+                    {% for region in regions%}
+                    <option value="{{region.name}}" selected> {{region.name}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+        <br>
+
+        <p>
+            <label for="note">Note &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+            </label>
+            <input type="text" id="note" name="note" placeholder="Mother" class="input1">
+        </p>
+        <br>
+        
+
+    </div>
+    <ul id="buttons01" class="style1 buttons">
+        <input type="submit" value="Submit" class="style1" id="submitbutton">
+    </ul>
+    <br>
+    </form>
+    {% endblock %}

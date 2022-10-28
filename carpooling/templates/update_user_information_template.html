@@ -92,6 +92,26 @@
             </select>
         </p>
         <br>
+        <p>
+            <label for="addressline1">Address Line 1</label>
+            <input type="text" id="addressline1" name="addressline1" placeholder="123 Example Drive" value= "{{user.driver_profile.address_line_1}}" class="input1" required="required">
+            </p>
+            <br>
+        <p>
+                <label for="addressline2">Address Line 2</label>
+                <input type="text" id="addressline2" name="addressline2" placeholder="" value= "{{user.driver_profile.address_line_2}}" class="input1">
+                </p>
+        <br>
+        <p>
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" placeholder="Richmond" class="input1" value="{{user.driver_profile.city}}" required="required">
+            </p>
+            <br>
+        <p>
+            <label for="zipcode">Zip Code</label>
+            <input type="text" id="zipcode" name="zipcode" placeholder="12345" class="input1" value ="{{user.driver_profile.zip_code}}" required="required">
+            </p>
+            <br>
 
         <p>
         <label for="note">Note</label>

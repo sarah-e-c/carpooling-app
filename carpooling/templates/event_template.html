@@ -10,6 +10,43 @@
 {% for region in regions%}
 <div class="regiondiv" style="border-color:{{region.color}}">
     <h3 class="style2">{{region.name.capitalize()}} Region</h3>
+    {% if user.is_authenticated %}
+    {% if user.passenger_profile.region_name == region.name %}
+    {% if user.passenger_profile in event.passengers_needing_ride %}
+    <div class="style1">
+        <ul class="style1 buttons">
+            <li>
+        <a href="#" class="closedbutton n01">
+            <span class="label">Carpool Requested</span>
+        </a>
+            </li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="style1">
+        <ul class="style1 buttons">
+            <li>
+        <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
+            <span class="label">I need a carpool</span>
+        </a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% else %}
+    <div class="style1">
+        <ul class="style1 buttons">
+            <li>
+        <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
+            <span class="label">I need a carpool</span>
+        </a>
+            </li>
+        </ul> <!-- Yes this logic is terrible, IM SORRY-->
+    </div>
+    {% endif %}
+    
+    
     {% for carpool in region.get_carpools_in_event(event) %}
         {% if carpool.has_driver() %}
         <div class="style1">
@@ -22,7 +59,7 @@
                 <span class="label"> {{carpool.get_passenger_number_name(i)}} </span>
             </a>
             {% else %}
-            <a href="{{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}}" class="button n01">
+            <a onclick="is_same_person(event, '{{carpool.driver}}')" href="{{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}}" class="button n01">
                 <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
                 </a>
             {% endif %}
@@ -44,7 +81,6 @@
             </a>
                 </li>
             </ul>
-            
         </div>
 
         {% endif %}
@@ -52,6 +88,29 @@
     {% endfor %}
 </div>
 {% endfor %}
+
+{% if event.user_id == current_user.id %}
+<ul class="style1 buttons">
+    <li>
+<a style="color: red"href="{{ url_for('delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+    <span class="label">Delete Event</span>
+</a>
+    </li>
+</ul>
+{% elif current_user.is_authenticated %}
+{%  if user.is_admin > 0 %}
+<ul class="style1 buttons">
+    <li>
+<a style="color: red"href="{{ url_for('delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+    <span class="label">Delete Event</span>
+</a>
+    </li>
+</ul>
+{% endif %}
+{% endif %}
+
+
+
 {% endblock %}
 
 {% block scripts %}
@@ -61,7 +120,31 @@
             e.preventDefault();
             alert("You must be logged in to drive a carpool!");
         }
-
+    }
+    function confirm_delete_event(e) {
+        if (!confirm("Are you sure you want to delete this event? Deleting this event will delete all carpool information associated with it and notify any drivers.")) {
+            e.preventDefault();
+        }
+    }
+    function confirm_sign_up_for_carpool(e) {
+        if (!confirm("Are you sure you want to request a carpool? Drivers in your area will be notified of your request.")) {
+            e.preventDefault();
+        }
     }
 </script>
+{% if user.is_authenticated %}
+<script>
+    function is_same_person(e, carpool_driver) {
+        if ("{{user.driver_profile}}" == carpool_driver) {
+            e.preventDefault();
+            alert("You cannot sign up for your own carpool!");
+        }
+    }
+</script>
+{% else %}
+<script>
+    function is_same_person(e, carpool_driver) {
+    }
+</script>
+{% endif %}
 {% endblock %}

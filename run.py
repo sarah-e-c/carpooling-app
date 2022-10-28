@@ -136,25 +136,25 @@ def initial_set_up():
         key = secrets.token_hex(4)
     )
     models.Carpool.query.delete()
-    models.User.query.delete()
-    models.Driver.query.delete()
-    models.Passenger.query.delete()
+    #models.User.query.delete()
+    #models.Driver.query.delete()
+    #models.Passenger.query.delete()
     models.Event.query.delete()
     
     models.Region.query.delete()
     south_region = models.Region(
-        name='Prince George-Petersburg-Colonial Heights-South Chesterfield',
+        name='South',
         dropoff_location='Southpark Mall',
         color='#8B0000',
     )
     henrico_region = models.Region(
-        name='Henrico and Northern Areas',
+        name='North',
         dropoff_location='Short Pump Town Center',
         color='#FF8C00',
     )
 
     eastern_region = models.Region(
-        name='New Kent-Charles City-East Prince George',
+        name='East',
         dropoff_location='New Kent High School',
         color='#FF00FF',
     )
@@ -166,21 +166,15 @@ def initial_set_up():
     )
 
     chesterfield_region = models.Region(
-        name='Central Chesterfield',
+        name='Chesterfield',
         dropoff_location='Chesterfield Towne Center',
         color='#00FF00',
-    )
-
-    west_region = models.Region(
-        name='Western Counties',
-        dropoff_location='Liberty University',
-        color='#008000',
     )
 
     db.session.add(south_region)
     db.session.add(henrico_region)
     db.session.add(richmond_region)
-    db.session.add(west_region)
+    #db.session.add(west_region)
     db.session.add(eastern_region)
     db.session.add(chesterfield_region)
     db.session.add(first_key)
@@ -196,8 +190,9 @@ def make_admin(first_name, last_name):
 
 if __name__ == '__main__': # run app
     with app.app_context() as f:
-        # db.create_all()
-        # initial_set_up()
-        make_admin('sarah', 'crowder')
+        #db.create_all()
+        #initial_set_up()
+        #make_admin('sarah', 'crowder')
+        pass
     logging.basicConfig(level=logging.DEBUG)
     app.run(debug=True)

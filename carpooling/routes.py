@@ -1,5 +1,3 @@
-from lib2to3.pgen2 import driver
-from multiprocessing.sharedctypes import Value
 from carpooling import db
 from carpooling import app, mail
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
@@ -149,9 +147,6 @@ def verify_auth_key_page(next, kwargs_keys, kwargs_string):
                 return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
 
 
-
-
-
 @app.route('/')
 @app.route('/home')
 def home_page(logout=False):
@@ -162,14 +157,21 @@ def home_page(logout=False):
     if logout:
         logout_user()
         logger.info(f'User {current_user} logged out')
-    return render_template('index.html', user=current_user)
+    events = Event.query.all()
+    events = [event for event in events if event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
+    if current_user.is_authenticated:
+        if current_user.driver_profile is not None:
+            driver_carpools = [carpool for carpool in Carpool.query.filter_by(driver_index=current_user.driver_profile.index).all() if carpool.event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
+        else:
+            driver_carpools = []
+        passenger_carpools = [carpool for carpool in current_user.passenger_profile.carpools if carpool.event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
+    else:
+        driver_carpools = []
+        passenger_carpools = []
+    return render_template('index.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools, events=events)
 
 
-@app.route('/register-driver', methods=['GET','POST'])
-@app.route('/registerdriver', methods=['GET','POST'])
-@app.route('/registeruser', methods=['GET','POST'])
 @app.route('/register', methods=['GET','POST'])
-@app.route('/register-user', methods=['GET','POST'])
 def register_new_driver_page():
     """
     Page to register a new driver to the database.
@@ -185,7 +187,8 @@ def register_new_driver_page():
         message = request.args.get('message')
         if message is None:
             message = 'Register to be a driver for team 422!'
-        return render_template('driver_signup_template.html', message=message, user=current_user)
+        regions = Region.query.all()
+        return render_template('driver_signup_template.html', message=message, user=current_user, regions=regions)
     if request.method == 'POST':
         driver_info = {
             'first_name':request.form['firstname'].lower(),
@@ -201,7 +204,12 @@ def register_new_driver_page():
             'emergency_contact_number': request.form['emergencycontact'],
             'emergency_contact_relation': request.form['emergencycontactrelation'],
             'extra_information': request.form['note'],
-            'num_seats': request.form['numberofseats']
+            'num_seats': request.form['numberofseats'],
+            'region_name': request.form['region'],
+            'address_line_1': request.form['addressline1'],
+            'address_line_2': request.form['addressline2'],
+            'city': request.form['city'],
+            'zip_code': request.form['zipcode'],
         }
         try:
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
@@ -269,14 +277,14 @@ def valid_auth_keys_page():
     return_list = [item.key for item in auth_keys]
     return_list_2 = [item.date_created for item in auth_keys]
     
-    return (f'Valid auth keys: {return_list} <br> Date created: {return_list_2}')
+    return render_template('valid_auth_keys_template.html', return_list=zip(return_list, return_list_2), user=current_user)
 
 @app.route('/events')
 def events_page():
     """
     Events page
     """
-    current_events = Event.query.filter(Event.event_date >= datetime.datetime.now()).all()
+    current_events = Event.query.filter(Event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)).all()
     print(current_events)
     
     return render_template('events_template.html', events=current_events, user=current_user)
@@ -289,6 +297,9 @@ def event_page(event_index):
     event = Event.query.get(event_index)
     logger.info(Event.query.all()[0].index)
     logger.info(event)
+    logger.debug(event.user_id)
+    if current_user.is_authenticated:
+        logger.debug(current_user.id)
    
     return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
 
@@ -313,7 +324,8 @@ def create_event_page():
             'event_start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
             'event_end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
             'event_location': request.form['eventlocation'],
-            'event_description': request.form['eventdescription']
+            'event_description': request.form['eventdescription'],
+            'user_id': current_user.id
         }
         try:
             new_event = Event(**event_info)
@@ -332,6 +344,7 @@ def create_event_page():
         except Exception as e:
             logger.info(e)
             return redirect(url_for("create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
+        
 
         return redirect(url_for('events_page'))
     else: 
@@ -356,6 +369,26 @@ def driver_carpool_signup_page(carpool_index):
             carpool.driver_index = current_user.driver_profile.index
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
+            # messaging the passengers in region that requested a carpool
+            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if passenger.region_name == carpool.region_name]:
+                if passenger.region_name == carpool.region_name:
+                    try:
+                        message = Message(
+                            subject='Carpool Request Fulfilled',
+                            recipients=[passenger.email_address],
+                            sender = ('Mech Tech Dragons Carpooling', 'Carpooling Dragon'),
+                            body=f'Hi {passenger.first_name},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nTeam 422'
+                        )
+                        mail.send(message)
+                        logger.info(f'Message sent to {passenger.email_address}')
+                    except Exception as e:
+                        logger.debug(e)
+                        logger.info(f'Failed to send message to {passenger.email_address}, probably due to an invalid email address')
+            # removing the passengers needing a ride in the region
+            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if passenger.region_name == carpool.region_name]:
+                carpool.event.passengers_needing_ride.remove(passenger)
+            db.session.commit()
+
             return render_template('error_template.html', main_message='Success!', sub_message='You have signed up to drive! Thank you for helping the team!', user=current_user) 
 
         carpool = Carpool.query.get(carpool_index)
@@ -366,7 +399,6 @@ def driver_carpool_signup_page(carpool_index):
         except Exception as e:
             logger.critical(e)
             logger.warning('This should never happen : (')
-
         driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
         logger.debug(driver)
         if driver is None:
@@ -508,8 +540,11 @@ def register_passenger_page():
                 'region_name': region_name,
                 'extra_information': request.form['note'],
                 'emergency_contact_number': request.form['emergencycontact'],
-                'emergency_contact_relation': request.form['emergencycontactrelation']
-
+                'emergency_contact_relation': request.form['emergencycontactrelation'],
+                'address_line_1': request.form['addressline1'],
+                'address_line_2': request.form['addressline2'],
+                'city': request.form['city'],
+                'zip_code': request.form['zipcode'],
             }
 
             passenger = Passenger(**passenger_information)
@@ -635,8 +670,9 @@ def login_help_page():
 
 
 
-@login_required
+
 @app.route('/user-profile', methods=['GET', 'POST'])
+@login_required
 def user_profile_page():
     """
     Page that allows for the management of the user profile
@@ -647,8 +683,9 @@ def user_profile_page():
         return render_template('user_profile_passenger_template.html', user=current_user)
 
 
-@login_required
+
 @app.route('/update-user', methods=['GET', 'POST'])
+@login_required
 def update_user_information_page():
     """
     Page that allows for the updating of user information -- basically just a copy of the sign up page but with default values
@@ -664,58 +701,101 @@ def update_user_information_page():
         logger.debug(current_user.driver_id)
         return render_template('update_user_information_template_passenger.html', user=current_user, regions=regions)
     elif request.method == 'POST':
-        region = Region.query.filter_by(name=request.form['region']).first()
-        logger.debug(request.form['region'])
-        driver_info = {
-            'first_name':request.form['firstname'].lower(),
-            'last_name': request.form['lastname'].lower(),
-            'student_or_parent': request.form['studentorparent'],
-            'num_years_with_license': request.form['licenseyears'],
-            'phone_number': request.form['phonenumber'],
-            'email_address': request.form['email'],
-            'car_type_1': request.form['cartype1'],
-            'car_color_1': request.form['carcolor1'],
-            'car_type_2': request.form['cartype2'],
-            'car_color_2': request.form['carcolor2'],
-            'emergency_contact_number': request.form['emergencycontact'],
-            'emergency_contact_relation': request.form['emergencycontactrelation'],
-            'extra_information': request.form['note'],
-            'num_seats': request.form['numberofseats'],
-            'region_name': region.name
-        }
-        try:
-            existing_driver = current_user.driver_profile
-            for key, value in driver_info.items():
-                setattr(existing_driver, key, value)
-            db.session.commit()
-            logger.info('Driver information updated: {}'.format(existing_driver))
+        # if the user is a driver
+        if current_user.driver_profile is not None:
+            
+            region = Region.query.filter_by(name=request.form['region']).first()
+            logger.debug(request.form['region'])
+            driver_info = {
+                'first_name':request.form['firstname'].lower(),
+                'last_name': request.form['lastname'].lower(),
+                'student_or_parent': request.form['studentorparent'],
+                'num_years_with_license': request.form['licenseyears'],
+                'phone_number': request.form['phonenumber'],
+                'email_address': request.form['email'],
+                'car_type_1': request.form['cartype1'],
+                'car_color_1': request.form['carcolor1'],
+                'car_type_2': request.form['cartype2'],
+                'car_color_2': request.form['carcolor2'],
+                'emergency_contact_number': request.form['emergencycontact'],
+                'emergency_contact_relation': request.form['emergencycontactrelation'],
+                'extra_information': request.form['note'],
+                'num_seats': request.form['numberofseats'],
+                'region_name': region.name,
+                'address_line_1': request.form['addressline1'],
+                'address_line_2': request.form['addressline2'],
+                'city': request.form['city'],
+                'zip_code': request.form['zipcode'],
+            }
+            try:
+                existing_driver = current_user.driver_profile
+                for key, value in driver_info.items():
+                    setattr(existing_driver, key, value)
+                db.session.commit()
+                logger.info('Driver information updated: {}'.format(existing_driver))
 
-            # deleting the unneeded rows so it can also be converted to passenger -- this is a bit of a hack <- copilot :(
-            del driver_info['student_or_parent']
-            del driver_info['num_years_with_license']
-            del driver_info['num_seats']
-            del driver_info['car_type_1']
-            del driver_info['car_color_1']
-            del driver_info['car_type_2']
-            del driver_info['car_color_2']
+                # deleting the unneeded rows so it can also be converted to passenger -- this is a bit of a hack <- copilot :(
+                del driver_info['student_or_parent']
+                del driver_info['num_years_with_license']
+                del driver_info['num_seats']
+                del driver_info['car_type_1']
+                del driver_info['car_color_1']
+                del driver_info['car_type_2']
+                del driver_info['car_color_2']
 
-            # updating the passenger information
-            existing_passenger = current_user.passenger_profile
-            for key, value in driver_info.items():
-                setattr(existing_passenger, key, value)
-            db.session.commit()
-            logger.info(f'Passenger Data modified: {existing_passenger}')
+                # updating the passenger information
+                existing_passenger = current_user.passenger_profile
+                for key, value in driver_info.items():
+                    setattr(existing_passenger, key, value)
+                db.session.commit()
+                logger.info(f'Passenger Data modified: {existing_passenger}')
 
-            # updating the user information
-            current_user.first_name = request.form['firstname'].lower()
-            current_user.last_name = request.form['lastname'].lower()
-            db.session.commit()
-            logger.info(f'User Data modified: {current_user}')
+                # updating the user information
+                current_user.first_name = request.form['firstname'].lower()
+                current_user.last_name = request.form['lastname'].lower()
+                db.session.commit()
+                logger.info(f'User Data modified: {current_user}')
 
-            return redirect(url_for("user_profile_page"))
-        except Exception as e:
-            logger.debug(e)
-            return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user)
+                return redirect(url_for("user_profile_page"))
+            except Exception as e:
+                logger.debug(e)
+                return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user, regions=regions)
+        # if the user is a passenger
+        else:
+            region = Region.query.filter_by(name=request.form['region']).first()
+            logger.debug(request.form['region'])
+
+            # defining passenger info
+            passenger_info = {
+                'first_name':request.form['firstname'].lower(),
+                'last_name': request.form['lastname'].lower(),
+                'phone_number': request.form['phonenumber'],
+                'email_address': request.form['email'],
+                'emergency_contact_number': request.form['emergencycontact'],
+                'emergency_contact_relation': request.form['emergencycontactrelation'],
+                'extra_information': request.form['note'],
+                'region_name': region.name,
+                'address_line_1': request.form['addressline1'],
+                'address_line_2': request.form['addressline2'],
+                'city': request.form['city'],
+                'zip_code': request.form['zipcode'],
+            }
+            try:
+                for key, value in passenger_info.items():
+                    setattr(current_user.passenger_profile, key, value)
+                db.session.commit()
+                logger.info('Passenger information updated: {}'.format(current_user.passenger_profile))
+
+                # updating the user information
+                current_user.first_name = request.form['firstname'].lower()
+                current_user.last_name = request.form['lastname'].lower()
+                db.session.commit()
+                logger.info(f'User Data modified: {current_user}')
+                return redirect(url_for("user_profile_page"))
+            except Exception as e:
+                logger.debug(e)
+                return render_template('update_user_information_template_passenger.html', message='There was an error. Please try again.', user=current_user, regions=regions)
+            
     else: 
         return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
@@ -732,7 +812,7 @@ def manage_carpools_page():
     try:
         driver_carpools = current_user.driver_profile.carpools
         logger.debug(driver_carpools)
-        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_date > datetime.datetime.now() + datetime.timedelta(hours=10)]
+        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(hours=30)]
         logger.debug(driver_carpools)
     except AttributeError as e:
         logger.debug('user is not a driver')
@@ -740,7 +820,7 @@ def manage_carpools_page():
         driver_carpools = []
     passenger_carpools = current_user.passenger_profile.carpools
     logger.debug(passenger_carpools)
-    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_date > datetime.datetime.now() + datetime.timedelta(hours=10)]
+    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(hours=30)]
     logger.debug(passenger_carpools)
 
     return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools)
@@ -940,7 +1020,12 @@ def passenger_to_driver_page():
             emergency_contact_number = current_user.passenger_profile.emergency_contact_number,
             emergency_contact_relation = current_user.passenger_profile.emergency_contact_relation,
             student_or_parent = request.form['studentorparent'],
+            address_line_1 = current_user.passenger_profile.address_line_1,
+            address_line_2 = current_user.passenger_profile.address_line_2,
+            city = current_user.passenger_profile.city,
+            zip_code = current_user.passenger_profile.zip_code,
         )
+
         db.session.add(new_driver)
         db.session.commit()
         logger.info('New driver created: {}'.format(new_driver))
@@ -958,7 +1043,7 @@ def admin_home_page():
     Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
     """
 
-    pass #TODO
+    return render_template('admin_home_template.html', user=current_user)
 
 
 @app.route('/manage-users')
@@ -1032,7 +1117,7 @@ def admin_delete_user(user_id):
         try:
             message = Message (
                 subject='Your Passenger has been deleted',
-                recipients= [carpool.driver.passenger_profile.email_address],
+                recipients= [carpool.driver.user[0].passenger_profile.email_address],
                 sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
                 body=f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
@@ -1131,3 +1216,188 @@ def safety():
     Be safe
     """
     return render_template('safety.html', user=current_user)
+
+@app.route('/delete-event/<event_index>')
+@login_required
+def delete_event(event_index):
+    """
+    Method to delete an event
+    """
+    try:
+        event_to_delete = Event.query.get(event_index)
+    except Exception as e:
+        logger.debug(e)
+        logger.info('Event {} not found'.format(event_index))
+        return redirect(url_for('events_page'))
+    
+    # checking that the user is the creator of the event
+    if not ((event_to_delete.user == current_user) or (current_user.is_admin > 0)):
+        logger.info('A person attempted to delete an event they were not authorized to delete')
+        return redirect(url_for('events_page'))
+    
+    # notifying the drivers of the event
+    for carpool in event_to_delete.carpools:
+        try:
+            message = Message (
+                subject='Your carpool event has been deleted',
+                recipients= [carpool.driver.user[0].passenger_profile.email_address],
+                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                body=f"""
+                Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
+                The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+                """
+            )
+            mail.send(message)
+            logger.info('Driver {} notified of event deletion'.format(carpool.driver))
+        except Exception as e:
+            logger.debug(e)
+            logger.warning('Driver {} not notified of event deletion, probably due to invalid email address'.format(carpool.driver))
+    
+    # notifying the passengers of the event
+    for carpool in event_to_delete.carpools:
+        try:
+            message = Message (
+                subject='Your carpool event has been deleted',
+                recipients= [passenger.passenger_profile.email_address for passenger in carpool.passengers],
+                sender=('Mech Techs Carpooling', 'mechtechscaprooling@zohomail.com'),
+                body=f"""
+                Hello passengers, \n\n
+                The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+                """
+            )
+            mail.send(message)
+            logger.info('Passengers notified of event deletion')
+        except Exception as e:
+            logger.debug(e)
+            logger.warning('Passengers not notified of event deletion, probably due to an invalid email address')
+    
+    # deleting the carpools of the event
+    for carpool in event_to_delete.carpools:
+        db.session.delete(carpool)
+
+    # deleting the event
+    db.session.delete(event_to_delete)
+    db.session.commit()
+
+    logger.info('Event {} deleted'.format(event_to_delete.event_name))
+    return redirect(url_for('events_page'))
+
+
+@app.route('/request-carpool/<event_index>', methods=['GET', 'POST'])
+def passenger_carpool_request_page(event_index):
+    """
+    Page for a passenger to request a carpool
+    event_index: index of the event
+    """
+    if request.method == 'GET':
+        regions=Region.query.all()
+        try:
+            event = Event.query.get(event_index)
+        except Exception as e:
+            logger.debug(e)
+            logger.info('Event {} not found'.format(event_index))
+            return redirect(url_for('events_page'))
+
+        if current_user.is_authenticated:
+            event.passengers_needing_ride.append(current_user.passenger_profile)
+            db.session.commit()
+            logger.info('Passenger {} added to event as needing ride {}'.format(current_user.passenger_profile, event))
+
+            # email the people in the area
+            # finding the drivers in the area -- yes i can do this if i set lazy to dynamic but thats a lot of work
+            drivers_in_area = Driver.query.filter_by(region=current_user.passenger_profile.region).all()
+            for driver in drivers_in_area: # yes i know about list comprehension yes it was confusing so i gave up
+                flag = False
+                for carpool in driver.carpools:
+                    if carpool.event == event:
+                        flag = True
+                        continue 
+                if flag:
+                    drivers_in_area.remove(driver)
+                    flag = False
+                        
+            for driver in drivers_in_area:
+                try:
+                    message = Message (
+                        subject='Passenger needs ride',
+                        recipients= [driver.user[0].passenger_profile.email_address],
+                        sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                        body=f"""
+                        Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
+                        A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
+                        please consider signing up to give them a ride.
+                        """)
+                    mail.send(message)
+                    logger.info('Driver {} notified of passenger needing ride'.format(driver))
+                except Exception as e:
+                    logger.debug(e)
+                    logger.warning('Driver {} not notified of passenger needing ride, probably due to invalid email address'.format(driver))
+            logger.info('finished notifying drivers.')
+            return redirect(url_for('event_page', event_index=event.index))
+        else:
+            regions = Region.query.all()
+            return render_template('passenger_carpool_request_template.html', event=event, user=current_user, regions=regions)
+    if request.method == 'POST':
+
+        # making sure that the event exists ...
+        try:
+            event = Event.query.get(event_index)
+        except Exception as e:
+            logger.debug(e)
+            logger.info('Event {} not found'.format(event_index))
+            return redirect(url_for('events_page'))
+        
+        # getting the form data
+        first_name = request.form['firstname']
+        last_name = request.form['lastname']
+        email_address = request.form['email']
+        phone_number = request.form['phonenumber']
+        region_name = request.form['region']
+        
+        # making sure that the user is not already in the database
+        passenger = Passenger.query.filter_by(first_name=first_name, last_name=last_name).first()
+        if passenger is not None:
+            logger.info('Passenger {} already exists'.format(passenger))
+            return render_template('error_page_template', main_message='You are already in the database', sub_message='Please log in to request a carpool.')
+        
+        # creating the passenger
+        passenger = Passenger(first_name=first_name, last_name=last_name, email_address=email_address, phone_number=phone_number, region_name=region_name)
+        db.session.add(passenger)
+        db.session.commit()
+        logger.info('Passenger {} created'.format(passenger))
+
+        # adding the passenger to the event
+        event.passengers_needing_ride.append(passenger)
+        db.session.commit()
+
+        # emailing the people in the region
+        drivers_in_area = Driver.query.filter_by(region_name=region_name).all()
+        for driver in drivers_in_area: # yes i know about list comprehension yes it was confusing so i gave up
+            flag = False
+            for carpool in driver.carpools:
+                if carpool.event == event:
+                    flag = True
+                    continue 
+            if flag:
+                drivers_in_area.remove(driver)
+                flag = False
+                    
+        for driver in drivers_in_area:
+            try:
+                message = Message (
+                    subject='Passenger needs ride',
+                    recipients= [driver.user[0].passenger_profile.email_address],
+                    sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
+                    body=f"""
+                    Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
+                    A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
+                    please consider signing up to give them a ride.
+                    """)
+                mail.send(message)
+                logger.info('Driver {} notified of passenger needing ride'.format(driver))
+            except Exception as e:
+                logger.debug(e)
+                logger.warning('Driver {} not notified of passenger needing ride, probably due to invalid email address'.format(driver))
+        logger.info('finished notifying drivers.')
+        return redirect(url_for('event_page', event_index=event.index))
+

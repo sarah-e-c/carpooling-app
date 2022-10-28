@@ -1,11 +1,13 @@
 
 from carpooling.models import User, AuthKey
-from carpooling import app
+from carpooling import app, mail
 from flask import redirect, url_for, session, request
+from flask_mail import Message
 from flask_login import current_user
 from functools import wraps
 from itsdangerous import URLSafeSerializer
 import logging
+
 
 
 logger = logging.getLogger(__name__)
@@ -133,5 +135,24 @@ def initial_set_up():
     """
     Function for setting up the initial admin user.
     """
+    pass # TODO
+
+def send_email(to, subject, message):
+    """
+    Function for sending emails.
+    to: list of recipients.
+    subject: subject of the email.
+    message: message of the email.
+    """
+    for recipient in to:
+        try:
+            msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
+            msg.body = message
+            mail.send(msg)
+        except Exception as e:
+            logger.debug(e)
+            logger.warning('Email failed to send to {}, probably due to an invalid email adderss'.format(recipient))
+    logger.info('Email sent to {}'.format(to))
+
 
     

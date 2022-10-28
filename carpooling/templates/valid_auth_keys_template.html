@@ -1,0 +1,18 @@
+{% extends 'bases/carrd_base.html' %}
+
+{% block title %}Team Auth Keys{% endblock %}
+
+{% set active_page ='home' %}
+
+{% block main %}
+<div id="image01" class="style1 image">
+    <span class="frame">
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+    </span>
+</div>
+<h1 class="style1">Team Auth Keys</h1>
+{% for key, date in return_list %}
+<p class="style2">Key: {{key}} <br> Date: {{date.strftime('%m-%d-%Y')}}</p>
+{% endfor %}
+
+{% endblock %}

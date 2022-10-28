@@ -10,11 +10,11 @@
         <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt="" />
     </span>
 </div>
-<h1 id="text01" class="style1">{{carpool.event.event_name.capitalize()}}Passenger Sign Up</h1>
+<h1 id="text01" class="style1">{{carpool.event.event_name.capitalize()}} Passenger Sign Up</h1>
 <h2 id="text07" class="style2">{{ message }}</h2>
 <hr id="divider02" class="style1">
 <div id="text02" class="style2">
-    <form action="{{url_for(" passenger_carpool_signup_page", carpool_index=carpool.index)}}" method="post">
+    <form action="{{url_for('passenger_carpool_signup_page', carpool_index=carpool.index)}}" method="post">
         <div id="formtable">
             <p>
                 <label for="firstname">First Name</label>
@@ -67,7 +67,6 @@
                 <input type="text" id="note" name="note" placeholder="Mother" class="input1">
             </p>
             <br>
-
         </div>
         <ul id="buttons01" class="style1 buttons">
             <input type="submit" value="Submit" class="style1" id="submitbutton">

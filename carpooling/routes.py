@@ -41,27 +41,12 @@ logger = logging.getLogger(__name__)
 @app.route('/driver/<lastname>/<firstname>')
 @requires_auth_key
 def driver_page(lastname, firstname):
+    """
+    Driver page for passengers and other drivers to see
+    last_name: last name of the driver
+    first_name: first name of the driver
+    """
     logger.info('driver page')
-    # """
-    # View a driver's page
-    # """
-    # logger.info('driver_page')
-    # if app.driver_access_flag:
-    #     logger.info('access granted')
-    #     app.driver_access_flag = False
-    # else:
-    #     try:
-    #         driver_access_key_time = float(request.cookies.get('driver_access_key_time'))
-    #         if time.time() - driver_access_key_time  > 60*60*24*30:
-    #             logger.info('redirecting to driver_login')
-    #             logger.info(time.time() - driver_access_key_time)
-    #             return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-    #     except ValueError as e:
-    #         return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-    #     except TypeError as e:
-    #         return redirect(url_for('get_driver_access', firstname=firstname, lastname=lastname))
-    
-    # logger.info('driver access granted in driver page')
     try:
         driver = Driver.query.filter_by(last_name=lastname, first_name=firstname).one()
     except:
@@ -94,6 +79,12 @@ def driver_page(lastname, firstname):
 def verify_auth_key_page(next, kwargs_keys, kwargs_string):
     """
     Page that users are redirected to if they need to get an auth key
+    next: the next page to go to
+    kwargs_keys: the keys of the kwargs, encoded by the decorator
+    kwargs_string: the values of the kwargs, encoded by the decorator
+
+    This page is called by the decorator requires_auth_key, and is pretty much exclusivelt used for that purpose.
+
     """
     if request.method == 'GET':
         # this is how the things are encoded
@@ -113,16 +104,17 @@ def verify_auth_key_page(next, kwargs_keys, kwargs_string):
                 for kwarg_key, kwarg in zip(kwargs_keys.split('--'), kwargs_string.split('--')):
                     kwargs[kwarg_key] = kwarg
                 
+                # setting the response
                 response = make_response(redirect(url_for(next, **kwargs)))
                 s = URLSafeSerializer(app.secret_key)
                 logger.info('setting cookie')
                 response.set_cookie('driver-access', s.dumps(['access granted']), max_age=datetime.timedelta(seconds=60))
                 return response
             else:
-                flash('Invalid Auth Key')
+                flash('Invalid Auth Key') # theres no flash support but like whatever
                 return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
         except IndexError as e:
-            # basically the same thing, but there's only one key
+            # basically the same thing, but there's only one key... yes there is probably a better way to do this but like 
             if request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key:
                 if current_user.is_authenticated:
                     current_user.team_auth_key = AuthKey.query.order_by(AuthKey.index.desc()).first().key
@@ -142,6 +134,7 @@ def verify_auth_key_page(next, kwargs_keys, kwargs_string):
                 return response
 
             else:
+                # invalid key
                 flash('Invalid Auth Key')
                 logger.info('access denied')
                 return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
@@ -151,12 +144,15 @@ def verify_auth_key_page(next, kwargs_keys, kwargs_string):
 @app.route('/home')
 def home_page(logout=False):
     """
-    Home page
+    Home page. Also index page.
     """
+    # if the user requested a logout, then they get logged out here
     logout = request.args.get('logout')
     if logout:
         logout_user()
         logger.info(f'User {current_user} logged out')
+    
+    # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
     events = Event.query.all()
     events = [event for event in events if event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
     if current_user.is_authenticated:
@@ -177,19 +173,23 @@ def register_new_driver_page():
     Page to register a new driver to the database.
     """
     
-    # updating the auth keys
+    # updating the auth keys... this should probably be done in a utils method or something
     if (datetime.datetime.now() - AuthKey.query.order_by(AuthKey.index.desc()).first().date_created).days > 29:
         new_auth_key = AuthKey(auth_key=secrets.token_hex(16))
         db.session.add(new_auth_key)
         db.session.commit()
     
+    # get template
     if request.method == 'GET':
         message = request.args.get('message')
         if message is None:
             message = 'Register to be a driver for team 422!'
         regions = Region.query.all()
         return render_template('driver_signup_template.html', message=message, user=current_user, regions=regions)
+    
     if request.method == 'POST':
+
+        # getting the data from the form, i don't care if aaron says this is bad practice
         driver_info = {
             'first_name':request.form['firstname'].lower(),
             'last_name': request.form['lastname'].lower(),
@@ -212,10 +212,12 @@ def register_new_driver_page():
             'zip_code': request.form['zipcode'],
         }
         try:
+            # the person already exists in the database as a driver
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
                 raise PersonAlreadyExistsException
             
             new_driver = Driver(**driver_info)
+
 
             try:
                 _ = int(request.form['numberofseats'])
@@ -231,13 +233,14 @@ def register_new_driver_page():
             del driver_info['car_type_2']
             del driver_info['car_color_2']
 
-            
+            # making the corresponding passenger and committing to the database
             new_passenger = Passenger(**driver_info)
             db.session.add(new_passenger)
             db.session.add(new_driver)
             db.session.commit()
-            logger.info(f'New driver added to database: {new_driver}')
-
+            logger.info(f'New driver added to database: {new_driver}')\
+            
+            # creating the corresponding user
             user_info = {
                 'first_name': new_driver.first_name,
                 'last_name': new_driver.last_name,
@@ -253,6 +256,7 @@ def register_new_driver_page():
             db.session.commit()
             logger.info('New user registered.')
 
+        # exceptions and their meanings
         except PersonAlreadyExistsException as e:
             logger.info(e)
             return redirect(url_for("register_new_driver_page", message='A person with that name already exists.'))
@@ -262,9 +266,8 @@ def register_new_driver_page():
         except Exception as e:
             logger.info(e)
             return redirect(url_for("register_new_driver_page", message='Something went wrong. Make sure that all inputs are valid.'))
+        
         return render_template('error_template.html', main_message='Success!', sub_message='Thank you for helping team 422!', user=current_user)
-    else: 
-        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
 
 @app.route('/valid-auth-keys')
 @admin_required
@@ -273,33 +276,32 @@ def valid_auth_keys_page():
     This page is only accessible if the admin has logged in.
     Page for admins to see all valid auth keys and when they were created.
     """
+    # querying the auth keys and ordering them
     auth_keys = AuthKey.query.order_by(AuthKey.date_created).all()
+
+    # i love naming things
     return_list = [item.key for item in auth_keys]
     return_list_2 = [item.date_created for item in auth_keys]
-    
     return render_template('valid_auth_keys_template.html', return_list=zip(return_list, return_list_2), user=current_user)
 
 @app.route('/events')
 def events_page():
     """
-    Events page
+    Page to display all upcoming events. Probably should make an events log in the futre
     """
     current_events = Event.query.filter(Event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)).all()
-    print(current_events)
-    
     return render_template('events_template.html', events=current_events, user=current_user)
 
 @app.route('/event/<event_index>')
 def event_page(event_index):
     """
     Event page
+    event_index: the index of the event that is wanted.
     """
-    event = Event.query.get(event_index)
-    logger.info(Event.query.all()[0].index)
-    logger.info(event)
-    logger.debug(event.user_id)
-    if current_user.is_authenticated:
-        logger.debug(current_user.id)
+    try:
+        event = Event.query.get(event_index)
+    except: # the event doesn't exist
+        redirect(url_for('events_page'))
    
     return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
 
@@ -308,16 +310,17 @@ def event_page(event_index):
 @requires_auth_key
 def create_event_page():
     """
-    Create event page. Used for admins to create an event needs
+    Create event page. Used for verified users to create events.
     """
+
     if request.method == 'GET':
         message = request.args.get('message')
-        if message is None:
+        if message is None: 
             message = 'Create an Event'
         return render_template('create_event_template.html', message=message, user=current_user)
 
-    
     if request.method == 'POST':
+        # getting the event info from the form
         event_info = {
             'event_name': request.form['eventname'],
             'event_date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
@@ -327,12 +330,11 @@ def create_event_page():
             'event_description': request.form['eventdescription'],
             'user_id': current_user.id
         }
+
         try:
             new_event = Event(**event_info)
             db.session.add(new_event)
-            db.session.commit()
-
-            for region in Region.query.all():
+            for region in Region.query.all(): # i love for loops
                 # for each region, create carpools
                 for _ in range(DEFAULT_NUMBER_OF_CARPOOLS):
                     carpool = Carpool(event_index=new_event.index, region_name=region.name, num_passengers=0, destination=region.dropoff_location)
@@ -341,11 +343,10 @@ def create_event_page():
             db.session.commit()
             logger.info(f'New event added to database: {new_event} with carpools: {new_event.carpools}')
 
-        except Exception as e:
-            logger.info(e)
+        except Exception as e: # i don't really know how this happens but its good to have
+            logger.debug(e)
             return redirect(url_for("create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
         
-
         return redirect(url_for('events_page'))
     else: 
         return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
@@ -501,13 +502,10 @@ def passenger_carpool_signup_page(carpool_index):
     carpool  = Carpool.query.get(carpool_index)
     return str(carpool.passengers[0].carpools) + str(len(carpool.passengers))
 
-
-
-
 @app.route('/register-passenger', methods=['GET', 'POST'])
 def register_passenger_page():
     """
-    Register passenger page.
+    Page for passengers to register
     """
     if request.method == 'GET':
         regions = Region.query.all()
@@ -1305,17 +1303,7 @@ def passenger_carpool_request_page(event_index):
 
             # email the people in the area
             # finding the drivers in the area -- yes i can do this if i set lazy to dynamic but thats a lot of work
-            drivers_in_area = Driver.query.filter_by(region=current_user.passenger_profile.region).all()
-            for driver in drivers_in_area: # yes i know about list comprehension yes it was confusing so i gave up
-                flag = False
-                for carpool in driver.carpools:
-                    if carpool.event == event:
-                        flag = True
-                        continue 
-                if flag:
-                    drivers_in_area.remove(driver)
-                    flag = False
-                        
+            drivers_in_area = [driver for driver in Driver.query.filter_by(region_name=region_name).all() if driver not in [carpool.driver for carpool in event.carpools]]      
             for driver in drivers_in_area:
                 try:
                     message = Message (
@@ -1371,16 +1359,8 @@ def passenger_carpool_request_page(event_index):
         db.session.commit()
 
         # emailing the people in the region
-        drivers_in_area = Driver.query.filter_by(region_name=region_name).all()
-        for driver in drivers_in_area: # yes i know about list comprehension yes it was confusing so i gave up
-            flag = False
-            for carpool in driver.carpools:
-                if carpool.event == event:
-                    flag = True
-                    continue 
-            if flag:
-                drivers_in_area.remove(driver)
-                flag = False
+        # finding the drivers in the area that haven't signed up to carpool
+        drivers_in_area = [driver for driver in Driver.query.filter_by(region_name=region_name).all() if driver not in [carpool.driver for carpool in event.carpools]]
                     
         for driver in drivers_in_area:
             try:

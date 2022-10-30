@@ -8,8 +8,6 @@ import secrets # lkj
 import datetime
 
 
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -188,11 +186,53 @@ def make_admin(first_name, last_name):
     user.is_admin = 2
     db.session.commit()
 
-if __name__ == '__main__': # run app
+def make_regions():
     with app.app_context() as f:
-        #db.create_all()
-        #initial_set_up()
-        #make_admin('sarah', 'crowder')
-        pass
+        models.Region.query.delete()
+        south_region = models.Region(
+            name='West Henrico',
+            dropoff_location='Short Pump Town Center',
+            color='#8B0000',
+        )
+        henrico_region = models.Region(
+            name='Central',
+            dropoff_location='Capital Building',
+            color='#FF8C00',
+        )
+
+        eastern_region = models.Region(
+            name='Varina and New Kent',
+            dropoff_location='New Kent High School',
+            color='#FF00FF',
+        )
+
+        richmond_region = models.Region(
+            name='Manchester',
+            dropoff_location='360x288 Target',
+            color='#FFFF00',
+        )
+
+        chesterfield_region = models.Region(
+            name='I-95',
+            dropoff_location='Southpark Mall',
+            color='#00FF00',
+        )
+        west_region = models.Region(
+            name='Goochland, and Powhatan',
+            dropoff_location='Audi Richmond',
+            color='#00FFFF',)
+
+
+        db.session.add(south_region)
+        db.session.add(henrico_region)
+        db.session.add(richmond_region)
+        db.session.add(west_region)
+        db.session.add(eastern_region)
+        db.session.add(chesterfield_region)
+        db.session.commit()
+
+if __name__ == '__main__': # run app
+
+
     logging.basicConfig(level=logging.DEBUG)
     app.run(debug=True)

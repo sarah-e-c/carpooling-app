@@ -92,7 +92,7 @@
 {% if event.user_id == current_user.id %}
 <ul class="style1 buttons">
     <li>
-<a style="color: red"href="{{ url_for('main.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+<a style="color: red"href="{{ url_for('internal.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
     <span class="label">Delete Event</span>
 </a>
     </li>
@@ -101,7 +101,7 @@
 {%  if user.is_admin > 0 %}
 <ul class="style1 buttons">
     <li>
-<a style="color: red"href="{{ url_for('main.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+<a style="color: red"href="{{ url_for('internal.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
     <span class="label">Delete Event</span>
 </a>
     </li>

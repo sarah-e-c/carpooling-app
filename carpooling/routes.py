@@ -263,13 +263,13 @@ def register_new_driver_page():
         # exceptions and their meanings
         except PersonAlreadyExistsException as e:
             logger.info(e)
-            return redirect(url_for("main.register_new_driver_page", message='A person with that name already exists.'))
+            return redirect(url_for("auth.register_new_driver_page", message='A person with that name already exists.'))
         except InvalidNumberOfSeatsException as e:
             logger.info(e)
-            return redirect(url_for("main.register_new_driver_page", message='The number of seats must be an integer.'))
+            return redirect(url_for("auth.register_new_driver_page", message='The number of seats must be an integer.'))
         except Exception as e:
             logger.info(e)
-            return redirect(url_for("main.register_new_driver_page", message='Something went wrong. Make sure that all inputs are valid.'))
+            return redirect(url_for("auth.register_new_driver_page", message='Something went wrong. Make sure that all inputs are valid.'))
         
         return render_template('error_template.html', main_message='Success!', sub_message='Thank you for helping team 422!', user=current_user)
 
@@ -751,7 +751,7 @@ def update_user_information_page():
                 db.session.commit()
                 logger.info(f'User Data modified: {current_user}')
 
-                return redirect(url_for("main.user_profile_page"))
+                return redirect(url_for("auth.user_profile_page"))
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user, regions=regions)
@@ -786,7 +786,7 @@ def update_user_information_page():
                 current_user.last_name = request.form['lastname'].lower()
                 db.session.commit()
                 logger.info(f'User Data modified: {current_user}')
-                return redirect(url_for("main.user_profile_page"))
+                return redirect(url_for("auth.user_profile_page"))
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template_passenger.html', message='There was an error. Please try again.', user=current_user, regions=regions)
@@ -958,7 +958,7 @@ def forgot_password_page():
                 body=f"""
                 Hello {user.first_name.capitalize()} {user.last_name.capitalize()}, \n\n
                 You have requested a password reset. Please click the link below to reset your password. \n\n
-                {url_for('main.reset_password_page', user_id=user.id, _external=True, token=user.get_reset_password_token())}
+                {url_for('auth.reset_password_page', user_id=user.id, _external=True, token=user.get_reset_password_token())}
                 """
             )
             mail.send(message)
@@ -987,7 +987,7 @@ def reset_password_page(user_id, token):
                 user.password = generate_password_hash(request.form['password'], method='sha256')
                 db.session.commit()
                 logger.info('Password reset for user {}'.format(user))
-                return redirect(url_for('main.login_page'))
+                return redirect(url_for('auth.login_page'))
             else: return render_template('reset_password_template.html', message='Passwords do not match. Please try again.', user=current_user, user_id=user_id, token=token)
         else:
             return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
@@ -1062,7 +1062,7 @@ def admin_delete_user(user_id):
 
     # checking that the user being deleted is not of a higher level than the current one
     if user_to_delete.is_admin >= current_user.is_admin:
-        return redirect(url_for('main.manage_users_page'))
+        return redirect(url_for('admin.manage_users_page'))
 
     # notifying the user that they are being deleted
     try:
@@ -1149,7 +1149,7 @@ def admin_delete_user(user_id):
 
     # redirecting back to the admin user page
     logger.info('User deleted.')
-    return redirect(url_for('main.manage_users_page'))
+    return redirect(url_for('admin.manage_users_page'))
 
 
 @main_blueprint.route('/give-admin/<user_id>')
@@ -1162,12 +1162,12 @@ def give_admin(user_id):
     # checking that they are not already super admin (that would be bad)
     if user_to_change.is_admin > 1:
         logger.info('User {} is already super admin'.format(user_to_change))
-        return redirect(url_for('main.manage_users_page'))
+        return redirect(url_for('admin.manage_users_page'))
 
     user_to_change.is_admin = 1
     db.session.commit()
     logger.info('User {} {} given admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
-    return redirect(url_for('main.manage_users_page'))
+    return redirect(url_for('admin.manage_users_page'))
 
 @main_blueprint.route('/give_super_admin/<user_id>')
 @admin_required
@@ -1180,7 +1180,7 @@ def give_super_admin(user_id):
     user_to_change.is_admin = 2
     db.session.commit()
     logger.info('User {} {} given super admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
-    return redirect(url_for('main.manage_users_page'))
+    return redirect(url_for('admin.manage_users_page'))
 
 @main_blueprint.route('/remove-admin/<user_id>')
 @admin_required
@@ -1193,16 +1193,16 @@ def remove_admin(user_id):
     # checking that the person removing is of higher admin than user
     if user_to_change.is_admin >= current_user.is_admin:
         logger.info('User {} {} is of higher admin than user {} {}'.format(current_user.first_name.capitalize(), current_user.last_name.capitalize(), user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
-        return redirect(url_for('main.manage_users_page'))
+        return redirect(url_for('admin.manage_users_page'))
 
     if user_to_change.is_admin > 1:
         logger.info('User {} is already super admin'.format(user_to_change))
-        return redirect(url_for('main.manage_users_page'))
+        return redirect(url_for('admin.manage_users_page'))
 
     user_to_change.is_admin = 0
     db.session.commit()
     logger.info('User {} {} removed from admin'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
-    return redirect(url_for('main.manage_users_page'))
+    return redirect(url_for('admin.manage_users_page'))
 
 
 @main_blueprint.route('/safety')

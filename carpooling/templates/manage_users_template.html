@@ -22,7 +22,7 @@
         <ul class="style1 buttons">
             {% if (user.is_admin > user_.is_admin) %}
             <li>
-                <a href="{{ url_for('main.admin_delete_user', user_id = user_.id)}}"
+                <a href="{{ url_for('internal.admin_delete_user', user_id = user_.id)}}"
                     onclick="confirm_delete_user(event)" class="button n01">
                     <span class="label">Delete User</span>
                 </a>
@@ -30,7 +30,7 @@
             {% endif %}
             {% if (user_.is_admin < 1) %} 
             <li>
-                <a href="{{ url_for('main.give_admin', user_id = user_.id)}}"
+                <a href="{{ url_for('internal.give_admin', user_id = user_.id)}}"
                     onclick="confirm_make_admin(event)" class="button n01">
                     <span class="label">Make Basic Admin</span>
                 </a>
@@ -38,7 +38,7 @@
             {% endif %}
             {% if (user_.is_admin < 2) and (user.is_admin> 1) %}
                 <li>
-                    <a href="{{ url_for('main.give_super_admin', user_id = user_.id)}}"
+                    <a href="{{ url_for('internal.give_super_admin', user_id = user_.id)}}"
                         onclick="confirm_make_super_admin(event)" class="button n01">
                         <span class="label">Make Super Admin</span>
                     </a>
@@ -46,7 +46,7 @@
             {% endif %}
             {% if (user_.is_admin > 0) and (user.is_admin > user_.is_admin) %}
             <li>
-                <a href="{{ url_for('main.remove_admin', user_id = user_.id)}}"
+                <a href="{{ url_for('internal.remove_admin', user_id = user_.id)}}"
                     onclick="confirm_remove_admin(event)" class="button n01">
                     <span class="label">Remove Admin rivileges</span>
                 </a>

@@ -44,7 +44,7 @@
     <div class="style1">
         <ul id="buttons01" class="style1 buttons">
             <li>
-                <a href="{{url_for('main.cancel_carpool', carpool_id = carpool.index)}}"
+                <a href="{{url_for('internal.cancel_carpool', carpool_id = carpool.index)}}"
                     onclick="confirm_carpool_delete(event, '{{carpool.index}}')" class="button n01">
                     <span class="label"> Cancel Carpool </span>
                 </a>
@@ -83,7 +83,7 @@ Driver: <a
 <div class="style1">
     <ul id="buttons01" class="style1 buttons">
         <li>
-            <a href="{{url_for('main.leave_carpool', carpool_id = carpool.index)}}"
+            <a href="{{url_for('internal.leave_carpool', carpool_id = carpool.index)}}"
                 onclick="confirm_carpool_leave(event, '{{carpool.index}}')" class="button n01">
                 <span class="label"> Leave Carpool </span>
             </a>
@@ -108,7 +108,7 @@ Driver: <a
             e.preventDefault();
         }
         new_request = new XMLHttpRequest();
-        new_request.open("POST", "{{ url_for('main.change_carpool_destination') }}", true);
+        new_request.open("POST", "{{ url_for('internal.change_carpool_destination') }}", true);
         new_request.setRequestHeader("Content-Type", "application/json");
         new_request.setRequestHeader("New-Carpool-Destination", new_destination);
         new_request.setRequestHeader("Carpool-Index", carpool_index);

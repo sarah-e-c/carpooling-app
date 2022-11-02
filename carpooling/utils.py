@@ -1,13 +1,13 @@
 
 from carpooling.models import User, AuthKey
-from carpooling import app, mail
+from carpooling import mail
 from flask import redirect, url_for, session, request
 from flask_mail import Message
 from flask_login import current_user
 from functools import wraps
 from itsdangerous import URLSafeSerializer
 import logging
-
+from flask import current_app
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def requires_auth_key(function):
                         kwargs_keys = '--'
                     if not kwargs_string:
                         kwargs_string = '--'
-                    return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+                    return redirect(url_for('main.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
             except:
                 if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key):
                 # encoding the key word args for the url
@@ -58,9 +58,9 @@ def requires_auth_key(function):
                         kwargs_keys = '--'
                     if not kwargs_string:
                         kwargs_string = '--'
-                    return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+                    return redirect(url_for('main.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
         else:
-            s = URLSafeSerializer(app.secret_key)
+            s = URLSafeSerializer(current_app.secret_key)
             try:
                 if s.loads(request.cookies.get('driver-access'))[0] == 'access granted':
                     logger.info('Access granted')
@@ -72,12 +72,12 @@ def requires_auth_key(function):
                         kwargs_keys = '--'
                     if not kwargs_string:
                         kwargs_string = '--'
-                    return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+                    return redirect(url_for('main.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
             except TypeError as e: # this is very awful
                 logger.debug(e)
                 kwargs_keys = '--'.join(kwargs)
                 kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                return redirect(url_for('verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
+                return redirect(url_for('main.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys, kwargs_string =kwargs_string))
 
         return function(*args, **kwargs)
     return wrapper
@@ -93,9 +93,9 @@ def admin_required(function):
             if current_user.is_admin > 0:
                 return function(*args, **kwargs)
             else:
-                return redirect(url_for('home_page'))
+                return redirect(url_for('main.home_page'))
         else:
-            return redirect(url_for('home_page'))
+            return redirect(url_for('main.home_page'))
     return wrapper
 
 def super_admin_required():
@@ -109,9 +109,9 @@ def super_admin_required():
             if current_user.is_admin > 1:
                 return function(*args, **kwargs)
             else:
-                return redirect(url_for('home_page'))
+                return redirect(url_for('main.home_page'))
         else:
-            return redirect(url_for('home_page'))
+            return redirect(url_for('main.home_page'))
     return wrapper
 
 def driver_required(function):
@@ -124,9 +124,9 @@ def driver_required(function):
             if current_user.driver_profile is not None:
                 return function(*args, **kwargs)
             else:
-                return redirect(url_for('home_page'))
+                return redirect(url_for('main.home_page'))
         else:
-            return redirect(url_for('home_page'))
+            return redirect(url_for('main.home_page'))
     
     return wrapper
 
@@ -140,19 +140,18 @@ def initial_set_up():
 def send_email(to, subject, message):
     """
     Function for sending emails.
-    to: list of recipients.
+    to: recipient email.
     subject: subject of the email.
     message: message of the email.
     """
-    for recipient in to:
-        try:
-            msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
-            msg.body = message
-            mail.send(msg)
-        except Exception as e:
-            logger.debug(e)
-            logger.warning('Email failed to send to {}, probably due to an invalid email adderss'.format(recipient))
-    logger.info('Email sent to {}'.format(to))
+    try:
+        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'Mech Techs Carpooling'), recipients=[to])
+        msg.body = message
+        mail.send(msg)
+        logger.info('Email sent to %s', to)
+    except Exception as e:
+        logger.debug(e)
+        logger.warning('Email failed to send to {}, probably due to an invalid email adderss'.format(to))
 
 
     

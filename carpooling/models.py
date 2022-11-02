@@ -163,6 +163,7 @@ class Region(db.Model):
     color = db.Column(db.String, nullable=False, default='#fff')
     #carpools = db.relationship('Carpool', backref=db.backref('region'))
     #passengers = db.relationship('Passenger', backref=db.backref('region'))
+    #drivers = db.relationship('Driver', backref=db.backref('region'))
 
     def get_carpools_in_event(self, event: Event):
         return [carpool for carpool in self.carpools if carpool.event == event]
@@ -300,3 +301,37 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
+
+
+# # possible future feature
+# class DistanceMatrix(db.Model):
+#     """
+#     Table to store the distance matrix
+#     """
+#     __tablename__ = 'distance_matrix'
+#     index = db.Column(db.Integer, primary_key=True)
+#     row = db.Column(db.String, nullable=False) # represents one location
+#     column = db.Column(db.String, nullable=False) # represents another location
+
+#     def __repr__(self):
+#         return f'DistanceMatrix: {self.row} {self.column}'
+
+# class Address(db.Model):
+#     """
+#     Table to store addresses and geocodes
+#     """
+#     __tablename__ = 'addresses'
+#     index = db.Column(db.Integer, primary_key=True)
+#     address_line_1 = db.Column(db.String, nullable=False)
+#     address_line_2 = db.Column(db.String, nullable=True)
+#     city = db.Column(db.String, nullable=False)
+#     state = db.Column(db.String, nullable=False)
+#     zip_code = db.Column(db.String, nullable=False)
+#     latitude = db.Column(db.Float, nullable=False)
+#     longitude = db.Column(db.Float, nullable=False)
+#     code = db.Column(db.String, nullable=False)
+#     passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
+#     driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+
+#     def __repr__(self):
+#         return f'Address: {self.address} {self.code}'

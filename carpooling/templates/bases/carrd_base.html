@@ -51,16 +51,16 @@
         </symbol>
     </svg>
     <div class="topnav">
-        <a class="{{ 'active' if active_page == 'home' else '' }}" href="{{ url_for('home_page') }}">Home</a>
-        <a class = "{{ 'active' if active_page == 'events' else '' }}" href="{{ url_for('events_page') }}">Events</a>
+        <a class="{{ 'active' if active_page == 'home' else '' }}" href="{{ url_for('main.home_page') }}">Home</a>
+        <a class = "{{ 'active' if active_page == 'events' else '' }}" href="{{ url_for('main.events_page') }}">Events</a>
         {% if user.is_authenticated %}
-        <a class="{{ 'active user-info' if active_page == 'user_profile' else 'user-info' }}" href = "{{ url_for('user_profile_page', user_id=user.id) }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
-        <a class="{{ 'active user-info' if active_page == 'logout' else 'user-info' }}" onclick="confirm_logout(event)" href="{{ url_for('home_page', logout=True) }}">Logout</a>
-        <a class="{{ 'active user-info' if active_page == 'carpools' else 'user-info' }}" href="{{url_for('manage_carpools_page')}}">Manage Carpools </a>
+        <a class="{{ 'active user-info' if active_page == 'user_profile' else 'user-info' }}" href = "{{ url_for('main.user_profile_page', user_id=user.id) }}">{{ user.first_name.capitalize() }} {{user.last_name.capitalize()}}</a>
+        <a class="{{ 'active user-info' if active_page == 'logout' else 'user-info' }}" onclick="confirm_logout(event)" href="{{ url_for('main.home_page', logout=True) }}">Logout</a>
+        <a class="{{ 'active user-info' if active_page == 'carpools' else 'user-info' }}" href="{{url_for('main.manage_carpools_page')}}">Manage Carpools </a>
         {% else %}
-        <a class="{{ 'active user-info' if active_page == 'login' else 'user-info' }}" href="{{ url_for('login_page') }}">Login</a>
-        <a class="{{ 'active user-info' if active_page == 'register' else 'user-info' }}" href="{{url_for('generic_register_page')}}">Register/Update</a>
-        <a class="{{ 'active user-info' if active_page == 'login_help' else 'user-info' }}" href="{{url_for('login_help_page')}}">Login Help</a>
+        <a class="{{ 'active user-info' if active_page == 'login' else 'user-info' }}" href="{{ url_for('main.login_page') }}">Login</a>
+        <a class="{{ 'active user-info' if active_page == 'register' else 'user-info' }}" href="{{url_for('main.generic_register_page')}}">Register/Update</a>
+        <a class="{{ 'active user-info' if active_page == 'login_help' else 'user-info' }}" href="{{url_for('main.login_help_page')}}">Login Help</a>
         
         {% endif %}
       </div>

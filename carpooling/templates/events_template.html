@@ -18,7 +18,7 @@
     
     <li>
         {% for event in events %}
-        <a href="{{url_for('event_page', event_index=event.index)}}" class="button n01">
+        <a href="{{url_for('main.event_page', event_index=event.index)}}" class="button n01">
             <span class="label">{{event.event_name.capitalize()}} {{event.event_date.strftime('%m/%d/%Y')}}</span>
         {% endfor %}
         </a>
@@ -29,7 +29,7 @@
 <h3 class="style2" style="align-self: center">Don't see the event you want?</h3>
 <ul id="buttons01" class="style1 buttons">
     <li>
-        <a href="{{url_for('create_event_page')}}" class="button n01">
+        <a href="{{url_for('main.create_event_page')}}" class="button n01">
             <span class="label">Create Event</span>
         </a>
     </li>

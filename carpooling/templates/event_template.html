@@ -9,7 +9,7 @@
 
 {% for region in regions%}
 <div class="regiondiv" style="border-color:{{region.color}}">
-    <h3 class="style2">{{region.name.capitalize()}} Region</h3>
+    <h3 class="style2">{{region.name}} Region</h3>
     {% if user.is_authenticated %}
     {% if user.passenger_profile.region_name == region.name %}
     {% if user.passenger_profile in event.passengers_needing_ride %}
@@ -26,7 +26,7 @@
     <div class="style1">
         <ul class="style1 buttons">
             <li>
-        <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
+        <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
             <span class="label">I need a carpool</span>
         </a>
             </li>
@@ -38,7 +38,7 @@
     <div class="style1">
         <ul class="style1 buttons">
             <li>
-        <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
+        <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index)}}" onclick="confirm_sign_up_for_carpool(event)" class="button n01">
             <span class="label">I need a carpool</span>
         </a>
             </li>
@@ -50,7 +50,7 @@
     {% for carpool in region.get_carpools_in_event(event) %}
         {% if carpool.has_driver() %}
         <div class="style1">
-        <p class="style2"> Ride with <a href= "{{url_for('driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}"> {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a> </p>
+        <p class="style2"> Ride with <a href= "{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}"> {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a> </p>
         <ul id="buttons01" class="style1 buttons">
             <li>
         {% for i in range(carpool.num_passengers) %}
@@ -59,7 +59,7 @@
                 <span class="label"> {{carpool.get_passenger_number_name(i)}} </span>
             </a>
             {% else %}
-            <a onclick="is_same_person(event, '{{carpool.driver}}')" href="{{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}}" class="button n01">
+            <a onclick="is_same_person(event, '{{carpool.driver}}')" href="{{ url_for('main.passenger_carpool_signup_page', carpool_index = carpool.index)}}" class="button n01">
                 <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
                 </a>
             {% endif %}
@@ -76,7 +76,7 @@
         <div class="style1">
             <ul class="style1 buttons">
                 <li>
-            <a href="{{ url_for('driver_carpool_signup_page', carpool_index = carpool.index)}}" onclick="confirm_valid_driver(event)" class="button n01">
+            <a href="{{ url_for('main.driver_carpool_signup_page', carpool_index = carpool.index)}}" onclick="confirm_valid_driver(event)" class="button n01">
                 <span class="label">Drive for this region!</span>
             </a>
                 </li>
@@ -92,7 +92,7 @@
 {% if event.user_id == current_user.id %}
 <ul class="style1 buttons">
     <li>
-<a style="color: red"href="{{ url_for('delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+<a style="color: red"href="{{ url_for('main.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
     <span class="label">Delete Event</span>
 </a>
     </li>
@@ -101,7 +101,7 @@
 {%  if user.is_admin > 0 %}
 <ul class="style1 buttons">
     <li>
-<a style="color: red"href="{{ url_for('delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
+<a style="color: red"href="{{ url_for('main.delete_event', event_index=event.index)}}" onclick="confirm_delete_event(event)" class="button n01">
     <span class="label">Delete Event</span>
 </a>
     </li>

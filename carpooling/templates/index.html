@@ -21,13 +21,13 @@
 </div>
 <ul id="buttons01" class="style1 buttons">
     <li>
-        <a href="{{url_for('generic_register_page')}}" class="button n01">
+        <a href="{{url_for('main.generic_register_page')}}" class="button n01">
             <svg>
                 <use xlink:href="#icon-b64"></use>
             </svg>
             <span class="label">Register Now</span>
         </a>
-        <a href="{{url_for('login_page')}}" class="button n01">
+        <a href="{{url_for('main.login_page')}}" class="button n01">
             <svg>
                 <use xlink:href="#icon-b64"></use>
             </svg>
@@ -51,7 +51,7 @@
 <h2 id="text02" class="style2">Events</h2>
 <p class="style2" style="display: block">
     {% for event in events %}
-    <a class ="style2" style="text-align: center; display: block" href="{{url_for('event_page', event_index=event.index)}}">{{event.event_name}}</a>
+    <a class ="style2" style="text-align: center; display: block" href="{{url_for('main.event_page', event_index=event.index)}}">{{event.event_name}}</a>
     <br>
     {% endfor %}
 
@@ -64,7 +64,7 @@
     Carpool for {{carpool.event.event_name}}
     <br>
     {% endfor %}
-    <a href="{{url_for('manage_carpools_page')}}">Manage</a>
+    <a href="{{url_for('main.manage_carpools_page')}}">Manage</a>
 {% endif %}
 {% if passenger_carpools %} 
 <h2 class="style2">Carpools I'm riding in</h2>
@@ -73,24 +73,24 @@
     Carpool for {{carpool.event.event_name}}
     <br>
     {% endfor %}
-    <a href="{{url_for('manage_carpools_page')}}">Manage</a>
+    <a href="{{url_for('main.manage_carpools_page')}}">Manage</a>
 {% endif %}
 
 <ul id="buttons01" class="style1 buttons">
     <li>
-        <a href="{{url_for('events_page')}}" class="button n01">
+        <a href="{{url_for('main.events_page')}}" class="button n01">
             <svg>
                 <use xlink:href="#icon-b64"></use>
             </svg>
             <span class="label">Upcoming Events</span>
         </a>
-        <a href="{{url_for('manage_carpools_page')}}" class="button n01">
+        <a href="{{url_for('main.manage_carpools_page')}}" class="button n01">
             <svg>
                 <use xlink:href="#icon-b64"></use>
             </svg>
             <span class="label">Manage Carpools</span>
         </a>
-        <a href="{{url_for('user_profile_page')}}" class="button n01">
+        <a href="{{url_for('main.user_profile_page')}}" class="button n01">
             <svg>
                 <use xlink:href="#icon-b64"></use>
             </svg>

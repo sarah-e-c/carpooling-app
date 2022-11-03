@@ -8,12 +8,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 CELERY_TASK_LIST = [
-    'app.tasks',
+    'carpooling.tasks',
 ]
 
 db_session = None
 celery = None
-
 
 def create_celery_app(_app=None):
     """

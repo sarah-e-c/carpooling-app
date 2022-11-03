@@ -34,6 +34,7 @@ class Driver(db.Model):
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
 
 
 
@@ -193,6 +194,7 @@ class Passenger(db.Model):
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
 
 
     def __repr__(self):
@@ -303,15 +305,17 @@ class User(UserMixin, db.Model):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
 
-# # possible future feature
+
 # class DistanceMatrix(db.Model):
 #     """
 #     Table to store the distance matrix
 #     """
 #     __tablename__ = 'distance_matrix'
 #     index = db.Column(db.Integer, primary_key=True)
-#     row = db.Column(db.String, nullable=False) # represents one location
-#     column = db.Column(db.String, nullable=False) # represents another location
+#     origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
+#     origin = db.relationship('Address', backref='address.origin_distances', lazy='dynamic')
+#     destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
+#     destination = db.relationship('Address', backref='address.destination_distances', lazy='dynamic')
 
 #     def __repr__(self):
 #         return f'DistanceMatrix: {self.row} {self.column}'
@@ -321,7 +325,7 @@ class User(UserMixin, db.Model):
 #     Table to store addresses and geocodes
 #     """
 #     __tablename__ = 'addresses'
-#     index = db.Column(db.Integer, primary_key=True)
+#     id = db.Column(db.Integer, primary_key=True)
 #     address_line_1 = db.Column(db.String, nullable=False)
 #     address_line_2 = db.Column(db.String, nullable=True)
 #     city = db.Column(db.String, nullable=False)

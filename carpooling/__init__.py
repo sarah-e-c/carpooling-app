@@ -7,10 +7,7 @@ from flask_mail import Mail
 import logging
 from celery import Celery
 from carpooling import celeryapp
-database_url = os.environ.get('DATABASE_URL')
-
-if database_url is None:
-    database_url = 'sqlite:///site.db'
+from flask_migrate import Migrate
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -24,13 +21,24 @@ mail = Mail()
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login_page'
+migrate = Migrate()
 
 
+# global tasks_
+# tasks_ = []
 
-
-@login_manager.user_loader
+@login_manager.user_loader # yes this is awful, im sorry i couldn't gt the takss to work any other way :(
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    global user_
+    try:
+        if user_ is None:
+            from carpooling.models import User as user_
+            logger.info('imported User')
+    except NameError as e:
+        from carpooling.models import User as user_ 
+        logger.info('imported User with nameerror')
+
+    return user_.query.get(int(user_id))
 
 
 
@@ -52,6 +60,10 @@ def create_app():
     celeryapp.celery = celery
     logger.info('celery app updated')
     celery.conf.update(app.config)
+    global tasks_
+    from carpooling import tasks as tasks_ # this is really weird im sorry
+    logger.debug(tasks_)
+    migrate.init_app(app, db)
     from .routes import register_blueprints
     register_blueprints(app)
     from .routes import register_task_blueprints
@@ -61,8 +73,7 @@ def create_app():
 
 
 
-import carpooling.routes
-from carpooling.models import User
-import carpooling.tasks
+#import carpooling.routes
+#from carpooling.models import User
 
 

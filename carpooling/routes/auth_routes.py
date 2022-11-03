@@ -5,6 +5,7 @@ All routes that have to do with authorization are defined here.
 from carpooling import db, mail
 from carpooling.models import Driver, AuthKey, Passenger, Region, User
 import logging
+from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException
 from flask import render_template, request, redirect, url_for, make_response, flash, Blueprint, current_app
 import secrets
@@ -475,18 +476,12 @@ def forgot_password_page():
         user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
         if user:
             logger.info('User {} found'.format(user))
-            message = Message(
-                'Password Reset',
-                recipients=[user.passenger_profile.email_address],
-                sender=('Mech Techs Carpooling', 'mechtechscarpooling@zohomail.com'),
-                body=f"""
+            send_async_email.delay(user.passenger_profile.email_address, 'Password Reset', f"""
                 Hello {user.first_name.capitalize()} {user.last_name.capitalize()}, \n\n
                 You have requested a password reset. Please click the link below to reset your password. \n\n
                 {url_for('auth.reset_password_page', user_id=user.id, _external=True, token=user.get_reset_password_token())}
-                """
-            )
-            mail.send(message)
-            logger.info('Password reset link sent to user.')
+                """ )
+            logger.info('Password reset link task started.')
             return render_template('forgot_password_template.html', message='Password reset link sent to your email address.', user=current_user)
         else:
             return render_template('forgot_password_template.html', message='User not found. Please register or try again.', user=current_user)

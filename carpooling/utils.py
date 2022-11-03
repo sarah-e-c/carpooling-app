@@ -131,27 +131,6 @@ def driver_required(function):
     return wrapper
 
 
-def initial_set_up():
-    """
-    Function for setting up the initial admin user.
-    """
-    pass # TODO
-
-def send_email(to, subject, message):
-    """
-    Function for sending emails.
-    to: recipient email.
-    subject: subject of the email.
-    message: message of the email.
-    """
-    try:
-        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'Mech Techs Carpooling'), recipients=[to])
-        msg.body = message
-        mail.send(msg)
-        logger.info('Email sent to %s', to)
-    except Exception as e:
-        logger.debug(e)
-        logger.warning('Email failed to send to {}, probably due to an invalid email adderss'.format(to))
 
 
     

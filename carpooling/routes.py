@@ -1,6 +1,6 @@
 from carpooling import db
 from carpooling import app, mail
-from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
+from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, EventCheckIn
 import logging
 import time
 from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException, super_admin_required
@@ -301,7 +301,7 @@ def event_page(event_index):
     try:
         event = Event.query.get(event_index)
     except: # the event doesn't exist
-        redirect(url_for('events_page'))
+        return redirect(url_for('events_page'))
    
     return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
 
@@ -1381,3 +1381,37 @@ def passenger_carpool_request_page(event_index):
         logger.info('finished notifying drivers.')
         return redirect(url_for('event_page', event_index=event.index))
 
+
+@app.route('/event-checkin/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_in_page(event_index):
+    """
+    Function to sign up for an event.
+    """
+
+    if EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first() is not None:
+        logger.info('Passenger {} already signed up for event {}'.format(current_user.passenger_profile, event_index))
+        existing_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+        existing_check_in.re_check_in_time = datetime.datetime.now()
+        db.session.commit()
+        logger.info('Passenger {} re-checked in for event {}'.format(current_user.passenger_profile, event_index))
+        return redirect(url_for('event_page', event_index=event_index))
+
+    logger.info('Passenger {} checking in for event {}'.format(current_user.passenger_profile, event_index))
+    new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
+    db.session.add(new_event_check_in)
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))
+
+@app.route('/event-checkout/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_out_page(event_index):
+    """
+    Function to check out of an event.
+    """
+    logger.info('Passenger {} checking out of event {}'.format(current_user.passenger_profile, event_index))
+    event_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+    event_check_in.re_check_in_time = None
+    event_check_in.check_out_time = datetime.datetime.now()
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))

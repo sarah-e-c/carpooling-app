@@ -7,6 +7,9 @@ from flask_mail import Mail
 from flask_session import Session
 from flask import Blueprint
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 database_url = os.environ.get('DATABASE_URL')

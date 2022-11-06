@@ -1,6 +1,6 @@
 from carpooling import db
 from carpooling import app, mail
-from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
+from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Address
 import logging
 import time
 from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException, super_admin_required
@@ -188,6 +188,8 @@ def register_new_driver_page():
         return render_template('driver_signup_template.html', message=message, user=current_user, regions=regions)
     
     if request.method == 'POST':
+        # making an address from the form data
+        address = Address(street=request.form['street'], city=request.form['city'], state=request.form['state'], zip_code=request.form['zip_code'])
 
         # getting the data from the form, i don't care if aaron says this is bad practice
         driver_info = {

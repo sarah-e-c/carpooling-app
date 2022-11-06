@@ -232,7 +232,5 @@ def make_regions():
         db.session.commit()
 
 if __name__ == '__main__': # run app
-
-
     logging.basicConfig(level=logging.DEBUG)
     app.run(debug=True)

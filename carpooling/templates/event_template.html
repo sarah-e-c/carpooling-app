@@ -28,6 +28,10 @@
         font-family: 'Fira Sans', sans-serif;
         color: white;
       }
+    
+    .tab button:hover {
+            background-color: #cbebdb;
+    }
     .tabbar {
         overflow: hidden;
         border: 1px solid #ccc;
@@ -35,6 +39,15 @@
         width: 100%;
     }
     
+    h4.style2 {
+        font-family: 'Fira Sans', sans-serif;
+        font-weight: 600;
+        font-size: 1.5em;
+        color: #FFFFFF;
+        text-align: center;
+        padding-bottom: 10px;
+    }
+
 </style>
 {% endblock %}
 
@@ -164,10 +177,10 @@
 
 <div class="sign_up_div tabcontent" style="display:block" id="signup">
     <div class="style1">
-        <h3 class="style2">Event Details</h3>
+        <h3 class="style2">Check in Details</h3>
         {% if user.is_authenticated %}
         {% if user.is_checked_in_for_event(event) %}
-        <p class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%H-%m') }}</p> 
+        <h4 class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%H:%M') }}</h4> 
         {% endif %}
         {% endif %}
 
@@ -186,11 +199,15 @@
                 </a>
                 {% endif %}
                 {% else %}
-
-                <a href="{{ url_for('event_check_in_page', event_index=event.index)}}" onclick="check_in(event)"
-                    class="button n01" id="checkin_button" style="width: 70%; height: 200px;">
-                    <span class="label" >Check In</span>
+                <h4 class="style2"> Please log in to check in to the event. </h4>
+                <a href="{{ url_for('login_page')}}" onclick="check_out(event)"
+                class="button n01" id="login_button">
+                <span class="label">Log In</span>
                 </a>
+                <a href="{{ url_for('generic_register_page', event_index=event.index)}}" onclick="check_out(event)"
+                class="button n01" id="register_button">
+                <span class="label">Register</span>
+            </a>
                 {% endif %}
             </li>
         </ul>

@@ -1,10 +1,6 @@
 from carpooling import db
 from carpooling import app, mail
-<<<<<<< HEAD
-from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, EventCheckIn
-=======
 from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Address
->>>>>>> temp-branch
 import logging
 import time
 from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException, super_admin_required
@@ -193,7 +189,20 @@ def register_new_driver_page():
     
     if request.method == 'POST':
         # making an address from the form data
-        address = Address(street=request.form['street'], city=request.form['city'], state=request.form['state'], zip_code=request.form['zip_code'])
+        address = Address(
+            address_line_1=request.form['addressline1'],
+            address_line_2=request.form['addressline2'],
+            city=request.form['city'],
+            state='VA',
+            zip_code=request.form['zipcode'],
+            latitude=request.form['latitude'],
+            longitude=request.form['longitude'],
+            code=request.form['place_id']
+        )
+        db.session.add(address)
+        db.session.commit()
+
+
 
         # getting the data from the form, i don't care if aaron says this is bad practice
         driver_info = {
@@ -216,7 +225,9 @@ def register_new_driver_page():
             'address_line_2': request.form['addressline2'],
             'city': request.form['city'],
             'zip_code': request.form['zipcode'],
+            'address_id': address.id,
         }
+        
         try:
             # the person already exists in the database as a driver
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
@@ -307,7 +318,7 @@ def event_page(event_index):
     try:
         event = Event.query.get(event_index)
     except: # the event doesn't exist
-        return redirect(url_for('events_page'))
+        redirect(url_for('events_page'))
    
     return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
 
@@ -1387,37 +1398,3 @@ def passenger_carpool_request_page(event_index):
         logger.info('finished notifying drivers.')
         return redirect(url_for('event_page', event_index=event.index))
 
-
-@app.route('/event-checkin/<event_index>', methods=['GET', 'POST'])
-@login_required
-def event_check_in_page(event_index):
-    """
-    Function to sign up for an event.
-    """
-
-    if EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first() is not None:
-        logger.info('Passenger {} already signed up for event {}'.format(current_user.passenger_profile, event_index))
-        existing_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
-        existing_check_in.re_check_in_time = datetime.datetime.now()
-        db.session.commit()
-        logger.info('Passenger {} re-checked in for event {}'.format(current_user.passenger_profile, event_index))
-        return redirect(url_for('event_page', event_index=event_index))
-
-    logger.info('Passenger {} checking in for event {}'.format(current_user.passenger_profile, event_index))
-    new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
-    db.session.add(new_event_check_in)
-    db.session.commit()
-    return redirect(url_for('event_page', event_index=event_index))
-
-@app.route('/event-checkout/<event_index>', methods=['GET', 'POST'])
-@login_required
-def event_check_out_page(event_index):
-    """
-    Function to check out of an event.
-    """
-    logger.info('Passenger {} checking out of event {}'.format(current_user.passenger_profile, event_index))
-    event_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
-    event_check_in.re_check_in_time = None
-    event_check_in.check_out_time = datetime.datetime.now()
-    db.session.commit()
-    return redirect(url_for('event_page', event_index=event_index))

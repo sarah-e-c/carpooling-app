@@ -317,7 +317,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
-<<<<<<< HEAD
     def is_checked_in_for_event(self, event: Event):
         """
         Returns true if the passenger is signed up for the event.
@@ -344,7 +343,6 @@ class User(UserMixin, db.Model):
         Returns the check in for the event.
         """
         return EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).first()
-=======
 
 class DistanceMatrix(db.Model):
     """
@@ -379,9 +377,8 @@ class Address(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     code = db.Column(db.String, nullable=False) # placeid
-    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
-    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+    # passenger = db.relationship('Passenger', backref='passenger.address', lazy=True)
+    # driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
 
     def __repr__(self):
         return f'Address: {self.address} {self.code}'
->>>>>>> temp-branch

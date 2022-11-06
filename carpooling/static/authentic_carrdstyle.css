@@ -514,6 +514,8 @@ hr.style1:before {
 
 .buttons li {
     max-width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .buttons li a {

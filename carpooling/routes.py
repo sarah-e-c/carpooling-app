@@ -1,6 +1,6 @@
 from carpooling import db
 from carpooling import app, mail
-from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Address
+from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Address, EventCheckIn
 import logging
 import time
 from carpooling.utils import PersonAlreadyExistsException, admin_required, driver_required, InvalidNumberOfSeatsException, super_admin_required
@@ -547,6 +547,23 @@ def register_passenger_page():
             return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
 
         try:
+            # creating new address
+            logger.debug("creating new address")
+            new_address = Address(
+                address_line_1 = request.form['addressline1'],
+                address_line_2 = request.form['addressline2'],
+                city = request.form['city'],
+                state = 'VA',
+                zip_code = request.form['zipcode'],
+                code = request.form['place_id'],
+                latitude = request.form['latitude'],
+                longitude = request.form['longitude']
+            )
+            db.session.add(new_address)
+            db.session.commit()
+            logger.debug("new address created")
+
+            logger.debug("creating new passenger")
             passenger_information = {
                 'first_name': request.form['firstname'].lower(),
                 'last_name': request.form['lastname'].lower(),
@@ -560,7 +577,9 @@ def register_passenger_page():
                 'address_line_2': request.form['addressline2'],
                 'city': request.form['city'],
                 'zip_code': request.form['zipcode'],
+                'address_id' : new_address.id,
             }
+
 
             passenger = Passenger(**passenger_information)
             db.session.add(passenger)
@@ -583,6 +602,7 @@ def register_passenger_page():
         except Exception as urMom:
             regions = Region.query.all()
             logger.debug(urMom)
+            raise urMom
             return render_template('passenger_sign_up_template.html', message='There was an error', user=current_user, regions=regions)
         
     
@@ -1163,6 +1183,15 @@ def admin_delete_user(user_id):
         db.session.delete(user_to_delete.driver_profile)
     except Exception as e:
         logger.debug(e) # passing after this
+    
+    # deleting address
+    try:
+        db.session.delete(user_to_delete.address)
+        db.session.commit()
+    except Exception as e:
+        logger.debug(e)
+        logger.warning('Address not deleted for user {}'.format(user_to_delete))
+
 
     db.session.delete(user_to_delete)
     db.session.commit()
@@ -1398,3 +1427,38 @@ def passenger_carpool_request_page(event_index):
         logger.info('finished notifying drivers.')
         return redirect(url_for('event_page', event_index=event.index))
 
+
+
+@app.route('/event-checkin/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_in_page(event_index):
+    """
+    Function to sign up for an event.
+    """
+
+    if EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first() is not None:
+        logger.info('Passenger {} already signed up for event {}'.format(current_user.passenger_profile, event_index))
+        existing_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+        existing_check_in.re_check_in_time = datetime.datetime.now()
+        db.session.commit()
+        logger.info('Passenger {} re-checked in for event {}'.format(current_user.passenger_profile, event_index))
+        return redirect(url_for('event_page', event_index=event_index))
+
+    logger.info('Passenger {} checking in for event {}'.format(current_user.passenger_profile, event_index))
+    new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
+    db.session.add(new_event_check_in)
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))
+
+@app.route('/event-checkout/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_out_page(event_index):
+    """
+    Function to check out of an event.
+    """
+    logger.info('Passenger {} checking out of event {}'.format(current_user.passenger_profile, event_index))
+    event_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+    event_check_in.re_check_in_time = None
+    event_check_in.check_out_time = datetime.datetime.now()
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))

@@ -5,6 +5,7 @@ from flask_login import UserMixin
 from itsdangerous import URLSafeSerializer
 import logging
 import datetime
+from sqlalchemy import event, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -362,11 +363,21 @@ class Address(db.Model):
     """
     Table to store addresses and geocodes
     """
+
+    # @event.listens_for(db.session, 'after_flush')
+    # def hashgen(session, flush_context):
+    #     for obj in session:
+    #         if isinstance(obj, Address):
+    #             logger.debug(f'Address: {obj}')
+    #             obj.origin_id = obj.id
+    #             obj.destination_id = obj.id
+
+    # this is literally the worst thing I have ever done
     __tablename__ = 'addresses'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    origin_id = db.Column(db.Integer, primary_key=True, unique=True)
+    id = db.Column(db.Integer, Sequence('record_id_seq_3'), primary_key=True)
+    origin_id = db.Column(db.Integer, Sequence('record_id_seq_4'), primary_key=True, unique=True)
     # origin_distances = db.relationship('DistanceMatrix')
-    destination_id = db.Column(db.Integer, primary_key=True, unique=True)
+    destination_id = db.Column(db.Integer, Sequence('record_id_seq_5'), primary_key=True, unique=True)
     # destination_distances = db.relationship('DistanceMatrix')
 
     address_line_1 = db.Column(db.String, nullable=False)

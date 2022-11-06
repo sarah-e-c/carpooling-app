@@ -44,7 +44,8 @@ class Driver(db.Model):
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
-
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', backref='address.driver')
 
 
     def __repr__(self):
@@ -144,6 +145,8 @@ class Event(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref=db.backref('events', lazy=True))
     passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', backref='address.event')
 
 
 
@@ -203,6 +206,8 @@ class Passenger(db.Model):
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', backref='address.passenger')
 
 
     def __repr__(self):
@@ -312,6 +317,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
+<<<<<<< HEAD
     def is_checked_in_for_event(self, event: Event):
         """
         Returns true if the passenger is signed up for the event.
@@ -338,3 +344,44 @@ class User(UserMixin, db.Model):
         Returns the check in for the event.
         """
         return EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).first()
+=======
+
+class DistanceMatrix(db.Model):
+    """
+    Table to store the distance matrix
+    """
+    __tablename__ = 'distance_matrix'
+    index = db.Column(db.Integer, primary_key=True)
+    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.origin_id'), nullable=False) # represents one location
+    origin = db.relationship('Address', backref='address.origin_distances', foreign_keys=[origin_id])
+    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.destination_id'), nullable=False) # represents another location
+    destination = db.relationship('Address', backref='address.destination_distances', foreign_keys=[destination_id])
+
+    def __repr__(self):
+        return f'DistanceMatrix: {self.row} {self.column}'
+
+class Address(db.Model):
+    """
+    Table to store addresses and geocodes
+    """
+    __tablename__ = 'addresses'
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    origin_id = db.Column(db.Integer, primary_key=True, unique=True)
+    # origin_distances = db.relationship('DistanceMatrix')
+    destination_id = db.Column(db.Integer, primary_key=True, unique=True)
+    # destination_distances = db.relationship('DistanceMatrix')
+
+    address_line_1 = db.Column(db.String, nullable=False)
+    address_line_2 = db.Column(db.String, nullable=True)
+    city = db.Column(db.String, nullable=False)
+    state = db.Column(db.String, nullable=False)
+    zip_code = db.Column(db.String, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    code = db.Column(db.String, nullable=False) # placeid
+    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
+    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+
+    def __repr__(self):
+        return f'Address: {self.address} {self.code}'
+>>>>>>> temp-branch

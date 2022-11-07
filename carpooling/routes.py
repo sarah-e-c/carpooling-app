@@ -15,6 +15,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from carpooling.utils import requires_auth_key
 from itsdangerous import URLSafeSerializer
 from flask_mail import Message
+from io import StringIO
+import csv
+
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
 
@@ -1462,3 +1465,41 @@ def event_check_out_page(event_index):
     event_check_in.check_out_time = datetime.datetime.now()
     db.session.commit()
     return redirect(url_for('event_page', event_index=event_index))
+
+@app.route('/view-checkins')
+@admin_required
+def view_checkins():
+    """
+    Function to view all the check ins.
+    """
+    recent_events = Event.query.order_by(Event.event_start_time.desc()).limit(3).all()
+    other_events = Event.query.order_by(Event.event_start_time.desc()).offset(3).all()
+    return render_template('view_checkins_template.html', recent_events=recent_events, other_events=other_events, user=current_user)
+
+
+@app.route('/download-hours-csv/<event_index>')
+@admin_required
+def download_hours_csv(event_index):
+    """
+    Function to download the hours csv as an admin
+    """
+    check_ins = EventCheckIn.query.filter_by(event_id=event_index)
+    event_name = Event.query.get(event_index).event_name
+    heading_row = ["First Name", "Last Name", "Check In Time", "Check Out Time", "Check In Hours"]
+    strio = StringIO()
+    cw = csv.writer(strio)
+    cw.writerow(heading_row)
+    csv_content = []
+    for check_in in check_ins:
+        new_row = [check_in.user.first_name.capitalize(),
+        check_in.user.last_name.capitalize(),
+        check_in.check_in_time.strftime('%I:%M %p'),
+        check_in.check_out_time.strftime('%I:%M %p'),
+        str(check_in.check_out_time - check_in.check_in_time)]
+        csv_content.append(new_row)
+    cw.writerows(csv_content)
+    output = make_response(strio.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={event_name}.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+

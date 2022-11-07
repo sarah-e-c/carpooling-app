@@ -20,6 +20,11 @@ class EventCheckIn(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     re_check_in_time = db.Column(db.DateTime, nullable=True)
 
+    def get_start_time(self):
+        return self.check_in_time.strftime('%I:%M %p')
+    def get_end_time(self):
+        return self.check_out_time.strftime('%I:%M %p')
+
 class Driver(db.Model):
     __tablename__ = 'drivers'
     index = db.Column(db.Integer, primary_key=True)
@@ -164,6 +169,8 @@ class Event(db.Model):
     def get_times(self):
         return f'{self.event_start_time.strftime("%I:%M %p")} - {self.event_end_time.strftime("%I:%M %p")}'
 
+    def get_checkins(self):
+        return EventCheckIn.query.filter_by(event_id=self.index).all()
 
     def __repr__(self):
         return f'Event: {self.event_name}'

@@ -5,15 +5,12 @@ import os
 from flask_login import LoginManager
 from flask_mail import Mail
 import logging
-<<<<<<< HEAD
 from celery import Celery
 from carpooling import celeryapp
 from flask_migrate import Migrate
-=======
 from dotenv import load_dotenv
 
 load_dotenv()
->>>>>>> master
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)

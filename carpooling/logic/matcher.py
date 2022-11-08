@@ -203,7 +203,8 @@ def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
     
 
     # query addresses
-    used_addresses = [address.id for address in Address.query.filter(Address.passenger_id.in_([user.id for user in rsvp_list])).all()]
+    logger.info(Address.query.all())
+    used_addresses = [address.id for address in Address.query.filter(Address.passenger_id.in_([user[0].id_ for user in rsvp_list])).all()]
 
     # filling in the distance matrix
     kilos_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
@@ -318,9 +319,10 @@ def load_people(strio: StringIO):
     people_list = []
     for user in users:
         new_person = Person(user.id, user.passenger_profile.address_id, 
-        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & s['last name'] == user.last_name)].iloc[0]['willing to drive'] == 'yes'),
-        user.driver_profile.number_of_seats if user.driver_profile else 0,
-        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & s['last name'] == user.last_name)].iloc[0]['needs ride'] == 'yes'),
+        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (s['last name'] == user.last_name), axis=1)].iloc[0]['willing to drive'] == 'yes'),
+        user.driver_profile.num_seats if user.driver_profile else 0,
+        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (s['last name'] == user.last_name), axis=1)].iloc[0]['needs ride'] == 'yes'),
+        100 # NEEDS CHANGED TODO
         ),
         people_list.append(new_person)
     return people_list
@@ -365,7 +367,7 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
     people_dict = {}
     logger.info('rsvp_list: {}'.format(rsvp_list))
     for person in rsvp_list:
-        people_dict[person.id_] = {'Person': person, 'Driver': None, 'Passenger': None}
+        people_dict[person[0].id_] = {'Person': person[0], 'Driver': None, 'Passenger': None}
         if person.is_driver:
             drivers.append(Driver(id_=person.id_, location_id=person.location_id,
                            num_seats=person.num_seats, is_real_driver=True, time_tolerance=person.time_tolerance))

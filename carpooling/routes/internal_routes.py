@@ -3,10 +3,10 @@ Routes that are used only for internal purposes. (Like leaving carpools). Usuall
 """
 
 from carpooling import db, mail
-from carpooling.models import Event, Carpool,  User, EventCheckIn
+from carpooling.models import Event, Carpool,  User, EventCheckIn, Destination, Address
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
-from carpooling.utils import admin_required
+from carpooling.utils import admin_required, requires_auth_key
 from flask import render_template, request, redirect, url_for, Blueprint, make_response
 import datetime
 from flask_login import login_required, current_user
@@ -330,3 +330,37 @@ def download_hours_csv(event_index):
     output.headers["Content-type"] = "text/csv"
     return output
 
+
+@internal_blueprint.route('/create-destination', methods=['GET', 'POST'])
+@requires_auth_key
+def create_destination():
+    """
+    Creates a destination
+    """
+
+    if request.method == 'GET':
+        return redirect(url_for('main.create_event_page'))
+    # creating the destination
+    new_address = Address(address_line_1=request.form['addressline1'],
+                          zip_code=request.form['zipcode'],
+                          city=request.form['city'],
+                          state=request.form['state'],
+                          latitude=request.form['latitude'],
+                          longitude=request.form['longitude'],
+                          code=request.form['place_id'])
+
+    db.session.add(new_address)
+    db.session.add(new_address)
+    db.session.commit()
+
+    logger.info('Address {} created'.format(new_address))
+
+
+    new_destination = Destination(name=request.form['destinationname'],
+                                    address_id=new_address.id)
+
+    db.session.add(new_destination)
+    db.session.commit()
+    logger.info('Destination {} created'.format(new_destination))
+
+    return redirect(url_for('main.create_event_page'))

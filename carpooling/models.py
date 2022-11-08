@@ -7,6 +7,7 @@ import logging
 import datetime
 from sqlalchemy import event, Sequence
 
+
 logger = logging.getLogger(__name__)
 
 class EventCheckIn(db.Model):
@@ -151,8 +152,8 @@ class Event(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref=db.backref('events', lazy=True))
     passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.event')
+    destination= db.relationship('Destination', backref=db.backref('events', lazy=True))
+    destination_id = db.Column(db.Integer, db.ForeignKey('destinations.id'), nullable=True)
 
 
 
@@ -399,4 +400,18 @@ class Address(db.Model):
     # driver = db.relationship('Driver', backref=db.backref('address'), lazy=True, foreign_keys=[driver_id])
 
     def __repr__(self):
-        return f'Address: {self.address} {self.code}'
+        return f'Address: {self.address_line_1}'
+
+
+class Destination(db.Model):
+    """
+    Class to represent a location where an event can be held.
+    """
+    __tablename__ = 'destinations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+    address = db.relationship('Address', backref='destination.addresses', foreign_keys=[address_id])
+
+    def __repr__(self):
+        return f'Destination: {self.name}'

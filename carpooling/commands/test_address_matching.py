@@ -17,5 +17,5 @@ class TestAddressMatching():
             db.create_all()
             with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
                 people = load_people(StringIO(f.read()))
-            solution = evaluate_best_solution(people, 0)
+            solution = evaluate_best_solution(people, 1)
             print(solution)

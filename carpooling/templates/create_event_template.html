@@ -4,63 +4,243 @@
 
 {% set active_page='events' %}
 
+{% block styles %}
+<style>
+    #createDestinationDiv  {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        border: 1px solid #000;
+        padding: 20px;
+        z-index: 0;
+        box-shadow: 0px 0px 5px 0px rgba(255, 225, 225, 0.75);
+        
+    }
+</style>
+{% endblock %}
+
 {% block main %}
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
+
 
 <div id="image01" class="style1 image">
     <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt="" />
     </span>
 </div>
 <h1 id="text01" class="style1">Create New Event</h1>
 <h2 id="text07" class="style2">{{ message }}</h2>
 <hr id="divider02" class="style1">
 <div id="text02" class="style2">
-    <form action="{{url_for("main.create_event_page")}}" method="post">
+    <form action="{{url_for('main.create_event_page')}}" method="post">
         <div id="formtable">
-        <p>
-        <label for="eventname">Event Name</label>
-        
-        <input type="text" id="eventname" name="eventname" placeholder="Friday Meeting" class="input1" required="required">
-        </p>
-        <br>
+            <p>
+                <label for="eventname">Event Name</label>
 
-        <p>
-            <label for="eventdate">Event Date  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-            <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="input1" required="required">
-            </p>
-            <br>
-        <p>
-
-        <label for="eventstarttime">Event Start Time &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-        <input type="time" id="eventstarttime" name="eventstarttime" placeholder="4:00" class="input1" required="required">
-        </p>
-        <br>
-
-        <p>
-            <label for="eventendtime">Event End Time</label>
-            <input type="time" id="eventendtime" name="eventendtime" placeholder="8:30" class="input1" required="required">
-        </p>
-        <br>
-
-        <p>
-        <label for="eventlocation">Event Location</label>
-        <input type="text" id="eventlocation" name="eventlocation" placeholder="Maggie L. Walker Governor's School" class="input1">
-        </p>
-        <br>
-
-        <p>
-            <label for="eventdescription">Event Description</label>
-            <input type="text" id="eventdescription" name="eventdescription" placeholder="Normal Friday Meeting" class="input1">
+                <input type="text" id="eventname" name="eventname" placeholder="Friday Meeting" class="input1"
+                    required="required">
             </p>
             <br>
 
-        <p>
-      
-        <ul id = "buttons01" class="style1 buttons">
-            <input type="submit" value="Create" class="style1" id="submitbutton"> 
+            <p>
+                <label for="eventdate">Event Date
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="input1"
+                    required="required">
+            </p>
+            <br>
+            <p>
+
+                <label for="eventstarttime">Event Start Time
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                <input type="time" id="eventstarttime" name="eventstarttime" placeholder="4:00" class="input1"
+                    required="required">
+            </p>
+            <br>
+
+            <p>
+                <label for="eventendtime">Event End Time</label>
+                <input type="time" id="eventendtime" name="eventendtime" placeholder="8:30" class="input1"
+                    required="required">
+            </p>
+            <br>
+
+            <p>
+                <label for="region">Event Location</label>
+                <select onclick="verifyDestination(event)" name="eventAddress" id="eventAddress">
+                    {% for destination in destinations %}
+                    <option value="{{destination.name}}" selected> {{destination.name}}</option>
+                    {% endfor %}
+                </select>
+                <ul id="buttons01" class="style1 buttons">
+                    <span class="button n01" onclick="verifyDestination(event)">Create Destination</span>
+                </ul>
+            </p>
+
+            <p>
+                <label for="eventdescription">Event Description</label>
+                <input type="text" id="eventdescription" name="eventdescription" placeholder="Normal Friday Meeting"
+                    class="input1">
+            </p>
+            <br>
+
+
+        </div>
+
+        <ul id="buttons01" class="style1 buttons">
+            <input type="submit" value="Create" class="style1" id="submitbutton">
         </ul>
         <br>
     </form>
+
+    <div id="createDestinationDiv" class="createDestinationDiv">
+        <form action="{{url_for('internal.create_destination')}}" method="post" id="createDestinationForm">
+            <p>
+                <label for="destinationname">Destination Name</label>
+                <input type="text" id="destinationname" name="destinationname" placeholder="Destination Name"
+                    class="input1" required="required">
+            </p>
+            <br>
+
+            <p>
+                <label for="addressline1">Destination Address</label>
+                <input type="text" id="addressline1" name="addressline1" placeholder="Destination Address"
+                    class="input1" required="required">
+            </p>
+            <br>
+
+            <input type="hidden" id="city" name="city" class="input1" required="required">
+            <input type="hidden" id="state" name="state" class="input1" required="required">
+            <input type="hidden" id="zipcode" name="zipcode" class="input1" required="required">
+            <input type="hidden" id="latitude" name="latitude" class="input1" required="required">
+            <input type="hidden" id="longitude" name="longitude" class="input1" required="required">
+            <input type="hidden" id="place_id" name="place_id" class="input1" required="required">
+
+            <ul id="buttons01" class="style1 buttons">
+                <input type="submit" onclick="verify_and_submit_form(event)" class="style1" id="submitbutton">
+            </ul>
+            <br>
+        </form>
+    </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    let autocomplete = google.maps.places.Autocomplete;
+    let addressLine1Field = document.getElementById("addressline1");
+
+    let latitude; // making these global so we can use them in the submit function without having to be in the form
+    let longitude;
+    let place_id;
+    let zipcode;
+    let city;
+    let state;
+
+    initAutocomplete()
+
+
+    function verifyDestination(event) {
+        let element = document.getElementById("eventAddress");
+        createDestinationDiv = document.getElementById("createDestinationDiv");
+        if (createDestinationDiv.style.display == 'block') {
+            createDestinationDiv.style.display = 'none';
+        } else {
+            createDestinationDiv.style.display = 'block';
+        }
+        
+        console.log("new destination selected")
+
+
+    }
+
+    function initAutocomplete() {
+        console.log("initAutocomplete")
+
+
+        // Create the autocomplete object, restricting the search predictions to
+        // addresses in the US
+        autocomplete = new google.maps.places.Autocomplete(addressLine1Field, {
+            componentRestrictions: { country: ["us"] },
+            fields: ["address_components", "geometry", "place_id"],
+            types: ["address"],
+        });
+
+        addressLine1Field.focus();
+        console.log("autocomplete initialized")
+
+        // When the user selects an address from the drop-down, populate the
+        // address fields in the form.
+        autocomplete.addListener("place_changed", fillInAddress);
+    }
+
+    function fillInAddress() {
+        // Get the place details from the autocomplete object.
+        const place = autocomplete.getPlace();
+        let address1 = "";
+
+        // Get each component of the address from the place details,
+        // and then fill-in the corresponding field on the form.
+        // place.address_components are google.maps.GeocoderAddressComponent objects
+        // which are documented at http://goo.gle/3l5i5Mr
+        console.log(place.address_components)
+        for (var i = 0; i < place.address_components.length; i++) {
+            // @ts-ignore remove once typings fixed
+            let component = place.address_components[i];
+            const componentType = component.types[0];
+
+
+            switch (componentType) {
+                case "street_number": {
+                    address1 = `${component.long_name} ${address1}`;
+                    break;
+                }
+                case "route": {
+                    address1 += component.short_name;
+                    break;
+                }
+                case "locality": {
+                    city = component.long_name;
+                    break;
+                }
+                case "postal_code": {
+                    zipcode = `${component.long_name}${zipcode}`;
+                    break;
+                }
+                case "state": {
+                    state = component.short_name
+                    break;
+                }
+            }
+        }
+
+        addressLine1Field.value = address1;
+        latitude = place.geometry.location.lat();
+        longitude = place.geometry.location.lng();
+        place_id = place.place_id;
+
+
+    }
+
+    function verify_and_submit_form(event) {
+        // this function is called when the submit button is clicked
+        // it verifies that the passwords match and then submits the form
+
+        event.preventDefault();
+        console.log(latitude, longitude)
+        document.getElementById("zipcode").value = zipcode;
+        document.getElementById("city").value = city;
+        document.getElementById("state").value = state;
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+        document.getElementById("place_id").value = place_id;
+        document.getElementById("createDestinationForm").submit();
+    }
+</script>
 {% endblock %}

@@ -4,7 +4,7 @@ Main, user-facing routes for the application
 
 from carpooling import db
 from carpooling import mail
-from carpooling.models import Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User
+from carpooling.models import Address, Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Destination
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
@@ -139,10 +139,11 @@ def create_event_page():
     """
 
     if request.method == 'GET':
+        destinations = Destination.query.all()
         message = request.args.get('message')
         if message is None:
             message = 'Create an Event'
-        return render_template('create_event_template.html', message=message, user=current_user)
+        return render_template('create_event_template.html', message=message, user=current_user, destinations=destinations)
 
     if request.method == 'POST':
         # getting the event info from the form
@@ -151,9 +152,9 @@ def create_event_page():
             'event_date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
             'event_start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
             'event_end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
-            'event_location': request.form['eventlocation'],
             'event_description': request.form['eventdescription'],
-            'user_id': current_user.id
+            'user_id': current_user.id,
+            'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id
         }
 
         try:
@@ -450,3 +451,38 @@ def passenger_carpool_request_page(event_index, region_name):
 
         logger.info('finished notifying drivers.')
         return redirect(url_for('main.event_page', event_index=event.index))
+
+
+@main_blueprint.route('/create-destination', methods=['GET', 'POST'])
+@requires_auth_key
+def create_destination():
+    """
+    Creates a destination
+    """
+
+    if request.method == 'GET':
+        return redirect(url_for('main.create_event_page'))
+    # creating the destination
+    new_address = Address(address_line_1=request.form['addressline1'],
+                          zip_code=request.form['zipcode'],
+                          city=request.form['city'],
+                          state=request.form['state'],
+                          latitude=request.form['latitude'],
+                          longitude=request.form['longitude'],
+                          code=request.form['place_id'])
+
+    db.session.add(new_address)
+    db.session.add(new_address)
+    db.session.commit()
+
+    logger.info('Address {} created'.format(new_address))
+
+
+    new_destination = Destination(name=request.form['destinationname'],
+                                    address_id=new_address.id)
+
+    db.session.add(new_destination)
+    db.session.commit()
+    logger.info('Destination {} created'.format(new_destination))
+
+    return redirect(url_for('main.create_event_page'))

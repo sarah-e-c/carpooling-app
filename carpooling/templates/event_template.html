@@ -82,7 +82,7 @@
         <div class="style1">
             <ul class="style1 buttons">
                 <li>
-                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index)}}"
+                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index, region_name=region.name) }}"
                         onclick="confirm_sign_up_for_carpool(event)" class="button n01">
                         <span class="label">I need a carpool</span>
                     </a>

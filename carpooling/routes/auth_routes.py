@@ -3,7 +3,7 @@ All routes that have to do with authorization are defined here.
 """
 
 from carpooling import db, mail
-from carpooling.models import Driver, AuthKey, Passenger, Region, User
+from carpooling.models import Address, Driver, AuthKey, Passenger, Region, User
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException
@@ -158,6 +158,18 @@ def register_new_driver_page():
     
     if request.method == 'POST':
 
+        address = Address(
+            address_line_1=request.form['addressline1'],
+            address_line_2=request.form['addressline2'],
+            city=request.form['city'],
+            state='VA',
+            zip_code=request.form['zipcode'],
+            latitude=request.form['latitude'],
+            longitude=request.form['longitude'],
+            code=request.form['place_id']
+        )
+        db.session.add(address)
+        db.session.commit()
         # getting the data from the form, i don't care if aaron says this is bad practice
         driver_info = {
             'first_name':request.form['firstname'].lower(),
@@ -179,15 +191,14 @@ def register_new_driver_page():
             'address_line_2': request.form['addressline2'],
             'city': request.form['city'],
             'zip_code': request.form['zipcode'],
-        }
+            'address_id': address.id}
         try:
             # the person already exists in the database as a driver
             if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
                 raise PersonAlreadyExistsException
             
             new_driver = Driver(**driver_info)
-
-
+        
             try:
                 _ = int(request.form['numberofseats'])
             except ValueError:
@@ -207,7 +218,12 @@ def register_new_driver_page():
             db.session.add(new_passenger)
             db.session.add(new_driver)
             db.session.commit()
-            logger.info(f'New driver added to database: {new_driver}')\
+            logger.info(f'New driver added to database: {new_driver}')
+
+            address.passenger_id = new_passenger.index
+            address.driver_id = new_driver.index
+            db.session.commit()
+            logger.info('Address updated with passenger and driver id')
             
             # creating the corresponding user
             user_info = {
@@ -268,6 +284,20 @@ def register_passenger_page():
             return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
 
         try:
+
+            address = Address(
+                address_line_1=request.form['addressline1'],
+                address_line_2=request.form['addressline2'],
+                city=request.form['city'],
+                state='VA',
+                zip_code=request.form['zipcode'],
+                latitude=request.form['latitude'],
+                longitude=request.form['longitude'],
+                code=request.form['place_id']
+            )
+            db.session.add(address)
+            db.session.commit()
+            
             passenger_information = {
                 'first_name': request.form['firstname'].lower(),
                 'last_name': request.form['lastname'].lower(),
@@ -281,12 +311,17 @@ def register_passenger_page():
                 'address_line_2': request.form['addressline2'],
                 'city': request.form['city'],
                 'zip_code': request.form['zipcode'],
+                'address_id': address.id
             }
 
             passenger = Passenger(**passenger_information)
             db.session.add(passenger)
             db.session.commit()
             logger.info('A new passenger has been added to the database!')
+
+            address.passenger_id = passenger.index
+            db.session.commit()
+            logger.info('Address updated with passenger id')
 
             user_information = {
                 'first_name': request.form['firstname'].lower(),

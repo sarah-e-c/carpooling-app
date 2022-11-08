@@ -313,9 +313,9 @@ class DistanceMatrix(db.Model):
     __tablename__ = 'distance_matrix'
     index = db.Column(db.Integer, primary_key=True)
     origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
-    origin = db.relationship('Address', backref='address.origin_distances', lazy='dynamic')
+    origin = db.relationship('Address', backref='address.origin_distances', foreign_keys=[origin_id])
     destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
-    destination = db.relationship('Address', backref='address.destination_distances', lazy='dynamic')
+    destination = db.relationship('Address', backref='address.destination_distances', foreign_keys=[destination_id])
     seconds = db.Column(db.Float, nullable=False) # time in minutes
     kilos = db.Column(db.Float, nullable=False) # distance in kilometers
 
@@ -336,8 +336,10 @@ class Address(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     code = db.Column(db.String, nullable=False)
-    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
-    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
+    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True, foreign_keys=[passenger_id])
+    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True, foreign_keys=[driver_id])
 
     def __repr__(self):
         return f'Address: {self.address} {self.code}'

@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 MAX_TIME = 90  # no more than 90 minutes of travel
 DRIVER_WAITING_TIME = 5  # assuming 5 minutes of wait time between stops
 
-MAX_COMPUTATION_TIME = 60 * 5  # 5 minutes
-MAX_ITER = 1000  # 1000 iterations
+MAX_COMPUTATION_TIME = 5  # 5 minutes
+MAX_ITER = 3  # 1000 iterations
 
 
 # weighting coefficients
@@ -171,11 +171,11 @@ def get_distance_matrix(origins, destinations) -> dict:
     :param destinations: the ids of the addresses in the database
     """
 
-    origins = list(Address.query.filter(Address.id.in_(origins)).place_id.all())
+    origins = [address.code for address in list(Address.query.filter(Address.id.in_(origins)).all())]
     origins = ["place_id:" + origin for origin in origins]
-    destinations = list(Address.query.filter(Address.id.in_(destinations)).place_id.all())
+    destinations = [address.code for address in list(Address.query.filter(Address.id.in_(destinations)).all())]
     destinations = ["place_id:" + origin for origin in destinations]
-    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins.join('|')}&destinations={destinations.join('|')}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
+    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={'|'.join(origins)}&destinations={'|'.join(destinations)}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
     headers = {}
 
     response = requests.get(url, headers=headers).json()
@@ -203,7 +203,7 @@ def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
     
 
     # query addresses
-    used_addresses = Address.query.filter(Address.passenger.in_([User.query.get(user.id_).passenger_profile for user in rsvp_list])).id.all()
+    used_addresses = [address.id for address in Address.query.filter(Address.passenger_id.in_([user.id for user in rsvp_list])).all()]
 
     # filling in the distance matrix
     kilos_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
@@ -311,8 +311,9 @@ def load_people(strio: StringIO):
     """
     signups_df = pd.read_csv(strio, sep=',')
 
-
-    users = User.query.filter(User.first_name.in_(signups_df.loc['first name'].apply(lambda s: s.lower())), 
+    logger.debug('signups_df: {}'.format(signups_df))
+    logger.debug('signups_df.columns: {}'.format(signups_df.columns))
+    users = User.query.filter(User.first_name.in_(signups_df['first name'].apply(lambda s: s.lower())), 
         User.last_name.in_(signups_df['last name'].apply(lambda s: s.lower()))).all()
     people_list = []
     for user in users:
@@ -362,6 +363,7 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
     passengers = []
     drivers = []
     people_dict = {}
+    logger.info('rsvp_list: {}'.format(rsvp_list))
     for person in rsvp_list:
         people_dict[person.id_] = {'Person': person, 'Driver': None, 'Passenger': None}
         if person.is_driver:
@@ -413,44 +415,43 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
         return 1 - (frame.loc[driver, passenger] / max_value_in_frame)
 
     # now heres the fun part
-    start_time = time.time()
-    while time.time() - start_time < MAX_COMPUTATION_TIME:
-        # yes this is a lot of for loops but this is how the paper does it
-        for i in range(1, MAX_ITER):
-            solutions_dict[f'iteration_{i}'] = Solution()
-            # while there are still viable pairs in the matrix
-            
-            while carpool_matching_frame.cumsum().sum().sum() > 0:
-                for driver in carpool_matching_frame.index:
-                    passenger = random.choice(
-                        carpool_matching_frame.loc[driver, :],
-                        weights=carpool_matching_frame.loc[driver, :].map(lambda f: calculate_selection_probability(carpool_matching_frame, driver, f.passenger, max(carpool_matching_frame))))
+    for i in range(1, MAX_ITER):
+        solutions_dict[f'iteration_{i}'] = Solution()
+        # while there are still viable pairs in the matrix
+        logger.info('carpool_matching_frame: {}'.format(carpool_matching_frame))
 
-                    # matching the driver and the passenger and adding them to the solution
-                    if not driver.is_real_driver:
-                        solutions_dict[f'iteration_{i}'].get_carpool(
-                            driver).add_passenger(passenger)
-                    else:
-                        new_carpool = Carpool(driver=driver)
-                        new_carpool.add_passenger(passenger)
-                        solutions_dict[f'iteration_{i}'].add_carpool(new_carpool)
-                     
-                    # deleting the passenger and the driver from the matrix, replacing with a virtual driver if the seats aren't empty
-                    if driver.num_seats > 0:
-                        new_virtual_driver = passenger.make_virtual_driver()
-                        carpool_matching_frame.loc[new_virtual_driver, :] = carpool_matching_frame.loc[driver, :]
-                        # deleting the passenger from the matrix
-                        carpool_matching_frame.drop(axis=1, columns=passenger, inplace=True)
-                        initialize_driver_compatibility(
-                            carpool_matching_frame, new_virtual_driver) # calculating the new row of the matrix that was made
-                    else:
-                        carpool_matching_frame.drop(axis=1, columns=passenger, inplace=True)
+        while carpool_matching_frame.cumsum().sum().sum() > 0:
+            logger.info('iteration: {}'.format(i))
+            for driver in carpool_matching_frame.index:
+                passenger = random.choice(
+                    carpool_matching_frame.loc[driver, :],
+                    weights=carpool_matching_frame.loc[driver, :].map(lambda f: calculate_selection_probability(carpool_matching_frame, driver, f.passenger, max(carpool_matching_frame))))
 
-                    carpool_matching_frame.drop(driver, inplace=True)
-            
+                # matching the driver and the passenger and adding them to the solution
+                if not driver.is_real_driver:
+                    solutions_dict[f'iteration_{i}'].get_carpool(
+                        driver).add_passenger(passenger)
+                else:
+                    new_carpool = Carpool(driver=driver)
+                    new_carpool.add_passenger(passenger)
+                    solutions_dict[f'iteration_{i}'].add_carpool(new_carpool)
+                    
+                # deleting the passenger and the driver from the matrix, replacing with a virtual driver if the seats aren't empty
+                if driver.num_seats > 0:
+                    new_virtual_driver = passenger.make_virtual_driver()
+                    carpool_matching_frame.loc[new_virtual_driver, :] = carpool_matching_frame.loc[driver, :]
+                    # deleting the passenger from the matrix
+                    carpool_matching_frame.drop(axis=1, columns=passenger, inplace=True)
+                    initialize_driver_compatibility(
+                        carpool_matching_frame, new_virtual_driver) # calculating the new row of the matrix that was made
+                else:
+                    carpool_matching_frame.drop(axis=1, columns=passenger, inplace=True)
 
-            # now we have to calculate the fitness of the solution
-            solutions_dict[f'iteration_{i}'].calculate_total_utility_value()
+                carpool_matching_frame.drop(driver, inplace=True)
+        
+
+        # now we have to calculate the fitness of the solution
+        solutions_dict[f'iteration_{i}'].calculate_total_utility_value()
 
     if return_ == 'all_solutions':
         return solutions_dict

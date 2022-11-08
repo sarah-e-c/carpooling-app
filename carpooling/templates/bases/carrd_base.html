@@ -22,6 +22,8 @@
     <!--<link href="https://fonts.googleapis.com/css?display=swap&family=Lexend+Giga:400,400italic%7CManrope:600,600italic" rel="stylesheet" type="text/css"/> -->
 
     <noscript>
+        {% block styles %}
+        {% endblock %}
         <style>
         body {
             overflow: auto !important;
@@ -72,6 +74,8 @@
             </div>
         </div>
     </div>
+    {% block scripts %}
+    {% endblock %}
     <script>
     function confirm_logout(e) {
         if (!confirm("Are you sure you want to logout?")) {

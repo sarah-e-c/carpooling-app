@@ -141,5 +141,8 @@ def make_admin(first_name, last_name):
 
 
 if __name__ == '__main__': # run app
+<<<<<<< HEAD
     #initial_set_up()
+=======
+>>>>>>> master
     logging.basicConfig(level=logging.DEBUG)

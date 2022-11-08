@@ -5,9 +5,25 @@ from flask_login import UserMixin
 from itsdangerous import URLSafeSerializer
 import logging
 import datetime
+from sqlalchemy import event, Sequence
 
 logger = logging.getLogger(__name__)
 
+class EventCheckIn(db.Model):
+    __tablename__ = 'event_sign_ups'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.index'))
+    event = db.relationship('Event', backref='events.event_sign_ups', uselist=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    user = db.relationship('User', backref='users.event_sign_ups', uselist=False)
+    check_in_time = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    check_out_time = db.Column(db.DateTime, nullable=True)
+    re_check_in_time = db.Column(db.DateTime, nullable=True)
+
+    def get_start_time(self):
+        return self.check_in_time.strftime('%I:%M %p')
+    def get_end_time(self):
+        return self.check_out_time.strftime('%I:%M %p')
 
 class Driver(db.Model):
     __tablename__ = 'drivers'
@@ -35,7 +51,7 @@ class Driver(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-
+    address = db.relationship('Address', backref='address.driver')
 
 
     def __repr__(self):
@@ -135,6 +151,9 @@ class Event(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref=db.backref('events', lazy=True))
     passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', backref='address.event')
+
 
 
     #carpools = db.relationship('Carpool', backref='event', lazy=True)
@@ -150,6 +169,8 @@ class Event(db.Model):
     def get_times(self):
         return f'{self.event_start_time.strftime("%I:%M %p")} - {self.event_end_time.strftime("%I:%M %p")}'
 
+    def get_checkins(self):
+        return EventCheckIn.query.filter_by(event_id=self.index).all()
 
     def __repr__(self):
         return f'Event: {self.event_name}'
@@ -195,6 +216,7 @@ class Passenger(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', backref='address.passenger')
 
 
     def __repr__(self):
@@ -304,7 +326,32 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
 
+    def is_checked_in_for_event(self, event: Event):
+        """
+        Returns true if the passenger is signed up for the event.
+        """
+        if EventCheckIn.query.filter_by(user_id=self.passenger_id, event_id=event.index).first() is not None:
+            if EventCheckIn.query.filter_by(user_id=self.passenger_id, event_id=event.index).one().check_out_time is None:
+                return True
+            if EventCheckIn.query.filter_by(user_id=self.passenger_id, event_id=event.index).one().re_check_in_time is not None:
+                return True
+            else:
+                return False # there is a check in, but it is checked out
+        else: # if there is not a check in for the event
+            return False
 
+        
+    def is_done_with_event(self, event: Event):
+        """
+        Returns true if the passenger is done with the event.
+        """
+        return True if EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).first().check_out_time is not None else False
+
+    def get_event_check_in(self, event: Event):
+        """
+        Returns the check in for the event.
+        """
+        return EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).first()
 
 class DistanceMatrix(db.Model):
     """
@@ -328,6 +375,16 @@ class Address(db.Model):
     """
     __tablename__ = 'addresses'
     id = db.Column(db.Integer, primary_key=True)
+
+    # @event.listens_for(db.session, 'after_flush')
+    # def hashgen(session, flush_context):
+    #     for obj in session:
+    #         if isinstance(obj, Address):
+    #             logger.debug(f'Address: {obj}')
+    #             obj.origin_id = obj.id
+    #             obj.destination_id = obj.id
+
+    # this is literally the worst thing I have ever done
     address_line_1 = db.Column(db.String, nullable=False)
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=False)

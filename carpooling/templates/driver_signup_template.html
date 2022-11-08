@@ -4,11 +4,20 @@
 
 {% set active_page='register' %}
 
+{% block styles %}
+<style>
+    .hiddenfield {
+        display: none !important;
+    }
+    </style>
+{%endblock%}
+
 {% block main %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
 
 <div id="image01" class="style1 image">
     <span class="frame">
-        <img src="{{url_for('static', filename='driver_sign_up_template_files/image01.png')}}" alt=""/>
+        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
     </span>
 </div>
 <h1 id="text01" class="style1">Driver Sign up</h1>
@@ -128,13 +137,123 @@
             <input type="password" id="confirmpassword" name="confirmpassword" class="input1">
         </p>
         <br>
+        <input type="hidden" id="latitude" name="latitude" placeholder="12345" class="input1 hiddenfield" required="required">
+        <input type="hidden" id="longitude" name="longitude" placeholder="12345" class="input1 hiddenfield" required="required">
+        <input type="hidden" id="place_id" name="place_id" placeholder="12345" class="input1 hiddenfield" required="required">
 
         </div>
         <ul id = "buttons01" class="style1 buttons">
-            <input type="submit" value="Submit" class="style1" id="submitbutton"> 
+            <input type="submit" value="Submit" class="style1" id="submitbutton" onclick="verify_and_submit_form(event)"> 
         </ul>
         <br>
     </form>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    
+    let autocomplete = google.maps.places.Autocomplete;
+    let addressLine1Field = document.getElementById("addressline1");
+    let addressLine2Field = document.getElementById("addressline2");
+    let zipCodeField = document.getElementById("zipcode");
+    let cityField = document.getElementById("city");
+
+    let latitude; // making these global so we can use them in the submit function without having to be in the form
+    let longitude;
+    let place_id;
+
+    initAutocomplete()
+
+    function initAutocomplete() {
+        console.log("initAutocomplete")
+
+    
+      // Create the autocomplete object, restricting the search predictions to
+      // addresses in the US
+      autocomplete = new google.maps.places.Autocomplete(addressLine1Field, {
+        componentRestrictions: { country: ["us"] },
+        fields: ["address_components", "geometry", "place_id"],
+        types: ["address"],
+      });
+
+      addressLine1Field.focus();
+      console.log("autocomplete initialized")
+    
+      // When the user selects an address from the drop-down, populate the
+      // address fields in the form.
+      autocomplete.addListener("place_changed", fillInAddress);
+    }
+
+    function fillInAddress() {
+        // Get the place details from the autocomplete object.
+        const place = autocomplete.getPlace();
+        let address1 = "";
+        let postcode = "";
+        let city = ""
+      
+        // Get each component of the address from the place details,
+        // and then fill-in the corresponding field on the form.
+        // place.address_components are google.maps.GeocoderAddressComponent objects
+        // which are documented at http://goo.gle/3l5i5Mr
+        console.log(place.address_components)
+        for (var i = 0; i < place.address_components.length; i++) {
+          // @ts-ignore remove once typings fixed
+          let component = place.address_components[i];
+          const componentType = component.types[0];
+          
+      
+          switch (componentType) {
+            case "street_number": {
+              address1 = `${component.long_name} ${address1}`;
+              break;
+            }
+            case "route": {
+              address1 += component.short_name;
+              break;
+            }
+            case "locality": {
+                city = component.long_name;
+                break;
+            }
+            case "postal_code": {
+              postcode = `${component.long_name}${postcode}`;
+              break;
+            }
+          }
+        }
+
+        addressLine1Field.value = address1;
+        zipCodeField.value = postcode;
+        cityField.value = city;
+        latitude = place.geometry.location.lat();
+        longitude = place.geometry.location.lng();
+        place_id = place.place_id;
+        console.log(latitude, longitude)
+        console.log(place_id)
+        document.getElementById("addressline2").focus() // focusing the cursor on address line 2
+      }
+
+    function verify_and_submit_form(event) { 
+        // this function is called when the submit button is clicked
+        // it verifies that the passwords match and then submits the form
+        let password = document.getElementById("password").value;
+        let confirmpassword = document.getElementById("confirmpassword").value;
+        if (password != confirmpassword) {
+            alert("Passwords do not match");
+            event.preventDefault();
+            return false;
+        }
+        else {
+            event.preventDefault();
+            console.log(latitude, longitude)
+            document.getElementById("latitude").value = latitude;
+            document.getElementById("longitude").value = longitude;
+            document.getElementById("place_id").value = place_id;
+            document.getElementById("registerform").submit();
+        }
+    }
+</script>
 
 {% endblock %}

@@ -1,10 +1,15 @@
-from carpooling import create_app
+from carpooling import create_app, db
 import carpooling.celeryapp as celeryapp
+from carpooling.models import Event, AuthKey, User, Address
 from flask import current_app
 import logging
 import time
 from carpooling import mail
 from flask_mail import Message
+import datetime
+import secrets
+import requests
+from io import StringIO
 
 logger = logging.getLogger(__name__)
 
@@ -67,3 +72,62 @@ def send_async_email_to_many(to: list, subject: str, message: str):
     except Exception as e:
         logger.debug(e)
         logger.warning('Email failed to send to {}, probably due to an invalid email address'.format(to))
+
+
+@celery.task()
+def maintenance_task():
+
+    # checking if an event should have a carpooling build
+    events = Event.query.filter_by(Event.event_date > datetime.datetime.now()).all()
+    for event in events:
+        if datetime.datetime.now() > event.event_date - datetime.timedelta(days=2):
+            build_address_match.delay(event.id) # creating a carpooling build
+            pass
+
+    # checking if an auth key is needed
+    if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(days=28):
+        new_auth_key = AuthKey(key=secrets.token_hex(4))
+        db.session.add(new_auth_key)
+        db.session.commit()
+
+    # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
+    problematic_users = User.query.filter_by(User.passenger_profile.address_id == None).all()
+
+
+    for user in problematic_users:
+        try:
+            source = requests.get(f"https://maps.googleapis.com/maps/api/geocode/json?address={user.passenger_profile.address_line_1.replace(' ','%20') + '%20' + user.passenger_profile.city + '%20VA'}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI")
+            if source.json()['status'] == 'OK':
+                new_address = Address(address_line_1=user.passenger_profile.address_line_1,
+                                        address_line_2=user.passenger_profile.address_line_2, 
+                                        latitude=source.json()['results'][0]['geometry']['location']['lat'],
+                                        longitude=source.json()['results'][0]['geometry']['location']['lng'],
+                                        place_id=source.json()['results'][0]['place_id'],
+                                        city=user.passenger_profile.city,
+                                        state='VA',)
+                db.session.add(new_address)
+                db.session.commit()
+
+                user.passenger_profile.address_id = new_address.id
+                if user.driver_profile is not None:
+                    user.driver_profile.address_id = new_address.id
+                db.session.commit()
+                logger.info(f'identified address for user {user.id} successfully!')
+        except Exception as e:
+            logger.info(f'failed to identify address for user {user.id}')
+            logger.debug(e)
+            send_async_email.delay(user.email, 'Address Identification Failed', 'We were unable to identify your address. If you would like to use address services, then please make sure that you have entered a valid address in your profile.')
+
+
+    return "maintenance task finished"
+
+
+@celery.task()
+def build_address_match():
+    # building address match
+    pass
+
+@celery.task()
+def get_people_string_io():
+    # example  for the tes 
+    return StringIO("first name, last name, willing to drive, needs ride \n Sarah, Crowder, yes, yes")

@@ -6,6 +6,15 @@ import pandas as pd
 import random
 import requests
 import time
+from carpooling.models import Event, Address, DistanceMatrix, User
+from carpooling import db
+import numpy as np
+import logging
+from io import StringIO
+
+logger = logging.getLogger(__name__)
+
+
 MAX_TIME = 90  # no more than 90 minutes of travel
 DRIVER_WAITING_TIME = 5  # assuming 5 minutes of wait time between stops
 
@@ -57,7 +66,7 @@ class Passenger:
     can_drive: bool
     num_seats: int
     time_tolerance: float
-    driver_history: list = []
+    driver_history: tuple = tuple()
 
     def create_virtual_driver(self, old_driver: Driver, time_passage: float) -> Driver:
         """
@@ -69,7 +78,7 @@ class Passenger:
                       num_seats=old_driver.num_seats - 1,
                       is_real_driver=False,
                       time_tolerance=old_driver.time_tolerance - time_passage,
-                      driver_history=self.driver_history + [old_driver.id_])
+                      driver_history= tuple(self.driver_history + [old_driver.id_]))
 class Carpool:
     """
     Class for prospective carpool. Carpools are defined by drivers.
@@ -129,7 +138,6 @@ class Solution:
         Calculating the utility function for the total length traveled.
         """
         return 1
-        pass
 
     def calculate_needed_passengers_served_value(self):
         """
@@ -156,34 +164,175 @@ class Solution:
         return 1
 
 
-def fill_distance_matrix():
+def get_distance_matrix(origins, destinations) -> dict:
+    """
+    Call the Google Distance Matrix API to get the distance between all of the addresses.
+    :param origins: the ids of the addresses in the database
+    :param destinations: the ids of the addresses in the database
+    """
+
+    origins = list(Address.query.filter(Address.id.in_(origins)).place_id.all())
+    origins = ["place_id:" + origin for origin in origins]
+    destinations = list(Address.query.filter(Address.id.in_(destinations)).place_id.all())
+    destinations = ["place_id:" + origin for origin in destinations]
+    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins.join('|')}&destinations={destinations.join('|')}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
+    headers = {}
+
+    response = requests.get(url, headers=headers).json()
+
+    return_dict = {}
+
+    for row, i in enumerate(response["rows"]):
+        return_dict[response['origin_addresses'][i]] = {}
+        for element, k in enumerate(row["elements"]):
+            return_dict[response['origin_addresses'][i]][response['destination_addresses'][k]] = {}
+            return_dict[response['origin_addresses'][i]][response['destination_addresses'][k]]["kilos"] = element["distance"]["value"]
+            return_dict[response['origin_addresses'][i]][response['destination_addresses'][k]]["seconds"] = element["duration"]["value"]
+
+    return return_dict
+
+
+def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
     """
     Method that uses Google Maps API to get the distances between all points.
+    :param rsvp_list: the list of Person objects to use
     """
     # TODO only get the values that are reasonably close to each other already.
     # We don't need a northside distance to a southside distance.
     # If its in the algorithm, then just input a high value
     
-    # for now just getting all of them because it is easier.
+
     # query addresses
+    used_addresses = Address.query.filter(Address.passenger.in_([User.query.get(user.id_).passenger_profile for user in rsvp_list])).id.all()
 
-    pass
-
-def load_people(first_names, last_names):
+    # filling in the distance matrix
+    kilos_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
+    seconds_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
+    for origin in used_addresses:
+        for destination in used_addresses:
+            if origin != destination:
+                try:
+                    values = DistanceMatrix.query.filter_by(origin_id=origin, destination_id=destination).first()
+                    kilos_matrix.loc[origin, destination] = values.kilos
+                    seconds_matrix.loc[origin, destination] = values.seconds
+                except AttributeError:
+                    logger.debug(f'No values for {origin} and {destination}')
+                    kilos_matrix.loc[origin, destination] = np.nan
+                    seconds_matrix.loc[origin, destination] = np.nan
+            else:
+                kilos_matrix.loc[origin, destination] = 0
+                seconds_matrix.loc[origin, destination] = 0
+            
+    
+    # step 1: determining which ones are new. We will do 3 calls to the api. Here is a handy graphic:
     """
-    Loads the people from the request form.
+                    new address new address old address old address
+        old address XXXXXXXXXXX XXXXXXXXXXX YYYYYYYYYYY YYYYYYYYYYY
+        old address XXXXXXXXXXX XXXXXXXXXXX YYYYYYYYYYY YYYYYYYYYYY
+        new address XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX
+        new address XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX
     """
-    # TODO load in the csv file
-    pass
+
+    new_addresses = [address for address in kilos_matrix.index if kilos_matrix.loc[address].isnull().all()] # all of them are null
+    old_addresses = [address for address in kilos_matrix.index if not kilos_matrix.loc[address].isnull().all()] # at least one is not null
+
+    # getting the new values
+    # call 1: origin is new, destination is new
+    new_points = get_distance_matrix(new_addresses, new_addresses)
+    # call 2: origin is new, destination is old
+    new_points_2 = get_distance_matrix(new_addresses, old_addresses)
+    # call 3: origin is old, destination is new
+    new_points_3 = get_distance_matrix(old_addresses, new_addresses)
+
+    # committing the new values to the database and adding to the matrices
+    for origin in new_points.keys():
+        for destination in new_points[origin]:
+            if origin != destination:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=new_points[origin][destination]['kilos'], seconds=new_points[origin][destination]['seconds']))
+                kilos_matrix.loc[origin, destination] = new_points[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points[origin][destination]['seconds']
+            else:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=0, seconds=0))
+                kilos_matrix.loc[origin, destination] = new_points[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points[origin][destination]['seconds']
+
+    for origin in new_points_2.keys():
+        for destination in new_points_2[origin]:
+            if origin != destination:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=new_points_2[origin][destination]['kilos'], seconds=new_points_2[origin][destination]['seconds']))
+                kilos_matrix.loc[origin, destination] = new_points_2[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points_2[origin][destination]['seconds']
+            else:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=0, seconds=0))
+                kilos_matrix.loc[origin, destination] = new_points_2[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points_2[origin][destination]['seconds']
+
+    for origin in new_points_3.keys():
+        for destination in new_points_3[origin]:
+            if origin != destination:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=new_points_3[origin][destination]['kilos'], seconds=new_points_3[origin][destination]['seconds']))
+                kilos_matrix.loc[origin, destination] = new_points_3[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points_3[origin][destination]['seconds']
+            else:
+                db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=0, seconds=0))
+                kilos_matrix.loc[origin, destination] = new_points_3[origin][destination]['kilos']
+                seconds_matrix.loc[origin, destination] = new_points_3[origin][destination]['seconds']
+    
+    db.session.commit()
+    logger.info('new distances added to database')
+    if not kilos_matrix.isnull().values.any():
+        logger.info('All values in the miles matrix are not null')
+    else:
+        origins_needed = [address for address in kilos_matrix.index if kilos_matrix.loc[address].isnull().any()]
+        destinations_needed = [address for address in kilos_matrix.columns if kilos_matrix[:, address].isnull().any()]
+        logger.info('There are null values in the miles matrix, filling them in')
+        final_points = get_distance_matrix(origins_needed, destinations_needed)
+        for origin in final_points.keys():
+            for destination in final_points[origin]:
+                if origin != destination:
+                    db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=final_points[origin][destination]['kilos'], seconds=final_points[origin][destination]['seconds']))
+                    kilos_matrix.loc[origin, destination] = final_points[origin][destination]['kilos']
+                    seconds_matrix.loc[origin, destination] = final_points[origin][destination]['seconds']
+                else:
+                    db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination, kilos=0, seconds=0))
+                    kilos_matrix.loc[origin, destination] = final_points[origin][destination]['kilos']
+                    seconds_matrix.loc[origin, destination] = final_points[origin][destination]['seconds']
+        db.session.commit()
+        logger.info('new distances added to database')
+    
+    return kilos_matrix, seconds_matrix
 
 
-@dataclass(frozen=True)
+
+
+def load_people(strio: StringIO):
+    """
+    Loads the people from the request form. If they are not in the database, they are not included.
+    """
+    signups_df = pd.read_csv(strio, sep=',')
+
+
+    users = User.query.filter(User.first_name.in_(signups_df.loc['first name'].apply(lambda s: s.lower())), 
+        User.last_name.in_(signups_df['last name'].apply(lambda s: s.lower()))).all()
+    people_list = []
+    for user in users:
+        new_person = Person(user.id, user.passenger_profile.address_id, 
+        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & s['last name'] == user.last_name)].iloc[0]['willing to drive'] == 'yes'),
+        user.driver_profile.number_of_seats if user.driver_profile else 0,
+        (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & s['last name'] == user.last_name)].iloc[0]['needs ride'] == 'yes'),
+        ),
+        people_list.append(new_person)
+    return people_list
+
+
+@dataclass()
 class Person:
     """
         Initialize a passenger.
         :param id_: the identifier of the passenger. If they are a mixed user, then this is the same as the driver id.
         :param location_id: the index of the location of the passenger
-        ;param can_drive: whether or not the passenger can drive. Used in determining the matching matrix.
+        ;param is_driver : whether or not the passenger can drive. Used in determining the matching matrix.
+        :param num_seats: the number of seats the passenger has available. Used in determining the matching matrix.
         :param is_passenger: whether or not the person is a passenger.
     """
     id_: int
@@ -205,11 +354,9 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
 
     # matrix of distances between each person. Each person is a column and a row.
     solutions_dict = {}
-    # TODO store these matrices in SQL
-    locations = ['Maggie Walker', 'Home One']
-    distance_matrix = pd.DataFrame(columns=locations, index=locations)
-    if True:  # if the data is unloaded, then fill the distance matrix with Google Maps
-        fill_distance_matrix()
+    distance_matrix = fill_distance_matrix(rsvp_list)
+    # updating the perople with their distances
+
 
     # making passengers and drivers for the matching matrix
     passengers = []

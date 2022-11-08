@@ -306,36 +306,38 @@ class User(UserMixin, db.Model):
 
 
 
-# class DistanceMatrix(db.Model):
-#     """
-#     Table to store the distance matrix
-#     """
-#     __tablename__ = 'distance_matrix'
-#     index = db.Column(db.Integer, primary_key=True)
-#     origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
-#     origin = db.relationship('Address', backref='address.origin_distances', lazy='dynamic')
-#     destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
-#     destination = db.relationship('Address', backref='address.destination_distances', lazy='dynamic')
+class DistanceMatrix(db.Model):
+    """
+    Table to store the distance matrix
+    """
+    __tablename__ = 'distance_matrix'
+    index = db.Column(db.Integer, primary_key=True)
+    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
+    origin = db.relationship('Address', backref='address.origin_distances', lazy='dynamic')
+    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
+    destination = db.relationship('Address', backref='address.destination_distances', lazy='dynamic')
+    seconds = db.Column(db.Float, nullable=False) # time in minutes
+    kilos = db.Column(db.Float, nullable=False) # distance in kilometers
 
-#     def __repr__(self):
-#         return f'DistanceMatrix: {self.row} {self.column}'
+    def __repr__(self):
+        return f'DistanceMatrix: {self.row} {self.column}'
 
-# class Address(db.Model):
-#     """
-#     Table to store addresses and geocodes
-#     """
-#     __tablename__ = 'addresses'
-#     id = db.Column(db.Integer, primary_key=True)
-#     address_line_1 = db.Column(db.String, nullable=False)
-#     address_line_2 = db.Column(db.String, nullable=True)
-#     city = db.Column(db.String, nullable=False)
-#     state = db.Column(db.String, nullable=False)
-#     zip_code = db.Column(db.String, nullable=False)
-#     latitude = db.Column(db.Float, nullable=False)
-#     longitude = db.Column(db.Float, nullable=False)
-#     code = db.Column(db.String, nullable=False)
-#     passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
-#     driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+class Address(db.Model):
+    """
+    Table to store addresses and geocodes
+    """
+    __tablename__ = 'addresses'
+    id = db.Column(db.Integer, primary_key=True)
+    address_line_1 = db.Column(db.String, nullable=False)
+    address_line_2 = db.Column(db.String, nullable=True)
+    city = db.Column(db.String, nullable=False)
+    state = db.Column(db.String, nullable=False)
+    zip_code = db.Column(db.String, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    code = db.Column(db.String, nullable=False)
+    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True)
+    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
 
-#     def __repr__(self):
-#         return f'Address: {self.address} {self.code}'
+    def __repr__(self):
+        return f'Address: {self.address} {self.code}'

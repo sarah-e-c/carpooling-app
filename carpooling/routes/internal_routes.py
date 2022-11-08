@@ -3,14 +3,16 @@ Routes that are used only for internal purposes. (Like leaving carpools). Usuall
 """
 
 from carpooling import db, mail
-from carpooling.models import Event, Carpool,  User
+from carpooling.models import Event, Carpool,  User, EventCheckIn
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required
-from flask import render_template, request, redirect, url_for, Blueprint
+from flask import render_template, request, redirect, url_for, Blueprint, make_response
 import datetime
 from flask_login import login_required, current_user
 from flask_mail import Message
+from io import StringIO
+import csv
 
 
 internal_blueprint = Blueprint(
@@ -264,3 +266,67 @@ def leave_carpool(carpool_id):
             logger.info(f'User {current_user} left carpool {carpool}')
 
     return redirect(url_for('main.manage_carpools_page'))
+
+
+
+@internal_blueprint.route('/event-checkin/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_in_page(event_index):
+    """
+    Function to sign up for an event.
+    """
+
+    if EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first() is not None:
+        logger.info('Passenger {} already signed up for event {}'.format(current_user.passenger_profile, event_index))
+        existing_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+        existing_check_in.re_check_in_time = datetime.datetime.now()
+        db.session.commit()
+        logger.info('Passenger {} re-checked in for event {}'.format(current_user.passenger_profile, event_index))
+        return redirect(url_for('event_page', event_index=event_index))
+
+    logger.info('Passenger {} checking in for event {}'.format(current_user.passenger_profile, event_index))
+    new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
+    db.session.add(new_event_check_in)
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))
+
+@internal_blueprint.route('/event-checkout/<event_index>', methods=['GET', 'POST'])
+@login_required
+def event_check_out_page(event_index):
+    """
+    Function to check out of an event.
+    """
+    logger.info('Passenger {} checking out of event {}'.format(current_user.passenger_profile, event_index))
+    event_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+    event_check_in.re_check_in_time = None
+    event_check_in.check_out_time = datetime.datetime.now()
+    db.session.commit()
+    return redirect(url_for('event_page', event_index=event_index))
+
+
+@internal_blueprint.route('/download-hours-csv/<event_index>')
+@admin_required
+def download_hours_csv(event_index):
+    """
+    Function to download the hours csv as an admin
+    """
+    check_ins = EventCheckIn.query.filter_by(event_id=event_index)
+    event_name = Event.query.get(event_index).event_name
+    heading_row = ["First Name", "Last Name", "Check In Time", "Check Out Time", "Check In Hours"]
+    strio = StringIO()
+    cw = csv.writer(strio)
+    cw.writerow(heading_row)
+    csv_content = []
+    for check_in in check_ins:
+        new_row = [check_in.user.first_name.capitalize(),
+        check_in.user.last_name.capitalize(),
+        check_in.check_in_time.strftime('%I:%M %p'),
+        check_in.check_out_time.strftime('%I:%M %p'),
+        str(check_in.check_out_time - check_in.check_in_time)]
+        csv_content.append(new_row)
+    cw.writerows(csv_content)
+    output = make_response(strio.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={event_name}.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+

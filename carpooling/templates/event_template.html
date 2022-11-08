@@ -82,7 +82,7 @@
         <div class="style1">
             <ul class="style1 buttons">
                 <li>
-                    <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}"
+                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index)}}"
                         onclick="confirm_sign_up_for_carpool(event)" class="button n01">
                         <span class="label">I need a carpool</span>
                     </a>
@@ -95,7 +95,7 @@
         <div class="style1">
             <ul class="style1 buttons">
                 <li>
-                    <a href="{{ url_for('passenger_carpool_request_page', event_index=event.index)}}"
+                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index)}}"
                         onclick="confirm_sign_up_for_carpool(event)" class="button n01">
                         <span class="label">I need a carpool</span>
                     </a>
@@ -120,7 +120,7 @@
                     </a>
                     {% else %}
                     <a onclick="is_same_person(event, '{{carpool.driver}}')"
-                        href="{{ url_for('passenger_carpool_signup_page', carpool_index = carpool.index)}}"
+                        href="{{ url_for('main.passenger_carpool_signup_page', carpool_index = carpool.index)}}"
                         class="button n01">
                         <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
                     </a>
@@ -155,7 +155,7 @@
     {% if event.user_id == current_user.id %}
     <ul class="style1 buttons">
         <li>
-            <a style="color: red" href="{{ url_for('delete_event', event_index=event.index)}}"
+            <a style="color: red" href="{{ url_for('internal.delete_event', event_index=event.index)}}"
                 onclick="confirm_delete_event(event)" class="button n01">
                 <span class="label">Delete Event</span>
             </a>
@@ -165,7 +165,7 @@
     {% if user.is_admin > 0 %}
     <ul class="style1 buttons">
         <li>
-            <a style="color: rgb(228, 53, 53)" href="{{ url_for('delete_event', event_index=event.index)}}"
+            <a style="color: rgb(228, 53, 53)" href="{{ url_for('internal.delete_event', event_index=event.index)}}"
                 onclick="confirm_delete_event(event)" class="button n01">
                 <span class="label">Delete Event</span>
             </a>
@@ -189,22 +189,22 @@
             <li>
                 {% if user.is_authenticated %}
                 {% if user.is_checked_in_for_event(event)%}
-                <a href="{{ url_for('event_check_out_page', event_index=event.index)}}" onclick="check_out(event)"
+                <a href="{{ url_for('internal.event_check_out_page', event_index=event.index)}}" onclick="check_out(event)"
                     class="button n01" style="width: 70%; height: 200px;" id="checkout_button">
                     <span class="label">Check Out</span>
                 </a>
                 {% else %}
-                <a href="{{ url_for('event_check_in_page', event_index=event.index)}}" onclick="check_in(event)"
+                <a href="{{ url_for('internal.event_check_in_page', event_index=event.index)}}" onclick="check_in(event)"
                     class="button n01" id="checkin_button" style="width: 70%; height: 200px;">
                     <span class="label">Check In</span>
                 </a>
                 {% endif %}
                 {% else %}
                 <h4 class="style2"> Please log in to check in to the event. </h4>
-                <a href="{{ url_for('login_page')}}" onclick="check_out(event)" class="button n01" id="login_button">
+                <a href="{{ url_for('auth.login_page')}}" onclick="check_out(event)" class="button n01" id="login_button">
                     <span class="label">Log In</span>
                 </a>
-                <a href="{{ url_for('generic_register_page', event_index=event.index)}}" onclick="check_out(event)"
+                <a href="{{ url_for('auth.generic_register_page', event_index=event.index)}}" onclick="check_out(event)"
                     class="button n01" id="register_button">
                     <span class="label">Register</span>
                 </a>

@@ -1,4 +1,4 @@
-from carpooling.models import  AuthKey, User
+from carpooling.models import  AuthKey, User, Event
 from carpooling.utils import  admin_required
 from flask import render_template
 from flask_login import current_user
@@ -39,3 +39,14 @@ def manage_users_page():
     Admin page that allows for the management of users
     """
     return render_template('manage_users_template.html', users=User.query.order_by(User.is_admin.desc()).all(), user=current_user)
+
+
+@admin_blueprint.route('/view-checkins')
+@admin_required
+def view_checkins():
+    """
+    Function to view all the check ins.
+    """
+    recent_events = Event.query.order_by(Event.event_start_time.desc()).limit(3).all()
+    other_events = Event.query.order_by(Event.event_start_time.desc()).offset(3).all()
+    return render_template('view_checkins_template.html', recent_events=recent_events, other_events=other_events, user=current_user)

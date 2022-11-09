@@ -50,3 +50,14 @@ def view_checkins():
     recent_events = Event.query.order_by(Event.event_start_time.desc()).limit(3).all()
     other_events = Event.query.order_by(Event.event_start_time.desc()).offset(3).all()
     return render_template('view_checkins_template.html', recent_events=recent_events, other_events=other_events, user=current_user)
+
+
+@admin_blueprint.route('/view-routes/<event_id>')
+@admin_required
+def route_summary_page(event_id):
+    """
+    Function to view the routes
+    :param event_id: the id of the event
+    """
+    event = Event.query.filter_by(id=event_id).first()
+    return render_template('route_summary_template.html', event=event, user=current_user)

@@ -1,0 +1,186 @@
+{% extends 'bases/carrd_base.html' %}
+
+
+{% block title %}Carpools for Event {% endblock %}
+
+{% block styles %}
+<style>
+    #detailsdiv {
+        display: block;
+        position: fixed;
+        top: 20%;
+        left: 80%;
+        width: 20%;
+        height: 60%;
+        background-color: #444;
+        border-radius: 3%;
+        box-shadow: 0px 0px 5px 0px rgba(255, 225, 225, 0.75);
+        padding: 10px;
+        margin: 10px;
+        transition: cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.5s;
+        z-index: 1;
+    }
+
+    .hiddendetails {
+        display: none;
+    }
+
+    .visibledetails:hover {
+        background-color: #666;
+        transition: cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.5s;
+    }
+
+    .visibledetails:hover .active {
+        background-color: #444;
+        transition: none
+    }
+
+    .hiddendetails .active {
+        background-color: #444;
+        display: block;
+        transition: cubic-bezier(0.075, 0.82, 0.165, 1) 0.5s;
+    }
+
+    .mapdiv {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%;
+        height: 70%;
+        border-color: #fff;
+    }
+</style>
+{% endblock %}
+{% block main %}
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k"></script>
+
+<div id="mapdiv">
+    <!--- This is where the map will be rendered-->
+</div>
+<div id="detailsdiv">
+    {% for carpool in carpools %}
+    <div id="{{carpool.name}}">
+        <div class="visibledetails" onclick="renderMap(event, '{{carpool.name}}')">
+            {% for item in carpool.route %}
+            <p class="style2">From {{item.}}</p>
+            {% endfor %}
+
+        </div>
+        <div class="hiddendetails">
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    let rendered_map;
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer();
+
+
+    function initMap() {
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 6,
+            center: { lat: 41.85, lng: -87.65 },
+        });
+
+        directionsRenderer.setMap(map);
+        document.getElementById("submit").addEventListener("click", () => {
+            calculateAndDisplayRoute(directionsService, directionsRenderer);
+        });
+    }
+
+    function calculateAndDisplayRoute(directionsService, directionsRenderer) {
+        const waypts = [];
+        const checkboxArray = document.getElementById("waypoints");
+
+        for (let i = 0; i < checkboxArray.length; i++) {
+            if (checkboxArray.options[i].selected) {
+                waypts.push({
+                    location: checkboxArray[i].value,
+                    stopover: true,
+                });
+            }
+        }
+
+        directionsService
+            .route({
+                origin: document.getElementById("start").value,
+                destination: document.getElementById("end").value,
+                waypoints: waypts,
+                optimizeWaypoints: true,
+                travelMode: google.maps.TravelMode.DRIVING,
+            })
+            .then((response) => {
+                directionsRenderer.setDirections(response);
+
+                const route = response.routes[0];
+                const summaryPanel = document.getElementById("directions-panel");
+
+                summaryPanel.innerHTML = "";
+
+                // For each route, display summary information.
+                for (let i = 0; i < route.legs.length; i++) {
+                    const routeSegment = i + 1;
+
+                    summaryPanel.innerHTML +=
+                        "<b>Route Segment: " + routeSegment + "</b><br>";
+                    summaryPanel.innerHTML += route.legs[i].start_address + " to ";
+                    summaryPanel.innerHTML += route.legs[i].end_address + "<br>";
+                    summaryPanel.innerHTML += route.legs[i].distance.text + "<br><br>";
+                }
+            })
+            .catch((e) => window.alert("Directions request failed due to " + status));
+    }
+
+    function renderMap(event, carpool_name) {
+
+        // toggling the visibility
+        const detailsdiv = document.getElementById(carpool_name);
+        const hiddendetails = detailsdiv.getElementsByClassName("hiddendetails")[0];
+        const visibledetails = detailsdiv.getElementsByClassName("visibledetails")[0];
+        if (hiddendetails.classList.contains("active")) {
+            hiddendetails.classList.remove("active");
+            visibledetails.classList.add("active");
+        } else {
+            hiddendetails.classList.add("active");
+            visibledetails.classList.remove("active");
+        }
+
+        if (rendered_map == carpool_name) {
+            return;
+        }
+
+        else {
+            rendered_map = carpool_name;
+
+        }
+    }
+
+    function render_map() {
+        const mapdiv = document.getElementById("mapdiv");
+        const map = new google.maps.Map(mapdiv, {
+            zoom: 6,
+            center: { lat: 41.85, lng: -87.65 },
+        });
+        directionsRenderer.setMap(map);
+    }
+
+
+    window.initMap = initMap;
+
+
+</script>
+
+<script
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&callback=initMap&v=weekly"
+defer
+></script>
+{% endblock %}

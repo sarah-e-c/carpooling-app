@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import requests
 import time
-from carpooling.models import Event, Address, DistanceMatrix, User
+from carpooling.models import Event, Address, DistanceMatrix, User, Destination
 from carpooling import db
 import numpy as np
 import logging
@@ -111,8 +111,10 @@ class Carpool:
 
 
 class Solution:
-    def __init__(self):
+    def __init__(self, kilos_matrix, seconds_matrix):
         self.carpools = []
+        self.kilos_matrix = kilos_matrix
+        self.seconds_matrix = seconds_matrix
         self.length_objective_value = 0
         self.needed_passengers_served_objective_value = 0
         self.favorable_time_objective_value = 0
@@ -138,7 +140,7 @@ class Solution:
     # utility functions
     def calculate_length_objective_value(self):
         """
-        Calculating the utility function for the total length traveled.
+        Calculating the utility function for the total length traveled compared to the default.
         """
         return 1
 
@@ -200,7 +202,7 @@ def get_distance_matrix(origins, destinations) -> dict:
     return return_dict
 
 
-def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
+def fill_distance_matrix(rsvp_list: list, destination_id: int) -> list[pd.DataFrame]:
     """
     Method that uses Google Maps API to get the distances between all points.
     :param rsvp_list: the list of Person objects to use
@@ -209,16 +211,18 @@ def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
     # We don't need a northside distance to a southside distance.
     # If its in the algorithm, then just input a high value
     
+    destination_id = Destination.query.get(destination_id).address_id
+
 
     # query addresses
     logger.info([address.passenger_id for address in Address.query.all()])
-    used_addresses = [address.id for address in Address.query.filter(Address.passenger_id.in_([user.id_ for user in rsvp_list])).all()]
+    used_addresses_ids = [address.id for address in Address.query.filter(Address.passenger_id.in_([user.id_ for user in rsvp_list])).all()]
 
     # filling in the distance matrix
-    kilos_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
-    seconds_matrix = pd.DataFrame(index=used_addresses, columns=used_addresses)
-    for origin in used_addresses:
-        for destination in used_addresses:
+    kilos_matrix = pd.DataFrame(index= [destination_id] + used_addresses_ids, columns= [destination_id] + used_addresses_ids)
+    seconds_matrix = pd.DataFrame(index=[destination_id] + used_addresses_ids, columns= [destination_id] + used_addresses_ids)
+    for origin in used_addresses_ids:
+        for destination in used_addresses_ids:
             if origin != destination:
                 try:
                     values = DistanceMatrix.query.filter_by(origin_id=origin, destination_id=destination).first()
@@ -229,8 +233,8 @@ def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
                     kilos_matrix.loc[origin, destination] = np.nan
                     seconds_matrix.loc[origin, destination] = np.nan
             else:
-                kilos_matrix.loc[origin, destination] = 0
-                seconds_matrix.loc[origin, destination] = 0
+                kilos_matrix.loc[origin, destination] = np.nan
+                seconds_matrix.loc[origin, destination] = np.nan # doing this because its harder to detect 0s
             
     
     # step 1: determining which ones are new. We will do 3 calls to the api. Here is a handy graphic:
@@ -241,6 +245,7 @@ def fill_distance_matrix(rsvp_list: list) -> list[pd.DataFrame]:
         new address XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX
         new address XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX XXXXXXXXXXX
     """
+
 
     new_addresses = [address for address in kilos_matrix.index if kilos_matrix.loc[address].isnull().all()] # all of them are null
     old_addresses = [address for address in kilos_matrix.index if not kilos_matrix.loc[address].isnull().all()] # at least one is not null
@@ -364,18 +369,19 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
     """
     Evaluating the best solution for a one-way event
     :param rsvp_list: the list of people who are going to the event, formatted into the Person class.
-    :param destination_id: the index of the destination of the event in the location matrix.
+    :param destination_id: the id of the destination in the Destinations table.
     :param return_: the type of return value. Can be 'all_solutions' or 'best_solution'.
     :return: The best found solution for the event
     """
 
     # matrix of distances between each person. Each person is a column and a row.
     solutions_dict = {}
-    kilos_matrix, distance_matrix = fill_distance_matrix(rsvp_list)
+    kilos_matrix, seconds_matrix = fill_distance_matrix(rsvp_list, destination_id)
     # updating the perople with their distances
 
 
-    # making passengers and drivers for the matching matrix
+
+    # making passengers and drivers for the matching matrix TODO possible multiprocessing
     passengers = []
     drivers = []
     people_dict = {}
@@ -407,13 +413,15 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
         Note: driver must be in the frame
         """
         for passenger in frame.columns:
+            if driver.id_ == passenger.id_:
+                return False
             # determining if picking up the passenger is within the time tolerance
-            if distance_matrix.loc[driver.location_id, passenger.location_id] + distance_matrix.loc[passenger.location_id, destination_id] + DRIVER_WAITING_TIME <= driver.time_tolerance:
+            if seconds_matrix.loc[driver.location_id, passenger.location_id] + seconds_matrix.loc[passenger.location_id, destination_id] + DRIVER_WAITING_TIME <= driver.time_tolerance:
                 # represents the extra time it would take for the driver to pick up the passenger
-                frame.loc[driver, passenger] = distance_matrix.loc[driver.location_id, passenger.location_id] + \
-                    distance_matrix.loc[passenger.location_id, destination_id] + \
+                frame.loc[driver, passenger] = seconds_matrix.loc[driver.location_id, passenger.location_id] + \
+                    seconds_matrix.loc[passenger.location_id, destination_id] + \
                     DRIVER_WAITING_TIME - \
-                    distance_matrix.loc[driver.location_id, destination_id]
+                    seconds_matrix.loc[driver.location_id, destination_id]
             else:
                 frame.loc[driver, passenger] = False
 
@@ -428,13 +436,13 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
         :param driver: the driver
         :param passenger: the passenger
         """
-        if max_value_in_frame == 0:
+        if max_value_in_frame == 0: # avoid div by 0
             return 0
         return 1 - (frame.loc[driver, passenger] / max_value_in_frame)
 
     # now heres the fun part
     for i in range(1, MAX_ITER):
-        solutions_dict[f'iteration_{i}'] = Solution()
+        solutions_dict[f'iteration_{i}'] = Solution(kilos_matrix=kilos_matrix, seconds_matrix=seconds_matrix)
         # while there are still viable pairs in the matrix
         logger.info('carpool_matching_frame: {}'.format(carpool_matching_frame))
 
@@ -454,13 +462,13 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
                 solutions_dict[f'iteration_{i}'].get_carpool(
                     driver).add_passenger(passenger)
             else:
-                new_carpool = Carpool(driver=driver, location_frame=distance_matrix)
+                new_carpool = Carpool(driver=driver, location_frame=seconds_matrix)
                 new_carpool.add_passenger(passenger)
                 solutions_dict[f'iteration_{i}'].add_carpool(new_carpool)
                 
             # deleting the passenger and the driver from the matrix, replacing with a virtual driver if the seats aren't empty
             if driver.num_seats > 0:
-                new_virtual_driver = passenger.make_virtual_driver(driver, distance_matrix.loc[driver.location_id, passenger.location_id])
+                new_virtual_driver = passenger.make_virtual_driver(driver, seconds_matrix.loc[driver.location_id, passenger.location_id])
                 carpool_matching_frame.loc[new_virtual_driver, :] = carpool_matching_frame.loc[driver, :]
                 # deleting the passenger from the matrix
                 carpool_matching_frame.drop(axis=1, columns=passenger, inplace=True)
@@ -487,3 +495,4 @@ if __name__ == '__main__':
 
 # TODO method to make the location fromes check for 0 or for NaN. I guess we could also just impute 0 after but idk
 # also probably should be doing this in C++ or something
+

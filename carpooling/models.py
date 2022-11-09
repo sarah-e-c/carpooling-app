@@ -415,3 +415,70 @@ class Destination(db.Model):
 
     def __repr__(self):
         return f'Destination: {self.name}'
+
+
+# # perhaps we will do this perhaps not
+
+# TODO think of a solution for having variable number of passengers per ride
+
+
+# class GeneratedCarpool(db.Model):
+#     """
+#     Table with the generated carpools
+#     """
+#     __tablename__ = 'generated_carpools'
+#     id = db.Column(db.Integer, primary_key=True)
+#     event_id = db.Column(db.Integer, db.ForeignKey('events.index'), nullable=False)
+#     carpool_solution_id = db.Column(db.Integer, db.ForeignKey('carpool_solutions.index'), nullable=False)
+#     from_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+#     to_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+#     from_address = db.relationship('Address', backref='generated_carpools.from_address', foreign_keys=[from_address_id])
+#     to_address = db.relationship('Address', backref='generated_carpools.to_address', foreign_keys=[to_address_id])
+#     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
+#     driver = db.relationship('Driver', backref='generated_carpools.driver', foreign_keys=[driver_id])
+#     passengers = db.relationship('Passenger', secondary='generated_carpool_passenger_links', lazy='subquery')
+#     address_order = db.Column(db.String, nullable=False) # JSON
+
+
+# class GeneratedCarpoolPart(db.Model):
+#     """
+#     One part of a generated carpool
+#     """
+#     __tablename__ = 'generated_carpool_parts'
+#     id = db.Column(db.Integer, primary_key=True)
+#     idx= db.Column(db.Integer, nullable=False)
+#     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
+#     generated_carpool = db.relationship('GeneratedCarpool', backref='generated_carpool_parts.generated_carpool', foreign_keys=[generated_carpool_id])
+#     from_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+#     from_address = db.relationship('Address', backref='generated_carpool_parts.from_address', foreign_keys=[from_address_id])
+#     to_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
+#     to_address = db.relationship('Address', backref='generated_carpool_parts.to_address', foreign_keys=[to_address_id])
+#     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
+#     driver = db.relationship('Driver', backref='generated_carpool_parts.driver', foreign_keys=[driver_id])
+#     passengers = db.relationship('Passenger', secondary='generated_carpool_part_passenger_links', lazy='subquery')
+
+
+# class CarpoolSolution(db.Model):
+#     """
+#     Table with possible solutions
+#     """
+#     __tablename__ = 'carpool_solutions'
+#     index = db.Column(db.Integer, primary_key=True)
+#     utility_value = db.Column(db.Float, nullable=False)
+#     event_id = db.Column(db.Integer, db.ForeignKey('events.index'), nullable=False)
+#     event = db.relationship('Event', backref='solutions.event', foreign_keys=[event_id])
+#     generated_carpools = db.relationship('GeneratedCarpool', backref='solutions.generated_carpools', lazy=True)
+
+
+
+
+# class GeneratedCarpoolPassengerLink(db.Model):
+#     """
+#     Table with the links between generated carpools and passengers
+#     """
+#     __tablename__ = 'generated_carpool_passenger_links'
+#     id = db.Column(db.Integer, primary_key=True)
+#     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
+#     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=False)
+#     generated_carpool = db.relationship('GeneratedCarpool', backref='generated_carpool_passengers.generated_carpool', foreign_keys=[generated_carpool_id])
+#     passenger = db.relationship('Passenger', backref='generated_carpool_passengers.passenger', foreign_keys=[passenger_id])

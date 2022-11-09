@@ -453,36 +453,4 @@ def passenger_carpool_request_page(event_index, region_name):
         return redirect(url_for('main.event_page', event_index=event.index))
 
 
-@main_blueprint.route('/create-destination', methods=['GET', 'POST'])
-@requires_auth_key
-def create_destination():
-    """
-    Creates a destination
-    """
 
-    if request.method == 'GET':
-        return redirect(url_for('main.create_event_page'))
-    # creating the destination
-    new_address = Address(address_line_1=request.form['addressline1'],
-                          zip_code=request.form['zipcode'],
-                          city=request.form['city'],
-                          state=request.form['state'],
-                          latitude=request.form['latitude'],
-                          longitude=request.form['longitude'],
-                          code=request.form['place_id'])
-
-    db.session.add(new_address)
-    db.session.add(new_address)
-    db.session.commit()
-
-    logger.info('Address {} created'.format(new_address))
-
-
-    new_destination = Destination(name=request.form['destinationname'],
-                                    address_id=new_address.id)
-
-    db.session.add(new_destination)
-    db.session.commit()
-    logger.info('Destination {} created'.format(new_destination))
-
-    return redirect(url_for('main.create_event_page'))

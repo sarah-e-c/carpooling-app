@@ -2,6 +2,8 @@ import logging
 import ssl
 import sys
 
+# credit: example flask-sqlalchemy-celery github repo
+
 from celery import Celery
 from celery.signals import after_setup_logger
 from sqlalchemy import create_engine

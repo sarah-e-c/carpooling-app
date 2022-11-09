@@ -250,7 +250,7 @@ def passenger_carpool_signup_page(carpool_index):
         if current_user.is_authenticated:
             carpool = Carpool.query.get(carpool_index)
             if carpool.driver is None:
-                return redirect(url_for('event_page', event_index=carpool.event_index))
+                return redirect(url_for('main.event_page', event_index=carpool.event_index))
             carpool.passengers.append(current_user.passenger_profile)
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')

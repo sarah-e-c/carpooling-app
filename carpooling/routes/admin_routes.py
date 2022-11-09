@@ -59,5 +59,5 @@ def route_summary_page(event_id):
     Function to view the routes
     :param event_id: the id of the event
     """
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.filter_by(index=event_id).first()
     return render_template('route_summary_template.html', event=event, user=current_user)

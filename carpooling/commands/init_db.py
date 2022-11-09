@@ -20,7 +20,6 @@ class InitDbCommand():
             init_db(is_testing=is_testing)
 
 def init_db(is_testing=True):
-    db.drop_all()
     db.create_all()
     create_regions()
     create_first_key()

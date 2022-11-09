@@ -9,10 +9,16 @@ from celery import Celery
 from carpooling import celeryapp
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from flask_migrate import Migrate
 
 load_dotenv()
 
+<<<<<<< HEAD
 logger = logging.getLogger(__name__)
+=======
+app = Flask(__name__)
+database_url = os.environ['DATABASE_URL']
+>>>>>>> master
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -30,6 +36,7 @@ migrate = Migrate()
 # global tasks_
 # tasks_ = []
 
+<<<<<<< HEAD
 @login_manager.user_loader # yes this is awful, im sorry i couldn't gt the takss to work any other way :(
 def load_user(user_id):
     global user_
@@ -40,6 +47,11 @@ def load_user(user_id):
     except NameError as e:
         from carpooling.models import User as user_ 
         logger.info('imported User with nameerror')
+=======
+mail = Mail(app)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+>>>>>>> master
 
     return user_.query.get(int(user_id))
 

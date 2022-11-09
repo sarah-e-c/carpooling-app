@@ -52,7 +52,6 @@ class Driver(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.driver', foreign_keys=[address_id])
 
 
     def __repr__(self):
@@ -156,7 +155,6 @@ class Event(db.Model):
     destination_id = db.Column(db.Integer, db.ForeignKey('destinations.id'), nullable=True)
 
 
-
     #carpools = db.relationship('Carpool', backref='event', lazy=True)
 
     def get_description(self):
@@ -217,7 +215,6 @@ class Passenger(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.passenger', foreign_keys=[address_id])
 
 
     def __repr__(self):
@@ -396,8 +393,8 @@ class Address(db.Model):
     code = db.Column(db.String, nullable=False)
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
-    # passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True, foreign_keys=[passenger_id])
-    # driver = db.relationship('Driver', backref=db.backref('address'), lazy=True, foreign_keys=[driver_id])
+    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True, foreign_keys=[passenger_id])
+    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True, foreign_keys=[driver_id])
 
     def __repr__(self):
         return f'Address: {self.address_line_1}'

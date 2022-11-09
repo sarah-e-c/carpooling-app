@@ -51,7 +51,6 @@ class Driver(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.driver')
 
 
     def __repr__(self):
@@ -152,7 +151,7 @@ class Event(db.Model):
     user = db.relationship('User', backref=db.backref('events', lazy=True))
     passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.event')
+    address = db.relationship('Address', backref='address.event', foreign_keys=[address_id])
 
 
 
@@ -215,7 +214,6 @@ class Passenger(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-    address = db.relationship('Address', backref='address.passenger')
 
 
     def __repr__(self):
@@ -358,9 +356,9 @@ class DistanceMatrix(db.Model):
     """
     __tablename__ = 'distance_matrix'
     index = db.Column(db.Integer, primary_key=True)
-    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.origin_id'), nullable=False) # represents one location
+    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
     origin = db.relationship('Address', backref='address.origin_distances', foreign_keys=[origin_id])
-    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.destination_id'), nullable=False) # represents another location
+    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
     destination = db.relationship('Address', backref='address.destination_distances', foreign_keys=[destination_id])
 
     def __repr__(self):
@@ -381,11 +379,7 @@ class Address(db.Model):
 
     # this is literally the worst thing I have ever done
     __tablename__ = 'addresses'
-    id = db.Column(db.Integer, Sequence('record_id_seq_3'), primary_key=True)
-    origin_id = db.Column(db.Integer, Sequence('record_id_seq_4'), primary_key=True, unique=True)
-    # origin_distances = db.relationship('DistanceMatrix')
-    destination_id = db.Column(db.Integer, Sequence('record_id_seq_5'), primary_key=True, unique=True)
-    # destination_distances = db.relationship('DistanceMatrix')
+    id = db.Column(db.Integer, primary_key=True, unique=True)
 
     address_line_1 = db.Column(db.String, nullable=False)
     address_line_2 = db.Column(db.String, nullable=True)
@@ -395,8 +389,10 @@ class Address(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     code = db.Column(db.String, nullable=False) # placeid
-    # passenger = db.relationship('Passenger', backref='passenger.address', lazy=True)
-    # driver = db.relationship('Driver', backref=db.backref('address'), lazy=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True) 
+    driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
+    passenger = db.relationship('Passenger', backref='passenger.address', foreign_keys=[passenger_id])
+    driver = db.relationship('Driver', backref=db.backref('address'), foreign_keys=[driver_id])
 
     def __repr__(self):
         return f'Address: {self.address} {self.code}'

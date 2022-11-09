@@ -8,11 +8,12 @@ from flask_session import Session
 from flask import Blueprint
 import logging
 from dotenv import load_dotenv
+from flask_migrate import Migrate
 
 load_dotenv()
 
 app = Flask(__name__)
-database_url = os.environ.get('DATABASE_URL')
+database_url = os.environ['DATABASE_URL']
 logging.basicConfig(level=logging.DEBUG)
 
 #database_url = 'sqlite:///test.db' # for testing
@@ -32,6 +33,7 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 mail = Mail(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.login_view = 'login_page'

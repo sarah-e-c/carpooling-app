@@ -8,3 +8,4 @@ venv
 latest.dump
 instance
 carpooling/local_settings.py
+dump.rdb

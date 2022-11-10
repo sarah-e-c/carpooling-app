@@ -3,7 +3,7 @@ Routes that are used only for internal purposes. (Like leaving carpools). Usuall
 """
 
 from carpooling import db, mail
-from carpooling.models import Event, Carpool,  User, EventCheckIn, Destination, Address
+from carpooling.models import Event, Carpool,  User, EventCheckIn, Destination, Address, GeneratedCarpool
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 from flask_mail import Message
 from io import StringIO
 import csv
+import json
 
 
 internal_blueprint = Blueprint(
@@ -364,3 +365,31 @@ def create_destination():
     logger.info('Destination {} created'.format(new_destination))
 
     return redirect(url_for('main.create_event_page'))
+
+
+@internal_blueprint.route('/get-generated-carpool-data/<carpool_id>', methods=['GET', 'POST'])
+@login_required
+def get_generated_carpool_data(carpool_id):
+    """
+    Internal function to get the generated carpool data to render on the carpool summary page
+    """
+    # get the carpool
+    carpool = GeneratedCarpool.query.get(carpool_id)
+
+    # checking if the person is eligible to view the carpool
+    if carpool.driver.id != current_user.id and carpool.passengers.filter_by(id=current_user.id).first() is None and not current_user.is_admin:
+        return redirect(url_for('main.index'))
+
+    carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),
+                    'driverPhone': carpool.driver.phone_number,
+                    'driverEmail': carpool.driver.email,
+                    'passengers': [{'passengerName': passenger.first_name.capitalize() + ' ' + passenger.last_name.capitalize()} for passenger in carpool.passengers],
+                    'origin': carpool.origin.place_id,
+                    'destination': carpool.destination.place_id,
+                    'waypoints': [{'location': part.destination.place_id, 
+                                   'stopover': True} for part in carpool.generated_carpool_parts[:-1]],
+    }
+    return json.dumps(carpool_data)
+
+
+

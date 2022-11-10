@@ -365,7 +365,7 @@ class Person:
     time_tolerance: float
 
 
-def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_ = 'all_solutions') -> Solution:
+def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, return_ = 'all_solutions') -> Solution:
     """
     Evaluating the best solution for a one-way event
     :param rsvp_list: the list of people who are going to the event, formatted into the Person class.
@@ -489,7 +489,7 @@ def evaluate_best_solution(rsvp_list: list[Person], destination_id: int, return_
         return max(solutions_dict, key=lambda f: solutions_dict[f].total_utility_value)
     
 if __name__ == '__main__':
-    evaluate_best_solution(rsvp_list=[Person(id_=1, location_id=0, is_driver=True, is_passenger=True, num_seats=1, time_tolerance=1), Person(
+    evaluate_best_solution_to(rsvp_list=[Person(id_=1, location_id=0, is_driver=True, is_passenger=True, num_seats=1, time_tolerance=1), Person(
         id_=2, location_id=0, is_driver=True, is_passenger=True, num_seats=1, time_tolerance=1)])
 
 

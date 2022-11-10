@@ -60,4 +60,6 @@ def route_summary_page(event_id):
     :param event_id: the id of the event
     """
     event = Event.query.filter_by(index=event_id).first()
-    return render_template('route_summary_template.html', event=event, user=current_user)
+    generated_carpools = event.carpool_solutions.first().generated_carpools
+
+    return render_template('route_summary_template.html', event=event, user=current_user, generated_carpools=generated_carpools)

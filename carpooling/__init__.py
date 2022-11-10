@@ -72,6 +72,10 @@ def create_app():
     register_blueprints(app)
     from .routes import register_task_blueprints
     register_task_blueprints(app)
+    # adding commands
+    from .commands import register_commands
+    register_commands(app)
+
     return app
     
 

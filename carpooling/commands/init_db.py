@@ -1,25 +1,18 @@
 import datetime
 
 from flask import current_app
+from flask.cli import with_appcontext
 
 from carpooling import db
 from carpooling import models
 from carpooling import create_app
 import secrets
+import click
 
-class InitDbCommand():
-    """
-    Initialize the database
-    """
-    def run(self, is_testing=True):
-        """
-        run the command.
-        """
-        app = create_app()
-        with app.app_context() as f:
-            init_db(is_testing=is_testing)
 
-def init_db(is_testing=True):
+@click.command('init-db')
+@with_appcontext
+def init_db_command(is_testing=True):
     db.create_all()
     create_regions()
     create_first_key()

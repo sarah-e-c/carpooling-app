@@ -52,6 +52,7 @@ class Driver(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    user = db.relationship('User', back_populates='driver_profile')
 
 
     def __repr__(self):
@@ -215,6 +216,9 @@ class Passenger(db.Model):
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    user = db.relationship('User', back_populates='passenger_profile')
+    generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers', secondary='generated_carpool_part_passenger_links', lazy=True, overlaps='passengers')
+    generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers', secondary='generated_carpool_passenger_links', lazy=True, overlaps='passengers')
 
     def __repr__(self):
         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -278,8 +282,8 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String, nullable=False)
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
-    driver_profile = db.relationship('Driver', backref=db.backref('user'), lazy=True)
-    passenger_profile = db.relationship('Passenger', backref=db.backref('user'), lazy=True)
+    driver_profile = db.relationship('Driver', back_populates='user', lazy=True)
+    passenger_profile = db.relationship('Passenger', back_populates='user', lazy=True)
     team_auth_key = db.Column(db.String, nullable=False, default='0') # a special key sent out by the team to allow access to the site
     is_admin = db.Column(db.Integer, nullable=False, default=0)
 
@@ -427,7 +431,7 @@ class GeneratedCarpool(db.Model):
     to_address = db.relationship('Address', backref=db.backref('to_generated_carpools'), foreign_keys=[to_address_id])
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
     driver = db.relationship('Driver', backref=db.backref('generated_carpools'), foreign_keys=[driver_id])
-    passengers = db.relationship('Passenger', backref=db.backref('generated_carpools'), secondary='generated_carpool_passenger_links', lazy='subquery')
+    passengers = db.relationship('Passenger', back_populates='generated_carpools', secondary='generated_carpool_passenger_links', lazy='subquery')
     carpool_solution= db.relationship('CarpoolSolution', backref=db.backref('generated_carpools'), foreign_keys=[carpool_solution_id])
     event = db.relationship('Event', backref=db.backref('generated_carpools'), foreign_keys=[event_id])
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
@@ -462,7 +466,7 @@ class GeneratedCarpoolPart(db.Model):
     to_address = db.relationship('Address', backref=db.backref('to_generated_carpool_parts'), foreign_keys=[to_address_id])
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=False)
     driver = db.relationship('Driver', backref=db.backref('generated_carpool_parts'), foreign_keys=[driver_id])
-    passengers = db.relationship('Passenger', backref=db.backref('generated_carpool_parts'), secondary='generated_carpool_part_passenger_links', lazy='subquery')
+    passengers = db.relationship('Passenger', back_populates='generated_carpool_parts', secondary='generated_carpool_part_passenger_links', lazy='subquery')
 
 
 class CarpoolSolution(db.Model):
@@ -474,6 +478,10 @@ class CarpoolSolution(db.Model):
     utility_value = db.Column(db.Float, nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.index'), nullable=False)
     event = db.relationship('Event', backref=db.backref('carpool_solutions'), foreign_keys=[event_id])
+    length_objective_value = db.Column(db.Float, nullable=False, default=0)
+    needed_passengers_served_objective_value = db.Column(db.Float, nullable=False, default=0)
+    favorable_time_objective_value = db.Column(db.Float, nullable=False, default=0)
+    favorable_route_objective_value = db.Column(db.Float, nullable=False, default=0)
     is_best = db.Column(db.Boolean, nullable=True)
 
 
@@ -485,8 +493,8 @@ class GeneratedCarpoolPassengerLink(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=False)
-    generated_carpool = db.relationship('GeneratedCarpool', backref=db.backref('generated_carpool_passenger_links'), foreign_keys=[generated_carpool_id])
-    passenger = db.relationship('Passenger', backref=db.backref('generated_carpool_passenger_links'), foreign_keys=[passenger_id])
+    # generated_carpool = db.relationship('GeneratedCarpool', foreign_keys=[generated_carpool_id])
+    # passenger = db.relationship('Passenger', foreign_keys=[passenger_id])
 
 class GeneratedCarpoolPartPassengerLink(db.Model):
     """
@@ -494,7 +502,7 @@ class GeneratedCarpoolPartPassengerLink(db.Model):
     """
     __tablename__ = 'generated_carpool_part_passenger_links'
     id = db.Column(db.Integer, primary_key=True)
-    generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpool_parts.id'), nullable=False)
-    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=False)
-    generated_carpool_part = db.relationship('GeneratedCarpoolPart', backref=db.backref('generated_carpool_part_passenger_links'), foreign_keys=[generated_carpool_id])
-    passenger = db.relationship('Passenger', backref=db.backref('generated_carpool_part_passenger_links'), foreign_keys=[passenger_id])
+    generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpool_parts.id'), nullable=False, primary_key=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=False, primary_key=True)
+    # generated_carpool_part = db.relationship('GeneratedCarpoolPart', back_populates='generated_carpool_parts', foreign_keys=[generated_carpool_id])
+    # passenger = db.relationship('Passenger', foreign_keys=[passenger_id])

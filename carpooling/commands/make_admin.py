@@ -1,18 +1,15 @@
 from carpooling import create_app, db
 from carpooling import models
+from flask.cli import with_appcontext
+import click
 
 
-class MakeAdminCommand():
 
-    def run(self, first_name, last_name, is_testing=True):
-        """
-        run the command.
-        """
-        app = create_app()
-        with app.app_context() as f:
-            make_admin(first_name, last_name)
-
-def make_admin(first_name, last_name):
+@click.command('make-admin')
+@click.argument('first_name')
+@click.argument('last_name')
+@with_appcontext
+def make_admin_command(first_name, last_name):
     """
     Method you can hard code to make someone admin
     """

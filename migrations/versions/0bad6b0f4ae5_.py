@@ -8,6 +8,7 @@ Create Date: 2022-11-09 18:37:07.974842
 from alembic import op
 import sqlalchemy as sa
 
+# why are they all bad??
 
 # revision identifiers, used by Alembic.
 revision = '0bad6b0f4ae5'

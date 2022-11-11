@@ -34,6 +34,7 @@
         background-color: #444;
         transition: none;
         cursor: pointer;
+        transition: scale(1.1);
     }
 
     .hiddendetails .active {
@@ -63,9 +64,20 @@
     {% for carpool in generated_carpools %}
     <div id="carpool{{carpool.id}}">
         <div class="visibledetails details{{carpool.id}}" onclick="renderMap(event, '{{carpool.id}}')">
-            This is a place that the people where the place.
+            {{carpool.origin.address[0].passenger.first_name}}'s Home to {{carpool.destination.address[0].destination.name}}'s
         </div>
         <div class="hiddendetails details{{carpool.id}}">
+            {% for part in carpool.generated_carpool_parts %}
+            <p class="style2" class="partshowing">
+                {{part.origin.address_line_1}} to {{part.destination.address_line_1}}
+            </p>
+            <p id="carpoolPartDetails{{part.id}}">
+                <span class="style2">part.destination</span>{{part.passenger.first_name}} {{part.passenger.last_name}}
+            </p>
+            <p id="hiddenDetails{{carpool.id}}" class="style2"> 
+                <!--- This is where the hidden details will be rendered-->
+            </p>
+            {% endfor %}
         </div>
     </div>
     {% endfor %}

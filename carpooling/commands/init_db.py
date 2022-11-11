@@ -16,6 +16,7 @@ def init_db_command(is_testing=True):
     db.create_all()
     create_regions()
     create_first_key()
+    create_first_destination()
 
 
 def create_regions():
@@ -65,4 +66,21 @@ def create_first_key():
         key = secrets.token_hex(4)
     )
     db.session.add(first_key)
+    db.session.commit()
+
+def create_first_destination():
+    destination_address = models.Address(
+        latitude = 37.5579166667,
+        longitude = -77.27135,
+        code=0,
+        address_line_1 = '1000 N Lombardy Street',
+        city = 'Richmond',
+        state = 'VA',
+        zip_code = '23220',
+    )
+    first_destination = models.Destination(
+        name='Maggie L. Walker Governor\'s School',
+        address=destination_address,
+    )
+    db.session.add(first_destination)
     db.session.commit()

@@ -46,7 +46,6 @@ class Driver(db.Model):
     extra_information = db.Column(db.String)
     region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=True)
     region = db.relationship('Region', backref=db.backref('drivers', lazy=True))
-    # # address TODO add addresses
     address_line_1 = db.Column(db.String, nullable=True)
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
@@ -368,7 +367,7 @@ class DistanceMatrix(db.Model):
     kilos = db.Column(db.Float, nullable=False) # distance in kilometers
 
     def __repr__(self):
-        return f'DistanceMatrix: {self.row} {self.column}'
+        return f'DistanceMatrix: {self.origin} {self.destination}'
 
 class Address(db.Model):
     """

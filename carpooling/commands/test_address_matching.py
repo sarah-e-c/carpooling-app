@@ -72,28 +72,25 @@ def test_address_matching_command_debug_mode():
 
             for carpool in solution.carpools:
                 driver_id = Passenger.query.get(
-                carpool.driver.id_).user.driver_profile.index
+                carpool.driver.id_).user[0].driver_profile.index
                 new_carpool = GeneratedCarpool(
                     carpool_solution_id=new_solution.id,
                     from_address_id=carpool.route[0],
                     to_address_id=carpool.route[-1],
                     driver_id=driver_id,  # yes this is bad
                     event_id=event.index,
-                    solution=new_solution
                 )
-                for passenger in carpool.driver_history[1:]:
+                for passenger in carpool.driver.driver_history[1:]:
                     new_carpool.passengers.append(Passenger.get(passenger.id_))
                 db.session.add(new_carpool)
-                for i in range(len(carpool.routes) - 1):
+                for i in range(len(carpool.route) - 1):
                     new_part = GeneratedCarpoolPart(
                         generated_carpool=new_carpool,
-                        from_address_id=carpool.routes[i],
-                        to_address_id=carpool.routes[i+1],
+                        from_address_id=carpool.route[i],
+                        to_address_id=carpool.route[i+1],
                         driver_id=driver_id,  # yes this is bad
-                        event_id=event.index,
-                        solution=new_solution,
                         idx=i,
-                        passengers=new_carpool.passesngers,
+                        passengers=new_carpool.passengers,
                     )
                     db.session.add(new_part)
         db.session.commit()

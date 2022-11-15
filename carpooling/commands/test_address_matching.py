@@ -1,6 +1,6 @@
 from carpooling import create_app
 from carpooling import db
-from carpooling.logic.matcher import load_people, evaluate_best_solution_to
+from carpooling.logic.carpool_matching import load_people, evaluate_best_solution_to
 from io import StringIO
 import logging
 from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, Passenger

@@ -102,7 +102,6 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
         # while there are still viable pairs in the matrix
         logger.info('carpool_matching_frame: {}'.format(
             carpool_matching_frame))
-        carpool_matching_frame.to_csv(f'carpool_matching_frame{i}.csv')
 
         while carpool_matching_frame.cumsum().sum().sum() > 0:
             logger.info('Creating carpool for iteration {}'.format(i))

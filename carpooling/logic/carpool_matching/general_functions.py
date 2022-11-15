@@ -172,7 +172,6 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
     logger.debug(f'Old addresses: {old_addresses}')
     # getting the new values (if needed)
 
-    kilos_matrix.to_csv('kilos_matrix_before.csv')  # see what is
     if kilos_matrix.isnull().values.any():
         # call 1: origin is new, destination is new
         new_points = get_distance_matrix(

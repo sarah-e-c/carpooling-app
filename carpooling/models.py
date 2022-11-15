@@ -153,6 +153,7 @@ class Event(db.Model):
     passengers_needing_ride = db.relationship('Passenger', secondary='passenger_event_links', lazy=True)
     destination= db.relationship('Destination', backref=db.backref('events', lazy=True))
     destination_id = db.Column(db.Integer, db.ForeignKey('destinations.id'), nullable=True)
+    event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='event', lazy=True)
 
 
     #carpools = db.relationship('Carpool', backref='event', lazy=True)
@@ -218,6 +219,7 @@ class Passenger(db.Model):
     user = db.relationship('User', back_populates='passenger_profile')
     generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers', secondary='generated_carpool_part_passenger_links', lazy=True, overlaps='passengers')
     generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers', secondary='generated_carpool_passenger_links', lazy=True, overlaps='passengers')
+    event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='passenger')
 
     def __repr__(self):
         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -473,6 +475,19 @@ class CarpoolSolution(db.Model):
     favorable_route_objective_value = db.Column(db.Float, nullable=False, default=0)
     is_best = db.Column(db.Boolean, nullable=True)
 
+
+class EventCarpoolSignup(db.Model):
+    """
+    Table with the signups for carpools and for events. Was the old CSV, but now is in a database.
+    """
+    __tablename__ = 'event_carpool_signups'
+    id = db.Column(db.Integer, primary_key=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.index'), nullable=False)
+    passenger = db.relationship('Passenger', back_populates='event_carpool_signups', foreign_keys=[passenger_id])
+    event = db.relationship('Event', back_populates='event_carpool_signups', foreign_keys=[event_id])
+    willing_to_drive = db.Column(db.Boolean, nullable=False)
+    needs_ride = db.Column(db.Boolean, nullable=False)
 
 class GeneratedCarpoolPassengerLink(db.Model):
     """

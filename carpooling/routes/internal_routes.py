@@ -377,16 +377,16 @@ def get_generated_carpool_data(carpool_id):
     carpool = GeneratedCarpool.query.get(carpool_id)
 
     # checking if the person is eligible to view the carpool
-    if carpool.driver.id != current_user.id and carpool.passengers.filter_by(id=current_user.id).first() is None and not current_user.is_admin:
+    if (carpool.driver.user[0].id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.user[0].id ==current_user.id]) == 0) and not current_user.is_admin:
         return redirect(url_for('main.index'))
 
     carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),
                     'driverPhone': carpool.driver.phone_number,
-                    'driverEmail': carpool.driver.email,
+                    'driverEmail': carpool.driver.email_address,
                     'passengers': [{'passengerName': passenger.first_name.capitalize() + ' ' + passenger.last_name.capitalize()} for passenger in carpool.passengers],
-                    'origin': carpool.origin.place_id,
-                    'destination': carpool.destination.place_id,
-                    'waypoints': [{'location': part.destination.place_id, 
+                    'origin': f"{carpool.from_address.address_line_1} {carpool.from_address.city} {carpool.from_address.state}",
+                    'destination': f'{carpool.to_address.address_line_1} {carpool.to_address.city} {carpool.to_address.state}',
+                    'waypoints': [{'location': f'{part.to_address.address_line_1} {part.to_address.city} {part.to_address.state}', 
                                    'stopover': True} for part in carpool.generated_carpool_parts[:-1]],
     }
     return json.dumps(carpool_data)

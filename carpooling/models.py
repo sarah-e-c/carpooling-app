@@ -375,16 +375,6 @@ class Address(db.Model):
     """
     __tablename__ = 'addresses'
     id = db.Column(db.Integer, primary_key=True)
-
-    # @event.listens_for(db.session, 'after_flush')
-    # def hashgen(session, flush_context):
-    #     for obj in session:
-    #         if isinstance(obj, Address):
-    #             logger.debug(f'Address: {obj}')
-    #             obj.origin_id = obj.id
-    #             obj.destination_id = obj.id
-
-    # this is literally the worst thing I have ever done
     address_line_1 = db.Column(db.String, nullable=False)
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=False)
@@ -432,7 +422,7 @@ class GeneratedCarpool(db.Model):
     driver = db.relationship('Driver', backref=db.backref('generated_carpools'), foreign_keys=[driver_id])
     passengers = db.relationship('Passenger', back_populates='generated_carpools', secondary='generated_carpool_passenger_links', lazy='subquery')
     carpool_solution= db.relationship('CarpoolSolution', backref=db.backref('generated_carpools'), foreign_keys=[carpool_solution_id])
-    event = db.relationship('Event', backref=db.backref('generated_carpools'), foreign_keys=[event_id])
+    event = db.relationship('Event', backref=db.backref('generated_carpools'), foreign_keys=[event_id], uselist=False)
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
 
 

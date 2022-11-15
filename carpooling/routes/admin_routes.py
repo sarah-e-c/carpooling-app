@@ -1,10 +1,12 @@
-from carpooling.models import  AuthKey, User, Event
-from carpooling.utils import  admin_required
+from carpooling.models import AuthKey, CarpoolSolution, User, Event
+from carpooling.utils import admin_required
 from flask import render_template
 from flask_login import current_user
 from flask import Blueprint
+import logging
 
 admin_blueprint = Blueprint('admin', __name__, template_folder='templates')
+logger = logging.getLogger(__name__)
 
 
 @admin_blueprint.route('/valid-auth-keys')
@@ -22,6 +24,7 @@ def valid_auth_keys_page():
     return_list_2 = [item.date_created for item in auth_keys]
     return render_template('valid_auth_keys_template.html', return_list=zip(return_list, return_list_2), user=current_user)
 
+
 @admin_blueprint.route('/admin')
 @admin_required
 def admin_home_page():
@@ -29,7 +32,6 @@ def admin_home_page():
     Page that allows for creation of events, creation of regions, and viewing of the valid authorization keys
     """
     return render_template('admin_home_template.html', user=current_user)
-
 
 
 @admin_blueprint.route('/manage-users')
@@ -47,19 +49,38 @@ def view_checkins():
     """
     Function to view all the check ins.
     """
-    recent_events = Event.query.order_by(Event.event_start_time.desc()).limit(3).all()
-    other_events = Event.query.order_by(Event.event_start_time.desc()).offset(3).all()
+    recent_events = Event.query.order_by(
+        Event.event_start_time.desc()).limit(3).all()
+    other_events = Event.query.order_by(
+        Event.event_start_time.desc()).offset(3).all()
     return render_template('view_checkins_template.html', recent_events=recent_events, other_events=other_events, user=current_user)
 
 
-@admin_blueprint.route('/view-routes/<event_id>')
+@admin_blueprint.route('/view-routes/<solution_id>')
 @admin_required
-def route_summary_page(event_id):
+def route_summary_page(solution_id):
     """
     Function to view the routes
-    :param event_id: the id of the event
+    :param solution_id: the id of the solution to see
     """
-    event = Event.query.filter_by(index=event_id).first()
-    generated_carpools = event.carpool_solutions.first().generated_carpools
-
-    return render_template('route_summary_template.html', event=event, user=current_user, generated_carpools=generated_carpools)
+    solution = CarpoolSolution.query.get(solution_id)
+    generated_carpools = solution.generated_carpools
+    event = solution.event
+    all_solutions = sorted(event.generated_carpools, key=lambda f: f.id)
+    # there is definitely a better way but im lazy
+    for i, solution_ in enumerate(all_solutions):
+        if solution_.id == solution.id:
+            try:
+                previous_solution_id = all_solutions[i-1].id
+                next_solution_id = all_solutions[i+1].id
+            except IndexError as e:
+                logger.debug(e)
+                if len(all_solutions) > i:
+                    previous_solution_id = all_solutions[i-1].id
+                    next_solution_id = all_solutions[0].id
+                if i == 0:  # its a big lower
+                    previous_solution_id = all_solutions[-1].id
+                    next_solution_id = all_solutions[i+1].id
+    
+    logger.debug(f'{previous_solution_id} {next_solution_id}')
+    return render_template('route_summary_template.html', event=event, user=current_user, carpool_solution=solution, generated_carpools=generated_carpools, next_solution_id=next_solution_id, previous_solution_id=previous_solution_id)

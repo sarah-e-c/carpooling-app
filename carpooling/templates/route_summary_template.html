@@ -9,10 +9,10 @@
         display: block;
         position: absolute;
         top: 20%;
-        left: 70%;
-        width: 20%;
+        left: 90%;
+        width: 40%;
         height: inherit;
-        background-color: #444;
+        background-color: #888;
         border-radius: 3%;
         box-shadow: 0px 0px 5px 0px rgba(255, 225, 225, 0.75);
         padding: 10px;
@@ -22,25 +22,37 @@
 
     .hiddendetails {
         display: none;
+        max-height: 0;
+    }
+
+    span.style2 {
+        color: white;
+        font-family: 'Fira Sans', sans-serif;
+        font-size: small;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        display: block;
+        margin-top: 3px;
     }
 
     .visibledetails:hover {
-        background-color: #666;
-        transition: cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.2s;
+        background-color: #AAA;
+        transition: none;
         cursor: pointer;
     }
 
     .visibledetails:hover .active {
-        background-color: #444;
+        background-color: #888;
         transition: none;
         cursor: pointer;
         transition: scale(1.1);
     }
 
-    .hiddendetails .active {
-        background-color: #444;
+    .hiddendetails.active {
+        background-color: #999;
         display: block;
-        transition: cubic-bezier(0.075, 0.82, 0.165, 1) 0.5s;
+        height: max-content;
+        max-height: max-content;
     }
 
     #mapdiv {
@@ -50,13 +62,16 @@
         border-color: #fff;
         background-color: #fff;
     }
+
+    .buttondiv {
+        display: inline-block;
+    }
 </style>
 {% endblock %}
 {% block main %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI&callback=initMap"
     async="false"></script>
-
-<button id="submit">Submit</button>
+    
 <h1 class="style1"> Route 1 </h1>
 <div id="mapdiv"></div>
 <!--- This is where the map will be rendered-->
@@ -64,23 +79,20 @@
     {% for carpool in generated_carpools %}
     <div id="carpool{{carpool.id}}">
         <div class="visibledetails details{{carpool.id}}" onclick="renderMap(event, '{{carpool.id}}')">
-            {{carpool.origin.address[0].passenger.first_name}}'s Home to {{carpool.destination.address[0].destination.name}}'s
+            <p class="style2">{{carpool.from_address.passenger.first_name}}'s Home to
+                {{carpool.to_address.destination.name}}</p>
         </div>
         <div class="hiddendetails details{{carpool.id}}">
             {% for part in carpool.generated_carpool_parts %}
-            <p class="style2" class="partshowing">
-                {{part.origin.address_line_1}} to {{part.destination.address_line_1}}
-            </p>
-            <p id="carpoolPartDetails{{part.id}}">
-                <span class="style2">part.destination</span>{{part.passenger.first_name}} {{part.passenger.last_name}}
-            </p>
-            <p id="hiddenDetails{{carpool.id}}" class="style2"> 
-                <!--- This is where the hidden details will be rendered-->
-            </p>
+            <span class="style2" class="partshowing">
+                {{part.from_address.address_line_1}} to {{part.to_address.address_line_1}}
+            </span>
+            <br>
             {% endfor %}
         </div>
     </div>
     {% endfor %}
+
     <div id="Richmond">
         <div class="visibledetails details0" onclick="renderMap(event, '0')">
             <p class="style2">Hi!</p>
@@ -89,9 +101,31 @@
         </div>
     </div>
 </div>
+<div class="buttondiv">
+    <ul class="style1 buttons">
+        <li>
+            <a class="button n01" id="leftbutton"
+                href="{{url_for('admin.route_summary_page', solution_id=previous_solution_id)}}"><svg>
+                    <use xlink:href="#icon-b64"></use>
+                </svg>
+                <span class="label"> Previous Solution</span>
+            </a>
+
+            <a class="button n01" id="rightbutton"
+                href="{{url_for('admin.route_summary_page', solution_id=previous_solution_id)}}"><svg>
+                    <use xlink:href="#icon-b64"></use>
+                </svg>
+                <span class="label">
+                    Next Solution
+                </span>
+            </a>
+        </li>
+    </ul>
+</div>
 {% endblock %}
 
 {% block scripts %}
+
 
 <script>
     console.log("starting script");
@@ -99,12 +133,13 @@
     let rendered_carpool;
 
 
+
     window.initMap = initMap
 
-
     function initMap() {
-        var directionsService = new google.maps.DirectionsService();
-        var directionsRenderer = new google.maps.DirectionsRenderer();
+        window.directionsService = new google.maps.DirectionsService();
+        window.directionsRenderer = new google.maps.DirectionsRenderer();
+
         map = new google.maps.Map(document.getElementById("mapdiv"), {
             zoom: 6,
             center: { lat: 41.85, lng: -87.65 },
@@ -164,22 +199,30 @@
     function renderMap(event, carpool_id) {
 
         //toggling the visibility
-        const detailsdiv = document.getElementById(carpool_id);
-        const hiddendetails = detailsdiv.getElementsByClassName("details" + carpool_id)[0];
-        const visibledetails = detailsdiv.getElementsByClassName("details" + carpool_id)[1];
+        const detailsdiv = document.getElementById('carpool' + carpool_id);
+        const hiddendetails = detailsdiv.children[1];
+        const visibledetails = detailsdiv.children[0];
+        for (let i = 0; i < document.getElementById('detailsdiv').children.length; i++) {
+            document.getElementById('detailsdiv').children[i].children[1].classList.remove('active')
+            document.getElementById('detailsdiv').children[i].children[0].classList.remove('active')
+        }
         if (hiddendetails.classList.contains("active")) {
             hiddendetails.classList.remove("active");
-            visibledetails.classList.add("active");
-        } else {
-            hiddendetails.classList.add("active");
             visibledetails.classList.remove("active");
+            console.log('deactivated the details div')
+        } else {
+            console.log('activated the details div.')
+            hiddendetails.classList.add("active");
+            visibledetails.classList.add("active");
         }
+
+
 
         // getting data for map
         let http_request = new XMLHttpRequest();
-        var directionsService = new google.maps.DirectionsService();
-        var directionsRenderer = new google.maps.DirectionsRenderer();
-        directionsRenderer.setMap(map)
+        window.directionsRenderer.setDirections({ routes: [] });
+
+        console.log('recieved request to render map');
         http_request.open("GET", "{{url_for('internal.get_generated_carpool_data', carpool_id='CHANGETHIS')}}".replace('CHANGETHIS', carpool_id), true);
         http_request.send();
         http_request.onreadystatechange = function () {

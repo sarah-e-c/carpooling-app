@@ -8,3 +8,4 @@ venv
 latest.dump
 instance
 dump.rdb
+.vscode

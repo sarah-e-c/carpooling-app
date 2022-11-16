@@ -319,8 +319,6 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                     seconds_matrix.loc[origin, destination] = 0
         db.session.commit()
         logger.info('new distances added to database')
-
-    kilos_matrix.to_csv('kilos_matrix_after.csv')  # see what is
     return kilos_matrix, seconds_matrix
 
 

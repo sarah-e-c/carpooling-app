@@ -21,7 +21,7 @@ def make_example_signup_command():
         writer = csv.writer(f)
         writer.writerow(['first name', 'last name', 'willing to drive', 'needs ride'])
         for user in eligible_users:
-            writer.writerow([user.first_name, user.last_name, 'yes' if user.user[0].driver_profile else 'no', 'yes'])
+            writer.writerow([user.first_name, user.last_name, 'yes' if user.user.driver_profile else 'no', 'yes'])
     
     logger.info('wrote example signup csv')
 

@@ -30,13 +30,7 @@ def upgrade():
     op.create_foreign_key(None, 'addresses', 'passengers', ['passenger_id'], ['index'])
     op.drop_column('addresses', 'origin_id')
     op.drop_column('addresses', 'destination_id')
-    op.create_foreign_key(None, 'distance_matrix', 'addresses', ['destination_id'], ['id'])
-    op.create_foreign_key(None, 'distance_matrix', 'addresses', ['origin_id'], ['id'])
-    op.create_foreign_key(None, 'drivers', 'regions', ['region_name'], ['name'])
-    op.create_foreign_key(None, 'drivers', 'addresses', ['address_id'], ['id'])
-    op.create_foreign_key(None, 'events', 'addresses', ['address_id'], ['id'])
-    op.create_foreign_key(None, 'events', 'users', ['user_id'], ['id'])
-    op.create_foreign_key(None, 'passengers', 'addresses', ['address_id'], ['id'])
+
     # ### end Alembic commands ###
 
 

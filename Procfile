@@ -1,2 +1,2 @@
 web: gunicorn carpooling:create_app
-worker: celery worker --app=tasks.celery
+worker: celery --app carpooling.celeryapp.celery_worker.celery worker --loglevel=info

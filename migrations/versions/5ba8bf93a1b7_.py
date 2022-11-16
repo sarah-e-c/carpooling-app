@@ -25,12 +25,12 @@ def upgrade():
     sa.ForeignKeyConstraint(['address_id'], ['addresses.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.drop_constraint('addresses_id_key', 'addresses', type_='unique')
     op.add_column('distance_matrix', sa.Column('seconds', sa.Float(), nullable=False))
     op.add_column('distance_matrix', sa.Column('kilos', sa.Float(), nullable=False))
     op.add_column('events', sa.Column('destination_id', sa.Integer(), nullable=True))
-    op.drop_constraint('events_address_id_fkey', 'events', type_='foreignkey')
     op.create_foreign_key(None, 'events', 'destinations', ['destination_id'], ['id'])
+    # op.drop_constraint('events_address_id_fkey', 'events', type_='foreignkey')
+    # op.drop_constraint('addresses_id_key', 'addresses', type_='unique')
     op.drop_column('events', 'address_id')
     # ### end Alembic commands ###
 

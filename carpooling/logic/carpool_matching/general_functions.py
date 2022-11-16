@@ -347,7 +347,7 @@ def load_people(strio: StringIO):
         new_person = Person(user.index, user.address[0].id,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (
                                 s['last name'] == user.last_name), axis=1)].iloc[0]['willing to drive'] == 'yes'),
-                            user.user[0].driver_profile.num_seats if user.user[0].driver_profile else 0,
+                            user.user.driver_profile.num_seats if user.user.driver_profile else 0,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (
                                 s['last name'] == user.last_name), axis=1)].iloc[0]['needs ride'] == 'yes'),
                             MAX_TIME  # NEEDS CHANGED TODO

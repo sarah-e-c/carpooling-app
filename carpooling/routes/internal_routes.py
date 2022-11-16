@@ -42,7 +42,7 @@ def delete_event(event_index):
 
     # notifying the drivers of the event
     for carpool in event_to_delete.carpools:
-        send_async_email.delay(carpool.driver.user[0].passenger_profile.email_address, 'The event you signed up to carpool for has been deleted.', f"""
+        send_async_email.delay(carpool.driver.user.passenger_profile.email_address, 'The event you signed up to carpool for has been deleted.', f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                 The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                 """)
@@ -167,7 +167,7 @@ def admin_delete_user(user_id):
     user_to_delete_upcoming_carpools = [
         carpool for carpool in user_to_delete.passenger_profile.carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(days=1)]
     for carpool in user_to_delete_upcoming_carpools:
-        send_async_email.delay(carpool.driver.user[0].passenger_profile.email_address, 'A passenger of yours has been deleted', f"""
+        send_async_email.delay(carpool.driver.user.passenger_profile.email_address, 'A passenger of yours has been deleted', f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                 Your passenger {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                 """)
@@ -377,7 +377,7 @@ def get_generated_carpool_data(carpool_id):
     carpool = GeneratedCarpool.query.get(carpool_id)
 
     # checking if the person is eligible to view the carpool
-    if (carpool.driver.user[0].id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.user[0].id ==current_user.id]) == 0) and not current_user.is_admin:
+    if (carpool.driver.user.id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.user.id ==current_user.id]) == 0) and not current_user.is_admin:
         return redirect(url_for('main.index'))
 
     carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),

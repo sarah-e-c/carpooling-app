@@ -391,7 +391,7 @@ def passenger_carpool_request_page(event_index, region_name):
             drivers_in_area = [driver for driver in Driver.query.filter_by(region_name=region_name).all(
             ) if driver not in [carpool.driver for carpool in event.carpools]]
             for driver in drivers_in_area:
-                send_async_email.delay(driver.user[0].passenger_profile.email_address, 'Passenger needs ride', f"""
+                send_async_email.delay(driver.user.passenger_profile.email_address, 'Passenger needs ride', f"""
                         Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
                         A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
                         please consider signing up to give them a ride.
@@ -443,7 +443,7 @@ def passenger_carpool_request_page(event_index, region_name):
         ) if driver not in [carpool.driver for carpool in event.carpools]]
 
         for driver in drivers_in_area:
-            send_async_email.delay(driver.user[0].passenger_profile.email_address, 'Passenger Needs Ride', f"""
+            send_async_email.delay(driver.user.passenger_profile.email_address, 'Passenger Needs Ride', f"""
                     Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
                     A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
                     please consider signing up to give them a ride.

@@ -180,6 +180,7 @@ class Solution:
 
             temp_value += (carpool.driver.num_seats/(carpool.driver.num_seats - 1)) * (1- total_distance_after_carpool/total_distance_before_carpool)
         self.length_objective_value = temp_value/len(self.carpools)      
+        logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
         return self.length_objective_value  
 
 
@@ -197,22 +198,23 @@ class Solution:
         served_passengers = [passenger for passenger in served_passengers if not passenger.can_drive]
 
         self.needed_passengers_served_objective_value = len(served_passengers) / len(needed_passengers) # ratio
+        logger.info(f'Solution {self} has a needed passengers served objective value of {self.needed_passengers_served_objective_value}')
         return self.needed_passengers_served_objective_value
 
-
-
-        return 1
 
     def calculate_favorable_time_value(self):
         """
         Calculating the utility value for each route not being too long compared to each driver's original route.
         """
+
         return 1
 
     def calculate_favorable_route_value(self):
         """
         Calculating the utility function for the people who have been carpooling longer having a favorable time.
         """
+
+        
         return 1
 
     def calculate_total_utility_value(self):
@@ -227,6 +229,8 @@ class Solution:
         needed_passengers_served_utility = self.calculate_needed_passengers_served_value()
         self.total_utility_value = self.TOTAL_LENGTH_OBJECTIVE_WEIGHT * total_length_utility +\
              self.PASSENGERS_SERVED_OBJECTIVE_WEIGHT * needed_passengers_served_utility
+        
+        logger.info(f'Solution {self} has a total utility value of {self.total_utility_value}')
 
 
 

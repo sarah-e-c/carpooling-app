@@ -342,7 +342,8 @@ def create_destination():
     if request.method == 'GET':
         return redirect(url_for('main.create_event_page'))
     # creating the destination
-    new_address = Address(address_line_1=request.form['addressline1'],
+    new_address = Address(id=None,
+        address_line_1=request.form['addressline1'],
                           zip_code=request.form['zipcode'],
                           city=request.form['city'],
                           state=request.form['state'],
@@ -350,7 +351,6 @@ def create_destination():
                           longitude=request.form['longitude'],
                           code=request.form['place_id'])
 
-    db.session.add(new_address)
     db.session.add(new_address)
     db.session.commit()
 

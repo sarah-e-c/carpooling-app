@@ -377,7 +377,7 @@ class Address(db.Model):
     Table to store addresses and geocodes
     """
     __tablename__ = 'addresses'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     address_line_1 = db.Column(db.String, nullable=False)
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=False)

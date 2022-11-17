@@ -11,6 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+TIME_TOLERANCE_CONSTANT = 1.5
+
 def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, return_='all_solutions', use_placeid=True) -> Solution:
     """
     Evaluating the best solution for a one-way event
@@ -34,6 +36,9 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
     people_dict = {}
     logger.info('rsvp_list: {}'.format(rsvp_list))
     for person in rsvp_list:
+        # calculating their time tolerance
+        time_tolerance = seconds_matrix.loc[person.location_id, destination_id] * TIME_TOLERANCE_CONSTANT
+        person.time_tolerance = time_tolerance
         people_dict[person.id_] = {'Person': person,
                                    'Driver': None, 'Passenger': None}
         if person.is_driver:
@@ -95,6 +100,8 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
         # initializing the matching matrix
         carpool_matching_frame = static_carpool_matching_frame.copy()
 
+        kilos_matrix.to_csv('kilos_matrix.csv')
+        seconds_matrix.to_csv('seconds_matrix.csv')
         solutions_dict[f'iteration_{i}'] = Solution(kilos_matrix=kilos_matrix, seconds_matrix=seconds_matrix,
                                                     all_passengers=passengers,
                                                     all_drivers=drivers,
@@ -159,4 +166,4 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
     if return_ == 'all_solutions':
         return solutions_dict
     else:
-        return np.nanmax(solutions_dict, key=lambda f: solutions_dict[f].total_utility_value)
+        return solutions_dict[max(solutions_dict, key=lambda f: solutions_dict[f].total_utility_value)]

@@ -15,8 +15,10 @@ def test_address_matching_command():
         with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
             people = load_people(StringIO(f.read()))
         event = Event.query.first()
-        solutions = evaluate_best_solution_to(people, 1, use_placeid=False) # need to drop the addresses
+        solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False) # need to drop the addresses
         logger.info(solutions)
+        if type(solutions) is not list:
+            solutions = {0: solutions}
         # writing the solutions to the database
         for _, solution in solutions.items():
             new_solution = CarpoolSolution(
@@ -57,7 +59,7 @@ def test_address_matching_command_debug_mode():
         with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
             people = load_people(StringIO(f.read()))
         event = Event.query.first()
-        solutions = evaluate_best_solution_to(people, 1, use_placeid=False) # need to drop the addresses
+        solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False) # need to drop the addresses
         # writing the solutions to the database
         for _, solution in solutions.items():
             new_solution = CarpoolSolution(
@@ -68,7 +70,6 @@ def test_address_matching_command_debug_mode():
             db.session.add(new_solution)
 
             for carpool in solution.carpools:
-                logger.info(carpool)
                 driver_id = Passenger.query.get(
                 carpool.driver.id_).user.driver_profile.index
                 new_carpool = GeneratedCarpool(

@@ -26,7 +26,7 @@ DRIVER_WAITING_TIME = 5  # assuming 5 minutes of wait time between stops
 PLACEHOLDER_HIGH_VALUE = 9999999999999
 
 MAX_COMPUTATION_TIME = 5  # 5 minutes
-MAX_ITER = 10  # 1000 iterations
+MAX_ITER = 100  # 1000 iterations
 
 API_KEY = 'AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI'
 
@@ -131,7 +131,7 @@ class Solution:
     TOTAL_LENGTH_OBJECTIVE_WEIGHT = 0.5
     PASSENGERS_SERVED_OBJECTIVE_WEIGHT = 0.5
 
-    def __init__(self, kilos_matrix, seconds_matrix, all_drivers, all_passengers, destination_id):
+    def __init__(self, kilos_matrix: pd.DataFrame, seconds_matrix: pd.DataFrame, all_drivers, all_passengers, destination_id, type_='to'):
         self.carpools = []
         self.kilos_matrix = kilos_matrix
         self.seconds_matrix = seconds_matrix
@@ -143,6 +143,7 @@ class Solution:
         self.favorable_time_objective_value = 0
         self.favorable_route_objective_value = 0
         self.total_utility_value = 0
+        self.type = type_
 
 
     def add_carpool(self, carpool: LocalCarpool):
@@ -166,22 +167,22 @@ class Solution:
         """
         Calculating the utility function for the total length traveled compared to the default.
         """
-        temp_value = 0
-        for carpool in self.carpools:
-            total_distance_before_carpool = 0
-            total_distance_after_carpool = 0
+        if self.type == 'to':
+            temp_value = 0
+            for carpool in self.carpools:
+                total_distance_before_carpool = 0
+                total_distance_after_carpool = 0
 
-            for passenger in carpool.passengers:
-                total_distance_before_carpool += self.kilos_matrix[passenger.location_id][self.destination_id]
-            total_distance_before_carpool += self.kilos_matrix[carpool.driver.location_id][self.destination_id]
-            for i in range(len(carpool.route) - 1):
-                total_distance_after_carpool += self.kilos_matrix[carpool.route[i]][carpool.route[i + 1]]
-            total_distance_after_carpool += self.kilos_matrix[carpool.route[-1]][self.destination_id]
+                for passenger in carpool.passengers:
+                    total_distance_before_carpool += self.kilos_matrix.loc[passenger.location_id][self.destination_id]
+                total_distance_before_carpool += self.kilos_matrix.loc[carpool.driver.location_id][self.destination_id]
+                for i in range(len(carpool.route) - 1):
+                    total_distance_after_carpool += self.kilos_matrix.loc[carpool.route[i]][carpool.route[i + 1]]
 
-            temp_value += (carpool.driver.num_seats/(carpool.driver.num_seats - 1)) * (1- total_distance_after_carpool/total_distance_before_carpool)
-        self.length_objective_value = temp_value/len(self.carpools)      
-        logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
-        return self.length_objective_value  
+                temp_value += (carpool.driver.num_seats/(carpool.driver.num_seats - 1)) * (1- total_distance_after_carpool/total_distance_before_carpool)
+            self.length_objective_value = temp_value/len(self.carpools) 
+            logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
+            return self.length_objective_value  
 
 
     def calculate_needed_passengers_served_value(self):

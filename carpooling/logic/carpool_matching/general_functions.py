@@ -23,23 +23,25 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
     :param destinations: the ids of the addresses in the database
     """
     return_dict = {}
-    if len(origins) * len(destinations) > 100:
+    if (len(origins) * len(destinations) > 100) | (len(origins) > 25) | (len(destinations) > 25):
         logger.warning(
             'too many origins and destinations, splitting into chunks')
         for origin_iter in range(0, len(origins), 10):
             for j in range(0, len(destinations), 10):
                 origins_chunk = origins[origin_iter:origin_iter+10]
                 destinations_chunk = destinations[j:j+10]
+                origins_chunk_addresses = [Address.query.get(origin) for origin in origins_chunk] # doing this to make sure that they are in same order
+                destinations_chunk_addresses = [Address.query.get(destination) for destination in destinations_chunk]
+                
+
                 if use_placeid:
-                    origins_chunk_str = [f'place_id:{origin}' for origin in list(
-                        Address.query.filter(Address.id.in_(origins_chunk)).with_entities(Address.code))]
-                    destinations_chunk_str = [f'place_id:{destination}' for destination in list(
-                        Address.query.filter(Address.id.in_(destinations_chunk)).with_entities(Address.code))]
+                    origins_chunk_str = [f'place_id:{origin.code}' for origin in origins_chunk_addresses]
+                    destinations_chunk_str = [f'place_id:{destination.code}' for destination in destinations_chunk_addresses]
                 else:
-                    origins_chunk_str = [f'{origin.address_line_1} {origin.city} {origin.state} {origin.zip_code}' for origin in list(
-                        Address.query.filter(Address.id.in_(origins_chunk)).all())]
+                    origins_chunk_str = [f'{origin.address_line_1} {origin.city} {origin.state} {origin.zip_code}' for origin in 
+                        origins_chunk_addresses]
                     destinations_chunk_str = [f'{destination.address_line_1} {destination.city} {destination.state} {destination.zip_code}' for destination in list(
-                        Address.query.filter(Address.id.in_(destinations_chunk)).all())]
+                        destinations_chunk_addresses)]
                 origins_str = '|'.join(origins_chunk_str)
                 destinations_str = '|'.join(destinations_chunk_str)
                 url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins={origins_str}&destinations={destinations_str}&key={API_KEY}'
@@ -74,30 +76,30 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
         return return_dict
 
     else:  # the number of origins and destinations is less than 100
+        origins_chunk_addresses = [Address.query.get(origin) for origin in origins_chunk]
+        destinations_chunk_addresses = [Address.query.get(destination) for destination in destinations_chunk]
         if use_placeid:
-            origins_for_url = [address.code for address in list(
-                Address.query.filter(Address.id.in_(origins)).all())]
+            
             origins_for_url = ["place_id:" +
-                               origin for origin in origins_for_url]
-            destinations_for_url = [address.code for address in list(
-                Address.query.filter(Address.id.in_(destinations)).all())]
+                               origin.code for origin in origins_chunk_addresses]
             destinations_for_url = [
-                "place_id:" + destination for destination in destinations_for_url]
+                "place_id:" + destination.code for destination in destinations_chunk_addresses]
             origins_for_url = '|'.join(origins_for_url)
             destinations_for_url = '|'.join(destinations_for_url)
             url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins_for_url}&destinations={destinations_for_url}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
             headers = {}
         else:  # not using placeid
-            origins_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in list(
-                Address.query.filter(Address.id.in_(origins)).all())]
+            origins_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in
+                origins_chunk_addresses]
             origins_for_url = '|'.join(origins_for_url)
-            destinations_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in list(
-                Address.query.filter(Address.id.in_(destinations)).all())]
+            destinations_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in destinations_chunk_addresses]
             destinations_for_url = '|'.join(destinations_for_url)
             url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins_for_url}&destinations={destinations_for_url}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
             headers = {}
 
         response = requests.get(url, headers=headers).json()
+        with open(f"carpooling/logic/examples/distance_matrix_example_{time.time()}.json", "w") as f:
+            json.dump(response, f)
         # TODO get this make the idea
         for origin_iter, row in zip(origins, response["rows"]):
             if type(return_dict.get(origin_iter)) != dict:

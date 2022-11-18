@@ -50,6 +50,7 @@ def run_migrations_offline():
     )
 
     with context.begin_transaction():
+        logger.info('running migrations')
         context.run_migrations()
 
 
@@ -82,6 +83,7 @@ def run_migrations_online():
         )
 
         with context.begin_transaction():
+            logger.info('Running migrations')
             context.run_migrations()
 
 

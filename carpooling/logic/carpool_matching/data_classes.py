@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import requests
 import time
-from carpooling.models import Event, Address, DistanceMatrix,  Destination, Passenger
+from carpooling.models import Event, Address, DistanceMatrix,  Destination
 from carpooling import db
 import numpy as np
 import logging

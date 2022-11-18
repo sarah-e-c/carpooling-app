@@ -1,7 +1,7 @@
 
 from .data_classes import Person, LocalPassenger, DRIVER_WAITING_TIME, Solution, MAX_ITER, LocalCarpool, LocalDriver
 from .general_functions import fill_distance_matrix
-from carpooling.models import Destination, Passenger
+from carpooling.models import Destination
 import numpy as np
 import pandas as pd
 from numpy.random import choice

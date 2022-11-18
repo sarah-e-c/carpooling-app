@@ -3,7 +3,9 @@ All routes that have to do with authorization are defined here.
 """
 
 from carpooling import db, mail
-from carpooling.models import Address, Driver, AuthKey, Passenger, Region, User
+from carpooling.models import Address, AuthKey, Region, User
+from carpooling.models import User as Passenger
+from carpooling.models import User as Driver
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException

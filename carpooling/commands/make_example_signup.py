@@ -1,6 +1,7 @@
 from flask.cli import with_appcontext
 import click
-from carpooling.models import Driver, User, Passenger, Address
+from carpooling.models import Address
+from carpooling.models import User as Passenger
 import csv
 import logging
 
@@ -19,7 +20,7 @@ def make_example_signup_command():
 
     with open('carpooling/logic/example_signup_csv.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['first name', 'last name', 'willing to drive', 'needs ride'])
+        writer.writerow(['first_name', 'last_name', 'willing_to_drive', 'needs_ride'])
         for user in eligible_users:
             writer.writerow([user.first_name, user.last_name, 'yes' if user.user.driver_profile else 'no', 'yes'])
     

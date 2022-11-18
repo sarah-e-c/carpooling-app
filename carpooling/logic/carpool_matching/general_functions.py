@@ -1,5 +1,6 @@
 import logging
-from carpooling.models import Address, DistanceMatrix, Passenger, Destination
+from carpooling.models import Address, DistanceMatrix, Destination
+from carpooling.models import User as Passenger
 from .data_classes import API_KEY, PLACEHOLDER_HIGH_VALUE, MAX_TIME, Person
 import requests
 import numpy as np

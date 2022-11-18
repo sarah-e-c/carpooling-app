@@ -6,7 +6,9 @@ import requests
 import click
 from flask.cli import with_appcontext
 from carpooling import db
-from carpooling.models import Passenger, Address, User, Driver, Event, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
+from carpooling.models import Address, User, Event, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
+from carpooling.models import User as Driver
+from carpooling.models import User as Passenger
 from werkzeug.security import generate_password_hash
 import random
 import logging

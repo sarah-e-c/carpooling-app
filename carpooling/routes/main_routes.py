@@ -4,7 +4,9 @@ Main, user-facing routes for the application
 
 from carpooling import db
 from carpooling import mail
-from carpooling.models import Address, Driver, AuthKey, Event, Passenger, Region, Carpool, StudentAndRegion, User, Destination
+from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination
+from carpooling.models import User as Driver
+from carpooling.models import User as Passenger
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required

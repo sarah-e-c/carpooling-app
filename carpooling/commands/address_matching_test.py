@@ -3,7 +3,8 @@ from carpooling import db
 from carpooling.logic.carpool_matching import load_people, evaluate_best_solution_to
 from io import StringIO
 import logging
-from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, Passenger
+from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event
+from carpooling.models import User as Passenger
 import click
 from flask.cli import with_appcontext
 import pandas as pd

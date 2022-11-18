@@ -6,14 +6,16 @@ import logging
 from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, Passenger
 import click
 from flask.cli import with_appcontext
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 @click.command('test-address-matching')
 @with_appcontext
-def test_address_matching_command():
-        with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
-            people = load_people(StringIO(f.read()))
+def address_matching_test_command():
+        # with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
+        #     people = load_people(StringIO(f.read()))
+        people = load_people(StringIO(pd.read_sql('select * from event_carpool_signups WHERE event_id=1', db.engine).to_csv()))
         event = Event.query.first()
         solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False) # need to drop the addresses
         logger.info(solutions)
@@ -53,7 +55,7 @@ def test_address_matching_command():
                     db.session.add(new_part)
         db.session.commit()
 
-def test_address_matching_command_debug_mode():
+def address_matching_command_test_debug_mode():
     app = create_app()
     with app.app_context():
         with open('carpooling/logic/example_signup_csv.csv', 'r') as f:

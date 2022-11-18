@@ -47,8 +47,8 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
                 url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins={origins_str}&destinations={destinations_str}&key={API_KEY}'
                 response = requests.get(url)
                 response_json = response.json()
-                with open(f"carpooling/logic/examples/distance_matrix_example_{time.time()}.json", "w") as f:
-                    json.dump(response_json, f)
+                # with open(f"carpooling/logic/examples/distance_matrix_example_{time.time()}.json", "w") as f:
+                #     json.dump(response_json, f)
                 if response.status_code != 200:
                     logger.error(f'error with request: {response.status_code}')
                     logger.error(response.text)
@@ -151,7 +151,6 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                     uu += 1
                     kilos_matrix.loc[origin, destination] = np.nan
                     seconds_matrix.loc[origin, destination] = np.nan
-                    logger.warning(f'no values for {origin} and {destination}')
             else:
                 kilos_matrix.loc[origin, destination] = 0
                 # doing this because its harder to detect 0s
@@ -328,28 +327,28 @@ def load_people(strio: StringIO):
     """
     Loads the people from the request form. If they are not in the database, they are not included.
     """
-    signups_df = pd.read_csv(strio, sep=',')
+    signups_df = pd.read_csv(strio)
 
     logger.debug('signups_df: {}'.format(signups_df))
     logger.debug('signups_df.columns: {}'.format(signups_df.columns))
-    users = Passenger.query.filter(and_(Passenger.first_name.in_(signups_df['first name']),
-                                        Passenger.last_name.in_(signups_df['last name']))).all()
+    users = Passenger.query.filter(and_(Passenger.first_name.in_(signups_df['first_name']),
+                                        Passenger.last_name.in_(signups_df['last_name']))).all()
     people_list = []
     for user in users:
         try:
-            signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (
-                s['last name'] == user.last_name), axis=1)].iloc[0]
+            signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
+                s['last_name'] == user.last_name), axis=1)].iloc[0]
         except IndexError:
             logger.warning('User {} {} not found in the signups'.format(
                 user.first_name, user.last_name))
             continue
         logger.debug('user: {}'.format(user))
-        new_person = Person(user.index, user.address[0].id,
-                            (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (
-                                s['last name'] == user.last_name), axis=1)].iloc[0]['willing to drive'] == 'yes'),
+        new_person = Person(user.index, user.address.id,
+                            (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
+                                s['last_name'] == user.last_name), axis=1)].iloc[0]['willing_to_drive'] == 'yes'),
                             user.user.driver_profile.num_seats if user.user.driver_profile else 0,
-                            (signups_df.loc[signups_df.apply(lambda s: (s['first name'] == user.first_name) & (
-                                s['last name'] == user.last_name), axis=1)].iloc[0]['needs ride'] == 'yes'),
+                            (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
+                                s['last_name'] == user.last_name), axis=1)].iloc[0]['needs_ride'] == 'yes'),
                             MAX_TIME  # NEEDS CHANGED TODO
                             )
         logger.info('new person: {}'.format(new_person))

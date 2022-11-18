@@ -1,0 +1,11 @@
+{
+    "1": {
+        "event_name": "Friday Meetin",
+        "event_description": "Normal",
+        "event_start_time": "12:00:00",
+        "event_end_time": "17:00:00",
+        "event_date": "2022-12-14",
+        "event_location": "Maggie Walker Governor's School",
+        "destination_id": 1
+    }
+}

@@ -48,7 +48,7 @@ def load_user(user_id):
 
 celery = Celery(__name__)
 
-def create_app():
+def create_app(extra_config_settings=None):
     app = Flask(__name__)
 
     # Load common settings
@@ -56,6 +56,10 @@ def create_app():
     # Load environment specific settings
     app.config.from_object('carpooling.local_settings')
     # Load extra settings from extra_config_settings parameter
+    if extra_config_settings is not None:
+        app.config.update(extra_config_settings)
+
+
     db.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)

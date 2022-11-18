@@ -50,7 +50,8 @@ class Driver(db.Model):
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     zip_code = db.Column(db.String, nullable=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    # address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    address = db.relationship('Address', back_populates='driver', uselist=False)
     user = db.relationship('User', back_populates='driver_profile', uselist=False)
 
 
@@ -215,11 +216,12 @@ class Passenger(db.Model):
     address_line_2 = db.Column(db.String(50), nullable=True)
     city = db.Column(db.String(20), nullable=True)
     zip_code = db.Column(db.String(12), nullable=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
+    # address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
     user = db.relationship('User', back_populates='passenger_profile', uselist=False)
     generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers', secondary='generated_carpool_part_passenger_links', lazy=True, overlaps='passengers')
     generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers', secondary='generated_carpool_passenger_links', lazy=True, overlaps='passengers')
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='passenger')
+    address = db.relationship('Address', back_populates='passenger', uselist=False)
 
     def __repr__(self):
         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -389,8 +391,8 @@ class Address(db.Model):
     passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.index'), nullable=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('drivers.index'), nullable=True)
     destination = db.relationship('Destination', back_populates='address', uselist=False)
-    passenger = db.relationship('Passenger', backref=db.backref('address'), lazy=True, foreign_keys=[passenger_id])
-    driver = db.relationship('Driver', backref=db.backref('address'), lazy=True, foreign_keys=[driver_id])
+    passenger = db.relationship('Passenger', back_populates='address', uselist=False, foreign_keys=[passenger_id])
+    driver = db.relationship('Driver', back_populates='address', lazy=True, foreign_keys=[driver_id])
 
     def __repr__(self):
         return f'Address: {self.address_line_1}'

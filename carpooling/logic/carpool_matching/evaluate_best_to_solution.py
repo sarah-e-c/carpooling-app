@@ -100,8 +100,8 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
         # initializing the matching matrix
         carpool_matching_frame = static_carpool_matching_frame.copy()
 
-        kilos_matrix.to_csv('kilos_matrix.csv')
-        seconds_matrix.to_csv('seconds_matrix.csv')
+        # kilos_matrix.to_csv('kilos_matrix.csv')
+        # seconds_matrix.to_csv('seconds_matrix.csv')
         solutions_dict[f'iteration_{i}'] = Solution(kilos_matrix=kilos_matrix, seconds_matrix=seconds_matrix,
                                                     all_passengers=passengers,
                                                     all_drivers=drivers,

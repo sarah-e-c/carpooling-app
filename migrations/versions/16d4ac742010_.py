@@ -7,9 +7,6 @@ Create Date: 2022-11-18 12:39:05.237995
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-from sqlalchemy import engine_from_config
-from sqlalchemy.engine import reflection
 
 # revision identifiers, used by Alembic.
 revision = '16d4ac742010'
@@ -126,6 +123,35 @@ def upgrade():
     op.bulk_insert(new_users_table, new_users)
 
     print(new_users_table)
+
+    # creating the legacy drivers table
+    legacy_drivers_table = op.create_table(
+        'legacy_drivers',
+        sa.Column('id', sa.Integer(), nullable=False, primary_key=True),
+        sa.Column('first_name', sa.String(length=120), nullable=False),
+        sa.Column('last_name', sa.String(length=120), nullable=False),
+        sa.Column('phone_number', sa.String(), nullable=False),
+        sa.Column('email_address', sa.String(), nullable=False),
+        sa.Column('num_seats', sa.Integer(), nullable=True),
+        sa.Column('num_years_with_license', sa.String(), nullable=True),
+        sa.Column('car_type_1', sa.String(), nullable=True),
+        sa.Column('car_color_1', sa.String(), nullable=True),
+        sa.Column('car_type_2', sa.String(), nullable=True),
+        sa.Column('car_color_2', sa.String(), nullable=True),
+        sa.Column('emergency_contact_number', sa.String(), nullable=True),
+        sa.Column('emergency_contact_relation', sa.String(), nullable=True),
+        sa.Column('extra_information', sa.String(length=200), nullable=True),
+    )
+
+    # moving the data from the old drivers table to the legacy drivers table
+    op.execute(
+        """INSERT INTO legacy_drivers (id, first_name, last_name, email_address, phone_number, num_seats, num_years_with_license, car_type_1, car_color_1, car_type_2, car_color_2, emergency_contact_number, emergency_contact_relation, extra_information)
+    SELECT drivers.index, drivers.first_name, drivers.last_name, drivers.email_address, drivers.phone_number, drivers.num_seats, drivers.num_years_with_license, drivers.car_type_1, drivers.car_color_1, drivers.car_type_2, drivers.car_color_2, drivers.emergency_contact_number, drivers.emergency_contact_relation, drivers.extra_information
+    FROM drivers
+    FULL OUTER JOIN old_users ON drivers.index = old_users.driver_id
+    WHERE old_users.first_name IS NULL
+    """ # the logic here is that if the first_name is null, then the user does not exist in the old_users table, and therefore is a legacy driver
+    )
 
     # handling addresses
     op.drop_constraint('addresses_driver_id_fkey',
@@ -437,7 +463,7 @@ def downgrade():
         sa.ForeignKeyConstraint(['region_name'], ['regions.name'],
                                 name='drivers_region_name_fkey'),
         sa.PrimaryKeyConstraint('index', name='drivers_pkey'))
-    
+    # putting the users into drivers
     op.execute("""
     INSERT INTO drivers (index, last_name, first_name, num_seats, phone_number, email_address, student_or_parent, num_years_with_license, car_type_1, car_color_1, car_type_2, car_color_2, emergency_contact_number, emergency_contact_relation, extra_information, region_name, address_line_1, address_line_2, city, zip_code)
     SELECT old_users.id, old_users.last_name, old_users.first_name, old_users.num_seats, old_users.phone_number, old_users.email_address, old_users.student_or_parent, old_users.num_years_with_license, old_users.car_type_1, old_users.car_color_1, old_users.car_type_2, old_users.car_color_2, old_users.emergency_contact_number, old_users.emergency_contact_relation, old_users.extra_information, old_users.region_name, addresses.address_line_1, addresses.address_line_2, addresses.city, addresses.zip_code
@@ -445,6 +471,13 @@ def downgrade():
     INNER JOIN address_user_links ON old_users.id = address_user_links.user_id
     INNER JOIN addresses ON address_user_links.address_id = addresses.id
     WHERE old_users.num_seats IS NOT NULL
+    """)
+
+    # filling the drivers table with the legacy drivers
+    op.execute("""
+    INSERT INTO drivers (index, last_name, first_name, num_seats, phone_number, email_address, student_or_parent, num_years_with_license, car_type_1, car_color_1, car_type_2, car_color_2, emergency_contact_number, emergency_contact_relation, extra_information)
+    SELECT 10000 + legacy_drivers.id, legacy_drivers.last_name, legacy_drivers.first_name, legacy_drivers.num_seats, legacy_drivers.phone_number, legacy_drivers.email_address, legacy_drivers.student_or_parent, legacy_drivers.num_years_with_license, legacy_drivers.car_type_1, legacy_drivers.car_color_1, legacy_drivers.car_type_2, legacy_drivers.car_color_2, legacy_drivers.emergency_contact_number, legacy_drivers.emergency_contact_relation, legacy_drivers.extra_information
+    FROM legacy_drivers
     """)
 
     # filling the users table with the driver_id

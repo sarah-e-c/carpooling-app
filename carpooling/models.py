@@ -429,6 +429,26 @@ class GeneratedCarpool(db.Model):
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
 
 
+class LegacyDriver(db.Model):
+    """
+    Table to store the drivers that signed up before the new system was implemented
+    """
+    __tablename__ = 'legacy_drivers'
+    id = db.Column(db.Integer(), nullable=False, primary_key=True)
+    first_name = db.Column(db.String(length=120), nullable=False)
+    last_name = db.Column(db.String(length=120), nullable=False)
+    phone_number = db.Column(db.String(), nullable=False)
+    email_address = db.Column(db.String(), nullable=False)
+    num_seats = db.Column(db.Integer(), nullable=True)
+    num_years_with_license = db.Column(db.String(), nullable=True)
+    car_type_1 = db.Column(db.String(), nullable=True)
+    car_color_1 = db.Column(db.String(), nullable=True)
+    car_type_2 = db.Column(db.String(), nullable=True)
+    car_color_2 = db.Column(db.String(), nullable=True)
+    emergency_contact_number = db.Column(db.String(), nullable=True)
+    emergency_contact_relation = db.Column(db.String(), nullable=True)
+    extra_information = db.Column(db.String(length=200), nullable=True)
+
 class GeneratedCarpoolResponse(db.Model):
     """
     Table to store the responses to generated carpools. Whenever one is created, always check to see if they all are.

@@ -3,7 +3,7 @@ All routes that have to do with authorization are defined here.
 """
 
 from carpooling import db, mail
-from carpooling.models import Address, AuthKey, Region, User
+from carpooling.models import Address, AuthKey, LegacyDriver, Region, User
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException
@@ -401,39 +401,53 @@ def legacy_driver_to_login_page():
     if request.method == 'GET': 
         logger.debug('get request')
         # TODO this doesn't work anymore 
-        return render_template('error_page_template.html', main_message='This page is no longer available', sub_message='Please contact the webmaster for more information.', user=current_user)
-        return render_template('legacy_driver_to_login_template.html', message='Enter your information', user=current_user)
+        return render_template('legacy_driver_to_login_template.html', message='Enter your information', user=current_user, regions=Region.query.all())
     if request.method == 'POST':
-        # if request.form['password'] != request.form['confirmpassword']:
-        #     return render_template('legacy_driver_to_login_template.html', message='Passwords do not match. Please try again.', user=current_user)
-        # try:
-        #     existing_driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
-        #     if existing_driver is None:
-        #         return render_template('legacy_driver_to_login_template.html', message='The driver does not exist. Please try again or register.', user=current_user)
-        #     new_passenger = Passenger(
-        #         first_name = request.form['firstname'].lower(),
-        #         last_name = request.form['lastname'].lower(),
-        #         email_address = existing_driver.email_address,
-        #         phone_number = existing_driver.phone_number,
-        #         emergency_contact_number = existing_driver.emergency_contact_number,
-        #         emergency_contact_relation = existing_driver.emergency_contact_relation,
-        #         extra_information = existing_driver.extra_information
-        #     )
-        #     db.session.add(new_passenger)
-        #     db.session.commit()
+        try:
+            legacy_driver = LegacyDriver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
+            if legacy_driver is None:
+                raise Exception('Legacy Driver not found')
+            address = Address.query.filter_by(address_line_1=request.form['addressline1'], address_line_2=request.form['addressline2'], city=request.form['city'], zip_code=request.form['zipcode']).first()
+            if address is None:
+                address = Address(
+                    address_line_1=request.form['addressline1'],
+                    address_line_2=request.form['addressline2'],
+                    city=request.form['city'],
+                    zip_code=request.form['zipcode'],
+                    latitude=request.form['latitude'],
+                    longitude=request.form['longitude'],
+                    state=request.form['state'],
+                    code=request.form['place_id']
+                )
+            new_user = User(
+                first_name = request.form['firstname'].lower(),
+                last_name = request.form['lastname'].lower(),
+                email_address = legacy_driver.email_address,
+                phone_number = legacy_driver.phone_number,
+                num_seats = legacy_driver.num_seats,
+                num_years_with_license = legacy_driver.num_years_with_license,
+                student_or_parent = legacy_driver.student_or_parent,
+                car_type_1 = legacy_driver.car_type_1,
+                car_color_1 = legacy_driver.car_color_1,
+                car_type_2 = legacy_driver.car_type_2,
+                car_color_2 = legacy_driver.car_color_2,
+                addresses=[address],
+                emergency_contact_number = legacy_driver.emergency_contact_number,
+                emergency_contact_relation = legacy_driver.emergency_contact_relation,
+                password=generate_password_hash(request.form['password']),
+                region_name=request.form['region'],
+                extra_information=legacy_driver.extra_information
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            logger.info(f'User created: {new_user}')
 
-        #     new_user = User(
-        #         first_name = request.form['firstname'].lower(),
-        #         last_name = request.form['lastname'].lower(),
-        #         password = generate_password_hash(request.form['password']),
-        #         passenger_id = new_passenger.index,
-        #         driver_id = existing_driver.index
-        #     )
-        #     db.session.add(new_user)
-        #     db.session.commit()
-        #     return render_template('error_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
-        try: 
-            pass
+            # deleting the legacy driver
+            db.session.delete(legacy_driver)
+            db.session.commit()
+            logger.info(f'Legacy Driver deleted: {legacy_driver}')
+
+            return redirect(url_for('auth.login_page'))
         except Exception as e:
             logger.debug(e)
             return render_template('legacy_driver_to_login_template.html', message='There was an error. Please try again.', user=current_user)

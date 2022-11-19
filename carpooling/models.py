@@ -257,7 +257,7 @@ class User(UserMixin, db.Model):
     extra_information = db.Column(db.String(200), nullable=True)
     region_name = db.Column(db.String(40), db.ForeignKey('regions.name'), nullable=True)
     num_seats = db.Column(db.Integer, nullable=True)
-    num_years_with_license = db.Column(db.String)
+    num_years_with_license = db.Column(db.String, nullable=True)
     car_type_1 = db.Column(db.String, nullable=True)
     car_color_1 = db.Column(db.String, nullable=True)
     car_type_2 = db.Column(db.String, nullable=True)

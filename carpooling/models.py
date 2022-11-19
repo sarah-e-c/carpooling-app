@@ -339,10 +339,84 @@ class User(UserMixin, db.Model):
         """
         Gives a pretty version of the address
         """
-        if not self.addresses[address_number - 1].address_line_2:
-            return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
-        else:
-            return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+        try:
+            if not self.addresses[address_number - 1].address_line_2:
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+            else:
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+        except IndexError:
+            return 'No address'
+        
+    def get_address_line_1(self, address_number=1):
+        """
+        Gives the first line of the address
+        """
+        try:
+            return self.addresses[address_number - 1].address_line_1
+        except IndexError:
+            return None
+    def get_address_line_2(self, address_number=1):
+        """
+        Gives the second line of the address
+        """
+        try:
+            return self.addresses[address_number - 1].address_line_2
+        except IndexError:
+            return None
+    def get_zip_code(self, address_number=1):
+        """
+        Gives the zip code of the address
+        """
+        try:
+            return self.addresses[address_number - 1].zip_code
+        except IndexError:
+            return None
+    def get_city(self, address_number=1):
+        """
+        Gives the city of the address
+        """
+        try:
+            return self.addresses[address_number - 1].city
+        except IndexError:
+            return None
+    def get_state(self, address_number=1):
+        """
+        Gives the state of the address
+        """
+        try:
+            return self.addresses[address_number - 1].state
+        except IndexError:
+            return None
+    def get_address_code(self, address_number=1):
+        """
+        Gives the address code of the address
+        """
+        try:
+            return self.addresses[address_number - 1].address_code
+        except IndexError:
+            return None
+    def get_latitude(self, address_number=1):
+        """
+        Gives the latitude of the address
+        """
+        try:
+            return self.addresses[address_number - 1].latitude
+        except IndexError:
+            return None
+    def get_longitude(self, address_number=1):
+        """
+        Gives the longitude of the address
+        """
+        try:
+            return self.addresses[address_number - 1].longitude
+        except IndexError:
+            return None
+    
+
+
+
+    
+
     
     def is_driver(self):
         """
@@ -385,9 +459,9 @@ class Address(db.Model):
     city = db.Column(db.String, nullable=False)
     state = db.Column(db.String, nullable=False)
     zip_code = db.Column(db.String, nullable=False)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    code = db.Column(db.String, nullable=False)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    code = db.Column(db.String, nullable=True) # change these once all of the addresses are loaded in properly
     destination = db.relationship('Destination', back_populates='address', uselist=False)
     users = db.relationship('User', back_populates='addresses', secondary='address_user_links')
 
@@ -448,6 +522,7 @@ class LegacyDriver(db.Model):
     emergency_contact_number = db.Column(db.String(), nullable=True)
     emergency_contact_relation = db.Column(db.String(), nullable=True)
     extra_information = db.Column(db.String(length=200), nullable=True)
+    student_or_parent= db.Column(db.String(), nullable=True)
 
 class GeneratedCarpoolResponse(db.Model):
     """

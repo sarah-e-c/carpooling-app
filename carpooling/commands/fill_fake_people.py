@@ -76,7 +76,7 @@ def fill_fake_people_command(number_of_people):
             address_line_2= address_source['address2'],
             city=address_source['city'],
             zip_code=address_source['postalCode'],
-            address=[new_address],
+            addresses=[new_address],
             )
     
         db.session.add(new_user)

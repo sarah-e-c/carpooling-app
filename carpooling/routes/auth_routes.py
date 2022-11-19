@@ -144,7 +144,7 @@ def register_new_driver_page():
     
     # updating the auth keys... this should probably be done in a utils method or something
     if (datetime.datetime.now() - AuthKey.query.order_by(AuthKey.index.desc()).first().date_created).days > 29:
-        new_auth_key = AuthKey(auth_key=secrets.token_hex(16))
+        new_auth_key = AuthKey(key=secrets.token_hex(16))
         db.session.add(new_auth_key)
         db.session.commit()
     

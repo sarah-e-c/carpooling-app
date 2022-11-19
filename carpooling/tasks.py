@@ -96,17 +96,18 @@ def maintenance_task():
 
     for user in problematic_users:
         try:
-            source = requests.get(f"https://maps.googleapis.com/maps/api/geocode/json?address={user.addresses[0].address_line_1.replace(' ','%20') + '%20' + user.addresses[0].city + '%20VA'}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI")
+            source = requests.get(f"https://maps.googleapis.com/maps/api/geocode/json?address={user.get_address_line_1().replace(' ','%20') + '%20' + user.get_city() + '%20VA'}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI")
             if source.json()['status'] == 'OK':
-                new_address = Address(address_line_1=user.addresses[0].address_line_1,
+                new_address = Address(address_line_1=user.get_address_line_1(),
                                         address_line_2=user.addresses[0].address_line_2, 
                                         latitude=source.json()['results'][0]['geometry']['location']['lat'],
                                         longitude=source.json()['results'][0]['geometry']['location']['lng'],
                                         place_id=source.json()['results'][0]['place_id'],
-                                        city=user.addresses[0].city,
+                                        city=user.get_city(),
                                         state='VA',)
                 db.session.add(new_address)
                 db.session.commit()
+                # TODO this doesn't work with the new address model
 
                 user.address_id = new_address.id
                 if user.num_seats is not None:

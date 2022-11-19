@@ -57,14 +57,14 @@ def get_people_data() ->dict:
         person_dict['is_admin'] = user.is_admin
         
         person_dict['address'] = {
-            'latitude': user.address.latitude,
-            'longitude': user.address.longitude,
-            'code': user.address.code,
-            'address_line_1': user.addresses[0].address_line_1,
-            'city': user.addresses[0].city,
-            'state': user.addresses[0].state,
-            'zip_code': user.addresses[0].zip_code,
-            'address_line_2': user.addresses[0].address_line_2,
+            'latitude': user.get_latitude(),
+            'longitude': user.get_longitude(),
+            'code': user.get_address_code(),
+            'address_line_1': user.get_address_line_1(),
+            'city': user.get_city(),
+            'state': user.get_state(),
+            'zip_code': user.get_zip_code(),
+            'address_line_2': user.get_address_line_2(),
         }
         person_dict['password'] = user.password
         

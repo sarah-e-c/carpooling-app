@@ -5,7 +5,7 @@ import pytest
 from carpooling.commands import init_db_command_for_code
 
 from carpooling import create_app, db
-from carpooling.models import User, Event, Passenger, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
+from carpooling.models import User, Event, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
 import quickpiggy
 
 import logging

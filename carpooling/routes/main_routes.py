@@ -5,8 +5,6 @@ Main, user-facing routes for the application
 from carpooling import db
 from carpooling import mail
 from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination
-from carpooling.models import User as Driver
-from carpooling.models import User as Passenger
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
@@ -55,15 +53,15 @@ def home_page(logout=False):
 
     # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
     events = Event.query.all()
-    events = [event for event in events if event.event_date >=
+    events = [event for event in events if event.date >=
               datetime.datetime.now() - datetime.timedelta(hours=36)]
     if current_user.is_authenticated:
-        if current_user.driver_profile is not None:
-            driver_carpools = [carpool for carpool in Carpool.query.filter_by(driver_index=current_user.driver_profile.index).all(
-            ) if carpool.event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
+        if current_user.num_seats is not None:
+            driver_carpools = [carpool for carpool in Carpool.query.filter_by(driver_index=current_user.id).all(
+            ) if carpool.event.date >= datetime.datetime.now() - datetime.timedelta(hours=36)]
         else:
             driver_carpools = []
-        passenger_carpools = [carpool for carpool in current_user.passenger_profile.carpools if carpool.event.event_date >=
+        passenger_carpools = [carpool for carpool in current_user.passenger_carpools if carpool.event.date >=
                               datetime.datetime.now() - datetime.timedelta(hours=36)]
     else:
         driver_carpools = []
@@ -81,7 +79,7 @@ def driver_page(lastname, firstname):
     """
     logger.info('driver page')
     try:
-        driver = Driver.query.filter_by(
+        driver = User.query.filter_by(
             last_name=lastname, first_name=firstname).one()
     except:
         logger.info('no driver was found')
@@ -114,7 +112,7 @@ def events_page():
     Page to display all upcoming events. Probably should make an events log in the futre
     """
     current_events = Event.query.filter(
-        Event.event_date >= datetime.datetime.now() - datetime.timedelta(hours=36)).all()
+        Event.date >= datetime.datetime.now() - datetime.timedelta(hours=36)).all()
     return render_template('events_template.html', events=current_events, user=current_user)
 
 
@@ -150,12 +148,12 @@ def create_event_page():
     if request.method == 'POST':
         # getting the event info from the form
         event_info = {
-            'event_name': request.form['eventname'],
-            'event_date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
-            'event_start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
-            'event_end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
-            'event_description': request.form['eventdescription'],
-            'user_id': current_user.id,
+            'name': request.form['eventname'],
+            'date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
+            'start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
+            'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
+            'description': request.form['eventdescription'],
+            'creator_id': current_user.id,
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id
         }
 
@@ -195,9 +193,9 @@ def driver_carpool_signup_page(carpool_index):
             carpool = Carpool.query.get(carpool_index)
             if carpool.driver is not None:
                 return redirect(url_for('main.event_page', event_index=carpool.event_index))
-            carpool.driver = current_user.driver_profile
-            carpool.num_passengers = current_user.driver_profile.num_seats
-            carpool.driver_index = current_user.driver_profile.index
+            carpool.driver = current_user
+            carpool.num_passengers = current_user.num_seats
+            carpool.driver_index = current_user.id
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
             # messaging the passengers in region that requested a carpool
@@ -224,7 +222,7 @@ def driver_carpool_signup_page(carpool_index):
         except Exception as e:
             logger.critical(e)
             logger.warning('This should never happen : (')
-        driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(
+        driver = User.query.filter_by(first_name=request.form['firstname'].lower(
         ), last_name=request.form['lastname'].lower()).first()
         logger.debug(driver)
         if driver is None:
@@ -253,7 +251,7 @@ def passenger_carpool_signup_page(carpool_index):
             carpool = Carpool.query.get(carpool_index)
             if carpool.driver is None:
                 return redirect(url_for('main.event_page', event_index=carpool.event_index))
-            carpool.passengers.append(current_user.passenger_profile)
+            carpool.passengers.append(current_user)
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
             return render_template('error_template.html', main_message='Success!', sub_message='You have signed up for a carpool!', user=current_user)
@@ -263,33 +261,34 @@ def passenger_carpool_signup_page(carpool_index):
 
     if request.method == 'POST':
         carpool = Carpool.query.get(carpool_index)
-        passenger = Passenger.query.filter_by(first_name=request.form['firstname'].lower(
+        passenger = User.query.filter_by(first_name=request.form['firstname'].lower(
         ), last_name=request.form['lastname'].lower()).first()
         logger.debug(passenger)
         if passenger is None:
-            try:
-                new_passenger = Passenger(
-                    first_name=request.form['firstname'].lower(),
-                    last_name=request.form['lastname'].lower(),
-                    email_address=request.form['email'].lower(),
-                    phone_number=request.form['phonenumber'],
-                    emergency_contact_number=request.form['emergencycontact'],
-                    emergency_contact_relation=request.form['emergencycontactrelation'],
-                    extra_information=request.form['note']
-                )
+            return redirect(url_for('auth.register_new_passenger_page'))
+            # try:
+            #     new_passenger = User(
+            #         first_name=request.form['firstname'].lower(),
+            #         last_name=request.form['lastname'].lower(),
+            #         email_address=request.form['email'].lower(),
+            #         phone_number=request.form['phonenumber'],
+            #         emergency_contact_number=request.form['emergencycontact'],
+            #         emergency_contact_relation=request.form['emergencycontactrelation'],
+            #         extra_information=request.form['note']
+            #     )
 
-                carpool.passengers.append(new_passenger)
-                db.session.add(new_passenger)
-                db.session.commit()
-                logger.info('new temp passenger created')
+            #     carpool.passengers.append(new_passenger)
+            #     db.session.add(new_passenger)
+            #     db.session.commit()
+            #     logger.info('new temp passenger created')
 
-                send_async_email.delay(carpool.driver.email_address, 'New Passenger Signup', f'New passenger {new_passenger} signed up for carpool {carpool}!')
+            #     send_async_email.delay(carpool.driver.email_address, 'New Passenger Signup', f'New passenger {new_passenger} signed up for carpool {carpool}!')
 
-                return render_template('error_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
+            #     return render_template('error_template.html', main_message='Success!', sub_message='A new passenger was registered, and you have successfully signed up for a carpool!', user=current_user)
 
-            except Exception as e:
-                logger.debug(e)
-                return render_template('passenger_carpool_signup_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
+            # except Exception as e:
+            #     logger.debug(e)
+            #     return render_template('passenger_carpool_signup_template.html', carpool=carpool, message='There was an error registering a new passenger. Try again.', user=current_user)
 
         else:
             passenger.extra_information = request.form['note']
@@ -299,8 +298,7 @@ def passenger_carpool_signup_page(carpool_index):
             logger.info('existing passenger added to carpool without sign in')
 
             # send email to driver about new passenger
-            send_async_email.delay(carpool.driver.email_address, 'New Passenger Sign Up', f'New passenger {new_passenger} signed up for carpool {carpool}!')
-            
+            send_async_email.delay(carpool.driver.email_address, 'New Passenger Sign Up', f'New passenger {passenger} signed up for carpool {carpool}!')
             return render_template('error_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
 
     carpool = Carpool.query.get(carpool_index)
@@ -315,18 +313,18 @@ def manage_carpools_page():
     """
 
     try:
-        driver_carpools = current_user.driver_profile.carpools
+        driver_carpools = current_user.driver_carpools
         logger.debug(driver_carpools)
-        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.event_date >
+        driver_carpools = [carpool for carpool in driver_carpools if carpool.event.date >
                            datetime.datetime.now() - datetime.timedelta(hours=30)]
         logger.debug(driver_carpools)
     except AttributeError as e:
         logger.debug('user is not a driver')
         logger.debug(e)
         driver_carpools = []
-    passenger_carpools = current_user.passenger_profile.carpools
+    passenger_carpools = current_user.passenger_carpools
     logger.debug(passenger_carpools)
-    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.event_date >
+    passenger_carpools = [carpool for carpool in passenger_carpools if carpool.event.date >
                           datetime.datetime.now() - datetime.timedelta(hours=30)]
     logger.debug(passenger_carpools)
 
@@ -343,13 +341,13 @@ def passenger_page(lastname, firstname):
     """
 
     current_user_carpools = Carpool.query.filter_by(
-        driver_index=current_user.driver_profile.index).all()  # TODO:filter by current user and upcoming
-    current_user_carpools = [carpool for carpool in current_user_carpools if carpool.event.event_end_time >
+        driver_index=current_user.id).all()  # TODO:filter by current user and upcoming
+    current_user_carpools = [carpool for carpool in current_user_carpools if carpool.event.end_time >
                              datetime.datetime.now() + datetime.timedelta(hours=5)]
 
     # checking if the person is able to see
     for carpool in current_user_carpools:
-        if (carpool.event.event_start_time) > datetime.datetime.now():
+        if (carpool.event.start_time) > datetime.datetime.now():
             for passenger in carpool.passengers:
                 if (passenger.first_name == firstname) and (passenger.last_name == lastname):
                     return render_template('passenger_template.html', user=current_user, passenger=passenger)
@@ -383,19 +381,19 @@ def passenger_carpool_request_page(event_index, region_name):
 
         if current_user.is_authenticated:
             event.passengers_needing_ride.append(
-                current_user.passenger_profile)
+                current_user)
             db.session.commit()
             logger.info('Passenger {} added to event as needing ride {}'.format(
-                current_user.passenger_profile, event))
+                current_user, event))
 
             # email the people in the area
             # finding the drivers in the area -- yes i can do this if i set lazy to dynamic but thats a lot of work
-            drivers_in_area = [driver for driver in Driver.query.filter_by(region_name=region_name).all(
+            drivers_in_area = [driver for driver in User.query.filter_by(region_name=region_name).all(
             ) if driver not in [carpool.driver for carpool in event.carpools]]
             for driver in drivers_in_area:
-                send_async_email.delay(driver.user.passenger_profile.email_address, 'Passenger needs ride', f"""
+                send_async_email.delay(driver.email_address, 'Passenger needs ride', f"""
                         Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
-                        A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
+                        A passenger in your area needs a ride to the event {event.name}. If you are going to the event,
                         please consider signing up to give them a ride.
                         """)
 
@@ -403,10 +401,12 @@ def passenger_carpool_request_page(event_index, region_name):
             return redirect(url_for('main.event_page', event_index=event.index))
         else:
             regions = Region.query.all()
+            return redirect(url_for('auth.generic_register_page'))
             return render_template('passenger_carpool_request_template.html', event=event, user=current_user, regions=regions, region_name=region_name)
     if request.method == 'POST':
-
+        return
         # making sure that the event exists ...
+
         try:
             event = Event.query.get(event_index)
         except Exception as e:
@@ -422,14 +422,14 @@ def passenger_carpool_request_page(event_index, region_name):
         region_name = request.form['region']
 
         # making sure that the user is not already in the database
-        passenger = Passenger.query.filter_by(
+        passenger = User.query.filter_by(
             first_name=first_name, last_name=last_name).first()
         if passenger is not None:
             logger.info('Passenger {} already exists'.format(passenger))
             return render_template('error_page_template', main_message='You are already in the database', sub_message='Please log in to request a carpool.')
 
         # creating the passenger
-        passenger = Passenger(first_name=first_name, last_name=last_name,
+        passenger = User(first_name=first_name, last_name=last_name,
                               email_address=email_address, phone_number=phone_number, region_name=region_name)
         db.session.add(passenger)
         db.session.commit()
@@ -445,9 +445,9 @@ def passenger_carpool_request_page(event_index, region_name):
         ) if driver not in [carpool.driver for carpool in event.carpools]]
 
         for driver in drivers_in_area:
-            send_async_email.delay(driver.user.passenger_profile.email_address, 'Passenger Needs Ride', f"""
+            send_async_email.delay(driver.email_address, 'Passenger Needs Ride', f"""
                     Hello {driver.first_name.capitalize()} {driver.last_name.capitalize()}, \n\n
-                    A passenger in your area needs a ride to the event {event.event_name}. If you are going to the event,
+                    A passenger in your area needs a ride to the event {event.name}. If you are going to the event,
                     please consider signing up to give them a ride.
                     """)
 

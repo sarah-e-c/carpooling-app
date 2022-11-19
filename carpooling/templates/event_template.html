@@ -1,6 +1,6 @@
 {% extends 'bases/webflow_base.html' %}
 
-{% set title = event.event_name.capitalize() %}
+{% set title = event.name.capitalize() %}
 {% set active_page='events' %}
 
 {% block subtitle %}{{event.get_description()}} <br> {{event.get_date()}} {{event.get_times()}}{% endblock %}
@@ -67,8 +67,8 @@
     <div class="regiondiv" style="border-color:{{region.color}}">
         <h3 class="style2">{{region.name.capitalize()}} Region</h3>
         {% if user.is_authenticated %}
-        {% if user.passenger_profile.region_name == region.name %}
-        {% if user.passenger_profile in event.passengers_needing_ride %}
+        {% if user.region_name == region.name %}
+        {% if user in event.passengers_needing_ride %}
         <div class="style1">
             <ul class="style1 buttons">
                 <li>
@@ -267,7 +267,7 @@
 {% if user.is_authenticated %}
 <script>
     function is_same_person(e, carpool_driver) {
-        if ("{{user.driver_profile}}" == carpool_driver) {
+        if ("{{user}}" == carpool_driver) {
             e.preventDefault();
             alert("You cannot sign up for your own carpool!");
         }

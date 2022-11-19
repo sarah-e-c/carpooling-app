@@ -7,8 +7,6 @@ import click
 from flask.cli import with_appcontext
 from carpooling import db
 from carpooling.models import Address, User, Event, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
-from carpooling.models import User as Driver
-from carpooling.models import User as Passenger
 from werkzeug.security import generate_password_hash
 import random
 import logging
@@ -46,7 +44,7 @@ def fill_fake_people_command(number_of_people):
         seed = random.randint(0, 1)
         logger.info(seed)
         if seed == 1: # is driver
-            new_driver = Driver(
+            new_user = User(
                 first_name=source['results'][i]['name']['first'].lower(),
                 last_name=source['results'][i]['name']['last'].lower(),
                 email_address=source['results'][i]['email'],
@@ -60,17 +58,13 @@ def fill_fake_people_command(number_of_people):
                 num_seats = 3,
                 region_name='West Henrico',
                 student_or_parent = 'Student',
-                address=[new_address],
-                address_line_1=address_source['address1'],
-                address_line_2= address_source['address2'],
-                city=address_source['city'],
-                zip_code=address_source['postalCode'],
+                addresses=[new_address],
+                is_admin=2,
+                password=generate_password_hash('password'),
             )
-            db.session.add(new_driver)
+            db.session.add(new_user)
         else:
-            new_driver = None
-    
-        new_passenger = Passenger(
+            new_user = User(
             first_name=source['results'][i]['name']['first'].lower(),
             last_name=source['results'][i]['name']['last'].lower(),
             email_address=source['results'][i]['email'],
@@ -82,25 +76,16 @@ def fill_fake_people_command(number_of_people):
             address_line_2= address_source['address2'],
             city=address_source['city'],
             zip_code=address_source['postalCode'],
-            address=[new_address])
-        
-        db.session.add(new_passenger)
+            address=[new_address],
+            )
     
-        new_user = User(
-            first_name=source['results'][i]['name']['first'].lower(),
-            last_name=source['results'][i]['name']['last'].lower(),
-            password = generate_password_hash('password'),
-            driver_profile = new_driver,
-            passenger_profile = new_passenger,
-            is_admin = 2
-        )
         db.session.add(new_user)
         db.session.commit()
 
         if seed == 1:
-            logging.info('added driver: ' + new_driver.first_name + ' ' + new_driver.last_name)
+            logging.info('added driver: ' + new_user.first_name + ' ' + new_user.last_name)
         else:
-            logging.info('added passenger: ' + new_passenger.first_name + ' ' + new_passenger.last_name)
+            logging.info('added passenger: ' + new_user.first_name + ' ' + new_user.last_name)
     
     
 

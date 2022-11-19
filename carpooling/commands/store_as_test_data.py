@@ -31,16 +31,16 @@ def get_people_data() ->dict:
         person_dict = {}
         person_dict['first_name'] = user.first_name
         person_dict['last_name'] = user.last_name
-        person_dict['email_address'] = user.passenger_profile.email_address
-        person_dict['phone_number'] = user.passenger_profile.phone_number
+        person_dict['email_address'] = user.email_address
+        person_dict['phone_number'] = user.phone_number
         if user.driver_profile is not None:
             person_dict['is_driver'] = True
-            person_dict['num_seats'] = user.driver_profile.num_seats
-            person_dict['car_type_1'] = user.driver_profile.car_type_1
-            person_dict['car_type_2'] = user.driver_profile.car_type_2
-            person_dict['car_color_1'] = user.driver_profile.car_color_1
-            person_dict['car_color_2'] = user.driver_profile.car_color_2
-            person_dict['student_or_parent'] = user.driver_profile.student_or_parent
+            person_dict['num_seats'] = user.num_seats
+            person_dict['car_type_1'] = user.car_type_1
+            person_dict['car_type_2'] = user.car_type_2
+            person_dict['car_color_1'] = user.car_color_1
+            person_dict['car_color_2'] = user.car_color_2
+            person_dict['student_or_parent'] = user.student_or_parent
         else:
             person_dict['is_driver'] = False
             person_dict['num_seats'] = None
@@ -50,21 +50,21 @@ def get_people_data() ->dict:
             person_dict['car_color_2'] = None
             person_dict['student_or_parent'] = None
 
-        person_dict['emergency_contact_number'] = user.passenger_profile.emergency_contact_number
-        person_dict['emergency_contact_relation'] = user.passenger_profile.emergency_contact_relation
-        person_dict['extra_information'] = user.passenger_profile.extra_information
-        person_dict['region_name'] = user.passenger_profile.region_name
+        person_dict['emergency_contact_number'] = user.emergency_contact_number
+        person_dict['emergency_contact_relation'] = user.emergency_contact_relation
+        person_dict['extra_information'] = user.extra_information
+        person_dict['region_name'] = user.region_name
         person_dict['is_admin'] = user.is_admin
         
         person_dict['address'] = {
-            'latitude': user.passenger_profile.address.latitude,
-            'longitude': user.passenger_profile.address.longitude,
-            'code': user.passenger_profile.address.code,
-            'address_line_1': user.passenger_profile.address.address_line_1,
-            'city': user.passenger_profile.address.city,
-            'state': user.passenger_profile.address.state,
-            'zip_code': user.passenger_profile.address.zip_code,
-            'address_line_2': user.passenger_profile.address.address_line_2,
+            'latitude': user.address.latitude,
+            'longitude': user.address.longitude,
+            'code': user.address.code,
+            'address_line_1': user.addresses[0].address_line_1,
+            'city': user.addresses[0].city,
+            'state': user.addresses[0].state,
+            'zip_code': user.addresses[0].zip_code,
+            'address_line_2': user.addresses[0].address_line_2,
         }
         person_dict['password'] = user.password
         
@@ -77,12 +77,12 @@ def get_events_data():
     events = models.Event.query.all()
     for event in events:
         event_dict = {}
-        event_dict['event_name'] = event.event_name
-        event_dict['event_description'] = event.event_description
-        event_dict['event_start_time'] = event.event_start_time.strftime('%H:%M:%S')
-        event_dict['event_end_time'] = event.event_end_time.strftime('%H:%M:%S')
-        event_dict['event_date'] = event.event_date.strftime('%Y-%m-%d')
-        event_dict['event_location'] = event.event_location
+        event_dict['event_name'] = event.name
+        event_dict['event_description'] = event.description
+        event_dict['event_start_time'] = event.start_time.strftime('%H:%M:%S')
+        event_dict['event_end_time'] = event.end_time.strftime('%H:%M:%S')
+        event_dict['event_date'] = event.date.strftime('%Y-%m-%d')
+        event_dict['event_location'] = event.location
         event_dict['destination_id'] = event.destination_id
         events_dict[event.index] = event_dict
     return events_dict

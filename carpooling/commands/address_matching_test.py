@@ -3,8 +3,7 @@ from carpooling import db
 from carpooling.logic.carpool_matching import load_people, evaluate_best_solution_to
 from io import StringIO
 import logging
-from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event
-from carpooling.models import User as Passenger
+from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, User
 import click
 from flask.cli import with_appcontext
 import pandas as pd
@@ -32,8 +31,8 @@ def address_matching_test_command():
             db.session.add(new_solution)
 
             for carpool in solution.carpools:
-                driver_id = Passenger.query.get(
-                carpool.driver.id_).user.driver_profile.index
+                driver_id = User.query.get(
+                carpool.driver.id_).user.index
                 new_carpool = GeneratedCarpool(
                     carpool_solution_id=new_solution.id,
                     from_address_id=carpool.route[0],
@@ -42,7 +41,7 @@ def address_matching_test_command():
                     event_id=event.index,
                 )
                 for passenger in carpool.driver.driver_history[1:]:
-                    new_carpool.passengers.append(Passenger.query.get(passenger.id_))
+                    new_carpool.passengers.append(User.query.get(passenger.id_))
                 db.session.add(new_carpool)
                 for i in range(len(carpool.route) - 1):
                     new_part = GeneratedCarpoolPart(
@@ -73,8 +72,8 @@ def address_matching_command_test_debug_mode():
             db.session.add(new_solution)
 
             for carpool in solution.carpools:
-                driver_id = Passenger.query.get(
-                carpool.driver.id_).user.driver_profile.index
+                driver_id = User.query.get(
+                carpool.driver.id_).user.index
                 new_carpool = GeneratedCarpool(
                     carpool_solution_id=new_solution.id,
                     from_address_id=carpool.route[0],
@@ -83,7 +82,7 @@ def address_matching_command_test_debug_mode():
                     event_id=event.index,
                 )
                 for passenger in carpool.driver.driver_history[1:]:
-                    new_carpool.passengers.append(Passenger.query.get(passenger.id_))
+                    new_carpool.passengers.append(User.query.get(passenger.id_))
                 db.session.add(new_carpool)
                 for i in range(len(carpool.route) - 1):
                     new_part = GeneratedCarpoolPart(

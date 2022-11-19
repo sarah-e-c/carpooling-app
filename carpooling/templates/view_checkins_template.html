@@ -123,13 +123,13 @@
 <div class="tabbar">
     <div class="tab">
         {% for event in recent_events %}
-            <button class="tablinks" onclick="openTab(event, '{{event.event_name}}')">{{event.event_name}}</button>
+            <button class="tablinks" onclick="openTab(event, '{{event.name}}')">{{event.name}}</button>
         {% endfor %}
         <div class="dropdown tablinks righttab">
         <button class="tablinks" onclick="toggleDropdown()">Other Events</button>
         <div class="othereventscontent" id="othereventscontent">
         {% for event in other_events %}
-            <span class="dropdown-content" onclick="openOtherEvents(event, '{{event.event_name}}')">{{event.event_name}}</span>
+            <span class="dropdown-content" onclick="openOtherEvents(event, '{{event.name}}')">{{event.name}}</span>
         {% endfor %}
         </div>
         </div>
@@ -140,8 +140,8 @@
 
 <!-- All of the event's tab content. Will only load the tab content of recents then load it with js if in the past-->
 {% for event in recent_events + other_events %}
-<div id="{{event.event_name}}" class="tabcontent">
-    <h4 class="style2">{{event.event_name}}</h4>
+<div id="{{event.name}}" class="tabcontent">
+    <h4 class="style2">{{event.name}}</h4>
     <!-- Users who have checked in -->
     <div class="gridcontainer">
     <span class="gridtitle">Name</span>

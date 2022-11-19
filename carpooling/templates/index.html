@@ -51,7 +51,7 @@
 <h2 id="text02" class="style2">Events</h2>
 <p class="style2" style="display: block">
     {% for event in events %}
-    <a class ="style2" style="text-align: center; display: block" href="{{url_for('main.event_page', event_index=event.index)}}">{{event.event_name}}</a>
+    <a class ="style2" style="text-align: center; display: block" href="{{url_for('main.event_page', event_index=event.index)}}">{{event.name}}</a>
     <br>
     {% endfor %}
 
@@ -61,7 +61,7 @@
 <h2 class="style2">Carpools I'm Driving For</h2>
 <p class="style2" style="display: block">
     {% for carpool in driver_carpools %}
-    Carpool for {{carpool.event.event_name}}
+    Carpool for {{carpool.event.name}}
     <br>
     {% endfor %}
     <a href="{{url_for('main.manage_carpools_page')}}">Manage</a>
@@ -70,7 +70,7 @@
 <h2 class="style2">Carpools I'm riding in</h2>
 <p class="style2" style="display: block">
     {% for carpool in driver_carpools %}
-    Carpool for {{carpool.event.event_name}}
+    Carpool for {{carpool.event.name}}
     <br>
     {% endfor %}
     <a href="{{url_for('main.manage_carpools_page')}}">Manage</a>

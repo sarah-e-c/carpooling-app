@@ -78,9 +78,9 @@ def send_async_email_to_many(to: list, subject: str, message: str):
 def maintenance_task():
 
     # checking if an event should have a carpooling build
-    events = Event.query.filter_by(Event.event_date > datetime.datetime.now()).all()
+    events = Event.query.filter_by(Event.date > datetime.datetime.now()).all()
     for event in events:
-        if datetime.datetime.now() > event.event_date - datetime.timedelta(days=2):
+        if datetime.datetime.now() > event.date - datetime.timedelta(days=2):
             build_address_match.delay(event.id) # creating a carpooling build
             pass
 
@@ -91,26 +91,26 @@ def maintenance_task():
         db.session.commit()
 
     # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
-    problematic_users = User.query.filter_by(User.passenger_profile.address_id == None).all()
+    problematic_users = User.query.filter_by(User.address_id == None).all()
 
 
     for user in problematic_users:
         try:
-            source = requests.get(f"https://maps.googleapis.com/maps/api/geocode/json?address={user.passenger_profile.address_line_1.replace(' ','%20') + '%20' + user.passenger_profile.city + '%20VA'}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI")
+            source = requests.get(f"https://maps.googleapis.com/maps/api/geocode/json?address={user.addresses[0].address_line_1.replace(' ','%20') + '%20' + user.addresses[0].city + '%20VA'}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI")
             if source.json()['status'] == 'OK':
-                new_address = Address(address_line_1=user.passenger_profile.address_line_1,
-                                        address_line_2=user.passenger_profile.address_line_2, 
+                new_address = Address(address_line_1=user.addresses[0].address_line_1,
+                                        address_line_2=user.addresses[0].address_line_2, 
                                         latitude=source.json()['results'][0]['geometry']['location']['lat'],
                                         longitude=source.json()['results'][0]['geometry']['location']['lng'],
                                         place_id=source.json()['results'][0]['place_id'],
-                                        city=user.passenger_profile.city,
+                                        city=user.addresses[0].city,
                                         state='VA',)
                 db.session.add(new_address)
                 db.session.commit()
 
-                user.passenger_profile.address_id = new_address.id
-                if user.driver_profile is not None:
-                    user.driver_profile.address_id = new_address.id
+                user.address_id = new_address.id
+                if user.num_seats is not None:
+                    user.address_id = new_address.id
                 db.session.commit()
                 logger.info(f'identified address for user {user.id} successfully!')
         except Exception as e:

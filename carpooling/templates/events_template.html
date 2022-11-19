@@ -19,7 +19,7 @@
     <li>
         {% for event in events %}
         <a href="{{url_for('main.event_page', event_index=event.index)}}" class="button n01">
-            <span class="label">{{event.event_name.capitalize()}} {{event.event_date.strftime('%m/%d/%Y')}}</span>
+            <span class="label">{{event.name.capitalize()}} {{event.date.strftime('%m/%d/%Y')}}</span>
         {% endfor %}
         </a>
     </li>

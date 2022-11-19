@@ -4,8 +4,6 @@ All routes that have to do with authorization are defined here.
 
 from carpooling import db, mail
 from carpooling.models import Address, AuthKey, Region, User
-from carpooling.models import User as Passenger
-from carpooling.models import User as Driver
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException
@@ -159,86 +157,41 @@ def register_new_driver_page():
         return render_template('driver_signup_template.html', message=message, user=current_user, regions=regions)
     
     if request.method == 'POST':
-
-        address = Address(
-            address_line_1=request.form['addressline1'],
-            address_line_2=request.form['addressline2'],
-            city=request.form['city'],
-            state='VA',
-            zip_code=request.form['zipcode'],
-            latitude=request.form['latitude'],
-            longitude=request.form['longitude'],
-            code=request.form['place_id']
-        )
-        db.session.add(address)
-        db.session.commit()
-        # getting the data from the form, i don't care if aaron says this is bad practice
-        driver_info = {
-            'first_name':request.form['firstname'].lower(),
-            'last_name': request.form['lastname'].lower(),
-            'student_or_parent': request.form['studentorparent'],
-            'num_years_with_license': request.form['licenseyears'],
-            'phone_number': request.form['phonenumber'],
-            'email_address': request.form['email'],
-            'car_type_1': request.form['cartype1'],
-            'car_color_1': request.form['carcolor1'],
-            'car_type_2': request.form['cartype2'],
-            'car_color_2': request.form['carcolor2'],
-            'emergency_contact_number': request.form['emergencycontact'],
-            'emergency_contact_relation': request.form['emergencycontactrelation'],
-            'extra_information': request.form['note'],
-            'num_seats': request.form['numberofseats'],
-            'region_name': request.form['region'],
-            'address_line_1': request.form['addressline1'],
-            'address_line_2': request.form['addressline2'],
-            'city': request.form['city'],
-            'zip_code': request.form['zipcode'],
-            'address_id': address.id}
         try:
-            # the person already exists in the database as a driver
-            if (Driver.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0) or (User.query.filter_by(first_name = driver_info['first_name'], last_name = driver_info['last_name']).count() > 0):
+            if User.query.filter_by(email_address=request.form['email']).first():
                 raise PersonAlreadyExistsException
             
-            new_driver = Driver(**driver_info)
-        
-            try:
-                _ = int(request.form['numberofseats'])
-            except ValueError:
-                raise InvalidNumberOfSeatsException
+            address = Address(
+                address_line_1=request.form['addressline1'],
+                address_line_2=request.form['addressline2'],
+                city=request.form['city'],
+                state='VA',
+                zip_code=request.form['zipcode'],
+                latitude=request.form['latitude'],
+                longitude=request.form['longitude'],
+                code=request.form['place_id']
+            )
 
-            # deleting the unneeded rows so it can also be converted to passenger
-            del driver_info['student_or_parent']
-            del driver_info['num_years_with_license']
-            del driver_info['num_seats']
-            del driver_info['car_type_1']
-            del driver_info['car_color_1']
-            del driver_info['car_type_2']
-            del driver_info['car_color_2']
-
-            # making the corresponding passenger and committing to the database
-            new_passenger = Passenger(**driver_info)
-            db.session.add(new_passenger)
-            db.session.add(new_driver)
-            db.session.commit()
-            logger.info(f'New driver added to database: {new_driver}')
-
-            address.passenger_id = new_passenger.index
-            address.driver_id = new_driver.index
-            db.session.commit()
-            logger.info('Address updated with passenger and driver id')
-            
-            # creating the corresponding user
-            user_info = {
-                'first_name': new_driver.first_name,
-                'last_name': new_driver.last_name,
-                'password': generate_password_hash(request.form['password'], method='sha256'),
-                'driver_id': new_driver.index,
-                'passenger_id': new_passenger.index
-            }
-
-            logger.debug(f'New User info: {user_info}')
-
-            new_user = User(**user_info)
+            new_user = User(
+                first_name=request.form['firstname'].lower(),
+                last_name=request.form['lastname'].lower(),
+                email_address=request.form['email'],
+                phone_number=request.form['phonenumber'],
+                team_auth_key='0',
+                region_name=request.form['region'],
+                car_type_1=request.form['cartype1'],
+                car_type_2=request.form['cartype2'],
+                car_color_1=request.form['carcolor1'],
+                car_color_2=request.form['carcolor2'],
+                emergency_contact_number=request.form['emergencycontact'],
+                emergency_contact_relation=request.form['emergencycontactrelation'],
+                extra_information=request.form['note'],
+                num_seats=request.form['numberofseats'],
+                num_years_with_license=request.form['licenseyears'],
+                student_or_parent=request.form['studentorparent'],
+                password=generate_password_hash(request.form['password'])
+            )
+            new_user.addresses.append(address)
             db.session.add(new_user)
             db.session.commit()
             logger.info('New user registered.')
@@ -274,31 +227,27 @@ def register_passenger_page():
         
         # doesn't really work
         region_name = request.form.get('region')
-        
-
 
         if User.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
             regions = Region.query.all()
             return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
-        
-        if Driver.query.filter_by(first_name=request.form['firstname'], last_name=request.form['lastname']).first() is not None:
-            regions = Region.query.all()
-            return render_template('passenger_sign_up_template.html', message='A user with that name already exists. Please try again.', regions=regions, user=current_user)
 
         try:
-
-            address = Address(
-                address_line_1=request.form['addressline1'],
-                address_line_2=request.form['addressline2'],
-                city=request.form['city'],
-                state='VA',
-                zip_code=request.form['zipcode'],
-                latitude=request.form['latitude'],
-                longitude=request.form['longitude'],
-                code=request.form['place_id']
-            )
-            db.session.add(address)
-            db.session.commit()
+            # checking if the address already exists
+            address = Address.query.filter_by(address_line_1=request.form['addressline1'], address_line_2=request.form['addressline2'], city=request.form['city'], zip_code=request.form['zipcode']).first()
+            if address is None:
+                address = Address(
+                    address_line_1=request.form['addressline1'],
+                    address_line_2=request.form['addressline2'],
+                    city=request.form['city'],
+                    state='VA',
+                    zip_code=request.form['zipcode'],
+                    latitude=request.form['latitude'],
+                    longitude=request.form['longitude'],
+                    code=request.form['place_id']
+                )
+                db.session.add(address)
+                db.session.commit()
             
             passenger_information = {
                 'first_name': request.form['firstname'].lower(),
@@ -309,33 +258,13 @@ def register_passenger_page():
                 'extra_information': request.form['note'],
                 'emergency_contact_number': request.form['emergencycontact'],
                 'emergency_contact_relation': request.form['emergencycontactrelation'],
-                'address_line_1': request.form['addressline1'],
-                'address_line_2': request.form['addressline2'],
-                'city': request.form['city'],
-                'zip_code': request.form['zipcode'],
-                'address_id': address.id
+                'password': generate_password_hash(request.form['password'])
             }
-
-            passenger = Passenger(**passenger_information)
+            passenger = User(**passenger_information)
+            passenger.addresses.append(address)
             db.session.add(passenger)
             db.session.commit()
             logger.info('A new passenger has been added to the database!')
-
-            address.passenger_id = passenger.index
-            db.session.commit()
-            logger.info('Address updated with passenger id')
-
-            user_information = {
-                'first_name': request.form['firstname'].lower(),
-                'last_name': request.form['lastname'].lower(),
-                'password': generate_password_hash(request.form['password']),
-                'passenger_id': passenger.index,
-                'driver_id': None,
-            }
-        
-            user = User(**user_information)
-            db.session.add(user)
-            db.session.commit()
 
 
         except Exception as urMom:
@@ -354,107 +283,52 @@ def update_user_information_page():
     Page that allows for the updating of user information -- basically just a copy of the sign up page but with default values
     """
     regions = Region.query.all()
-    if (request.method == 'GET') and (current_user.driver_profile is not None):
+    if (request.method == 'GET') and (current_user.num_seats is not None):
         return render_template('update_user_information_template.html', user=current_user, regions=regions)
     elif request.method == 'GET':
-        
         logger.debug(current_user)
-        logger.debug(current_user.driver_profile)
-        logger.debug(current_user.passenger_profile)
-        logger.debug(current_user.driver_id)
         return render_template('update_user_information_template_passenger.html', user=current_user, regions=regions)
     elif request.method == 'POST':
         # if the user is a driver
-        if current_user.driver_profile is not None:
-            
-            region = Region.query.filter_by(name=request.form['region']).first()
-            logger.debug(request.form['region'])
-            driver_info = {
-                'first_name':request.form['firstname'].lower(),
-                'last_name': request.form['lastname'].lower(),
-                'student_or_parent': request.form['studentorparent'],
-                'num_years_with_license': request.form['licenseyears'],
-                'phone_number': request.form['phonenumber'],
-                'email_address': request.form['email'],
-                'car_type_1': request.form['cartype1'],
-                'car_color_1': request.form['carcolor1'],
-                'car_type_2': request.form['cartype2'],
-                'car_color_2': request.form['carcolor2'],
-                'emergency_contact_number': request.form['emergencycontact'],
-                'emergency_contact_relation': request.form['emergencycontactrelation'],
-                'extra_information': request.form['note'],
-                'num_seats': request.form['numberofseats'],
-                'region_name': region.name,
-                'address_line_1': request.form['addressline1'],
-                'address_line_2': request.form['addressline2'],
-                'city': request.form['city'],
-                'zip_code': request.form['zipcode'],
-            }
+        if current_user.num_seats is not None:
+
             try:
-                existing_driver = current_user.driver_profile
-                for key, value in driver_info.items():
-                    setattr(existing_driver, key, value)
-                db.session.commit()
-                logger.info('Driver information updated: {}'.format(existing_driver))
-
-                # deleting the unneeded rows so it can also be converted to passenger -- this is a bit of a hack <- copilot :(
-                del driver_info['student_or_parent']
-                del driver_info['num_years_with_license']
-                del driver_info['num_seats']
-                del driver_info['car_type_1']
-                del driver_info['car_color_1']
-                del driver_info['car_type_2']
-                del driver_info['car_color_2']
-
-                # updating the passenger information
-                existing_passenger = current_user.passenger_profile
-                for key, value in driver_info.items():
-                    setattr(existing_passenger, key, value)
-                db.session.commit()
-                logger.info(f'Passenger Data modified: {existing_passenger}')
-
-                # updating the user information
+                current_user.addresses[0].address_line_1 = request.form['addressline1']
+                current_user.addresses[0].address_line_2 = request.form['addressline2']
+                current_user.addresses[0].city = request.form['city']
+                current_user.addresses[0].zip_code = request.form['zipcode']
                 current_user.first_name = request.form['firstname'].lower()
                 current_user.last_name = request.form['lastname'].lower()
+                current_user.email_address = request.form['email']
+                current_user.phone_number = request.form['phonenumber']
+                current_user.region_name = request.form.get('region')
+                current_user.extra_information = request.form['note']
+                current_user.emergency_contact_number = request.form['emergencycontact']
+                current_user.emergency_contact_relation = request.form['emergencycontactrelation']
+                current_user.num_seats = request.form['numberofseats']
+                current_user.num_years_with_license = request.form['licenseyears']
+                current_user.student_or_parent = request.form['studentorparent']
                 db.session.commit()
-                logger.info(f'User Data modified: {current_user}')
-
-                return redirect(url_for("auth.user_profile_page"))
+                return redirect(url_for('auth.user_profile_page'))
             except Exception as e:
                 logger.debug(e)
-                return render_template('update_user_information_template.html', message='There was an error. Please try again.', user=current_user, regions=regions)
+                return render_template('update_user_information_template.html', message='There was an error', user=current_user, regions=regions)
         # if the user is a passenger
         else:
-            region = Region.query.filter_by(name=request.form['region']).first()
-            logger.debug(request.form['region'])
-
-            # defining passenger info
-            passenger_info = {
-                'first_name':request.form['firstname'].lower(),
-                'last_name': request.form['lastname'].lower(),
-                'phone_number': request.form['phonenumber'],
-                'email_address': request.form['email'],
-                'emergency_contact_number': request.form['emergencycontact'],
-                'emergency_contact_relation': request.form['emergencycontactrelation'],
-                'extra_information': request.form['note'],
-                'region_name': region.name,
-                'address_line_1': request.form['addressline1'],
-                'address_line_2': request.form['addressline2'],
-                'city': request.form['city'],
-                'zip_code': request.form['zipcode'],
-            }
             try:
-                for key, value in passenger_info.items():
-                    setattr(current_user.passenger_profile, key, value)
-                db.session.commit()
-                logger.info('Passenger information updated: {}'.format(current_user.passenger_profile))
-
-                # updating the user information
+                current_user.addresses[0].address_line_1 = request.form['addressline1']
+                current_user.addresses[0].address_line_2 = request.form['addressline2']
+                current_user.addresses[0].city = request.form['city']
+                current_user.addresses[0].zip_code = request.form['zipcode']
                 current_user.first_name = request.form['firstname'].lower()
                 current_user.last_name = request.form['lastname'].lower()
+                current_user.email_address = request.form['email']
+                current_user.phone_number = request.form['phonenumber']
+                current_user.region_name = request.form.get('region')
+                current_user.extra_information = request.form['note']
+                current_user.emergency_contact_number = request.form['emergencycontact']
+                current_user.emergency_contact_relation = request.form['emergencycontactrelation']
                 db.session.commit()
-                logger.info(f'User Data modified: {current_user}')
-                return redirect(url_for("auth.user_profile_page"))
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template_passenger.html', message='There was an error. Please try again.', user=current_user, regions=regions)
@@ -471,33 +345,17 @@ def passenger_to_driver_page():
     if request.method == 'GET':
         return render_template('passenger_to_driver_template.html', user=current_user)
     if request.method == 'POST':
-        new_driver = Driver(
-            first_name = current_user.first_name,
-            last_name = current_user.last_name,
-            email_address = current_user.passenger_profile.email_address,
-            phone_number = current_user.passenger_profile.phone_number,
-            num_seats = request.form['numberofseats'],
-            num_years_with_license = request.form['licenseyears'],
-            car_type_1 = request.form['cartype1'],
-            car_type_2 = request.form['cartype2'],
-            car_color_1 = request.form['carcolor1'],
-            car_color_2 = request.form['carcolor2'],
-            emergency_contact_number = current_user.passenger_profile.emergency_contact_number,
-            emergency_contact_relation = current_user.passenger_profile.emergency_contact_relation,
-            student_or_parent = request.form['studentorparent'],
-            address_line_1 = current_user.passenger_profile.address_line_1,
-            address_line_2 = current_user.passenger_profile.address_line_2,
-            city = current_user.passenger_profile.city,
-            zip_code = current_user.passenger_profile.zip_code,
-        )
+        # updating the user information
+        current_user.num_seats = request.form['numberofseats']
+        current_user.num_years_with_license = request.form['licenseyears']
+        current_user.student_or_parent = request.form['studentorparent']
+        current_user.car_type_1 = request.form['cartype1']
+        current_user.car_color_1 = request.form['carcolor1']
+        current_user.car_type_2 = request.form['cartype2']
+        current_user.car_color_2 = request.form['carcolor2']
+        db.session.commit()
 
-        db.session.add(new_driver)
-        db.session.commit()
-        logger.info('New driver created: {}'.format(new_driver))
-        current_user.driver_id = new_driver.index
-        current_user.driver_profile = new_driver
-        db.session.commit()
-        logger.info('User {} converted to driver'.format(current_user))
+        logger.info(f'User Data modified: {current_user}')
         return redirect(url_for('main.home_page'))
 
 @auth_blueprint.route('/forgot-password', methods=['GET', 'POST'])
@@ -513,7 +371,7 @@ def forgot_password_page():
         user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
         if user:
             logger.info('User {} found'.format(user))
-            send_async_email.delay(user.passenger_profile.email_address, 'Password Reset', f"""
+            send_async_email.delay(user.email_address, 'Password Reset', f"""
                 Hello {user.first_name.capitalize()} {user.last_name.capitalize()}, \n\n
                 You have requested a password reset. Please click the link below to reset your password. \n\n
                 {url_for('auth.reset_password_page', user_id=user.id, _external=True, token=user.get_reset_password_token())}
@@ -529,7 +387,7 @@ def user_profile_page():
     """
     Page that allows for the management of the user profile
     """
-    if current_user.is_driver() == 'Yes':
+    if current_user.is_driver():
         return render_template('user_profile_template.html', user=current_user)
     else: 
         return render_template('user_profile_passenger_template.html', user=current_user)
@@ -542,36 +400,40 @@ def legacy_driver_to_login_page():
 
     if request.method == 'GET': 
         logger.debug('get request')
+        # TODO this doesn't work anymore 
+        return render_template('error_page_template.html', main_message='This page is no longer available', sub_message='Please contact the webmaster for more information.', user=current_user)
         return render_template('legacy_driver_to_login_template.html', message='Enter your information', user=current_user)
     if request.method == 'POST':
-        if request.form['password'] != request.form['confirmpassword']:
-            return render_template('legacy_driver_to_login_template.html', message='Passwords do not match. Please try again.', user=current_user)
-        try:
-            existing_driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
-            if existing_driver is None:
-                return render_template('legacy_driver_to_login_template.html', message='The driver does not exist. Please try again or register.', user=current_user)
-            new_passenger = Passenger(
-                first_name = request.form['firstname'].lower(),
-                last_name = request.form['lastname'].lower(),
-                email_address = existing_driver.email_address,
-                phone_number = existing_driver.phone_number,
-                emergency_contact_number = existing_driver.emergency_contact_number,
-                emergency_contact_relation = existing_driver.emergency_contact_relation,
-                extra_information = existing_driver.extra_information
-            )
-            db.session.add(new_passenger)
-            db.session.commit()
+        # if request.form['password'] != request.form['confirmpassword']:
+        #     return render_template('legacy_driver_to_login_template.html', message='Passwords do not match. Please try again.', user=current_user)
+        # try:
+        #     existing_driver = Driver.query.filter_by(first_name=request.form['firstname'].lower(), last_name=request.form['lastname'].lower()).first()
+        #     if existing_driver is None:
+        #         return render_template('legacy_driver_to_login_template.html', message='The driver does not exist. Please try again or register.', user=current_user)
+        #     new_passenger = Passenger(
+        #         first_name = request.form['firstname'].lower(),
+        #         last_name = request.form['lastname'].lower(),
+        #         email_address = existing_driver.email_address,
+        #         phone_number = existing_driver.phone_number,
+        #         emergency_contact_number = existing_driver.emergency_contact_number,
+        #         emergency_contact_relation = existing_driver.emergency_contact_relation,
+        #         extra_information = existing_driver.extra_information
+        #     )
+        #     db.session.add(new_passenger)
+        #     db.session.commit()
 
-            new_user = User(
-                first_name = request.form['firstname'].lower(),
-                last_name = request.form['lastname'].lower(),
-                password = generate_password_hash(request.form['password']),
-                passenger_id = new_passenger.index,
-                driver_id = existing_driver.index
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
+        #     new_user = User(
+        #         first_name = request.form['firstname'].lower(),
+        #         last_name = request.form['lastname'].lower(),
+        #         password = generate_password_hash(request.form['password']),
+        #         passenger_id = new_passenger.index,
+        #         driver_id = existing_driver.index
+        #     )
+        #     db.session.add(new_user)
+        #     db.session.commit()
+        #     return render_template('error_template.html', main_message='Success!', sub_message='You have signed up and can now log in!', user=current_user)
+        try: 
+            pass
         except Exception as e:
             logger.debug(e)
             return render_template('legacy_driver_to_login_template.html', message='There was an error. Please try again.', user=current_user)

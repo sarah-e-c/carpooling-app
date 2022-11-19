@@ -52,62 +52,29 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
             zip_code = person['address']['zip_code'],
             address_line_2 = person['address']['address_line_2'],
         )
-        if person['is_driver']:
-            new_driver = models.Driver(
-                first_name=person['first_name'],
-                last_name=person['last_name'],
-                email_address=person['email_address'],
-                phone_number=person['phone_number'],
-                num_seats=person['num_seats'],
-                region_name=person['region_name'],
-                car_type_1=person['car_type_1'],
-                car_type_2=person['car_type_2'],
-                car_color_1=person['car_color_1'],
-                car_color_2=person['car_color_2'],
-                emergency_contact_number=person['emergency_contact_number'],
-                emergency_contact_relation=person['emergency_contact_relation'],
-                extra_information=person['extra_information'],
-                address_line_1=person['address']['address_line_1'],
-                address_line_2=person['address']['address_line_2'],
-                city=person['address']['city'],
-                zip_code=person['address']['zip_code'],
-                student_or_parent=person['student_or_parent'],
-                address=new_address
-            )
-            db.session.add(new_driver)
-        new_passenger = models.Passenger(
+    
+        new_user = models.User(
             first_name=person['first_name'],
             last_name=person['last_name'],
             email_address=person['email_address'],
             phone_number=person['phone_number'],
+            num_seats=person['num_seats'],
             region_name=person['region_name'],
+            car_type_1=person['car_type_1'],
+            car_type_2=person['car_type_2'],
+            car_color_1=person['car_color_1'],
+            car_color_2=person['car_color_2'],
+            emergency_contact_number=person['emergency_contact_number'],
+            emergency_contact_relation=person['emergency_contact_relation'],
+            extra_information=person['extra_information'],
             address_line_1=person['address']['address_line_1'],
             address_line_2=person['address']['address_line_2'],
             city=person['address']['city'],
             zip_code=person['address']['zip_code'],
-            address=new_address
+            student_or_parent=person['student_or_parent'],
+            addresses=[new_address],
+            password=person['password']
         )
-        new_address.passenger = new_passenger
-        db.session.add(new_passenger)
-
-        if person['is_driver']:
-            new_user= models.User(
-                first_name=person['first_name'],
-                last_name=person['last_name'],
-                is_admin=person['is_admin'],
-                password=person['password'],
-                passenger_profile=new_passenger,
-                driver_profile= new_driver,
-            )
-        else: # yes this is a sloppy solution but it works
-            new_user= models.User(
-                first_name=person['first_name'],
-                last_name=person['last_name'],
-                is_admin=2,
-                password=person['password'],
-                passenger_profile=new_passenger,
-            )
-
         db.session.add(new_user)
     db.session.commit()
 
@@ -119,12 +86,12 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
     for id, event in data.items():
 
         new_event = models.Event(
-            event_name=event['event_name'],
-            event_description=event['event_description'],
-            event_date=datetime.datetime.strptime(event['event_date'], '%Y-%m-%d'),
-            event_start_time=datetime.datetime.strptime(event['event_start_time'], '%H:%M:%S'),
-            event_end_time=datetime.datetime.strptime(event['event_end_time'], '%H:%M:%S'),
-            event_location=event['event_location'],
+            name=event['event_name'],
+            description=event['event_description'],
+            date=datetime.datetime.strptime(event['event_date'], '%Y-%m-%d'),
+            start_time=datetime.datetime.strptime(event['event_start_time'], '%H:%M:%S'),
+            end_time=datetime.datetime.strptime(event['event_end_time'], '%H:%M:%S'),
+            location=event['event_location'],
             destination=models.Destination.query.get(event['destination_id']),
             destination_id=event['destination_id'],
         )

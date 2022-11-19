@@ -19,17 +19,17 @@
         <p>
         <label for="studentorparent">Student or Parent</label>
         
-        <input type="text" id="studentorparent" name="studentorparent" value={{user.driver_profile.student_or_parent}} class="input1" required="required">
+        <input type="text" id="studentorparent" name="studentorparent" value={{user.student_or_parent}} class="input1" required="required">
         </p>
         <br>
         <p>
         <label for="licenseyears">Number of Years with License (if student)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-        <input type="text" id="licenseyears" name="licenseyears" value={{user.driver_profile.num_years_with_license}} class="input1">
+        <input type="text" id="licenseyears" name="licenseyears" value={{user.num_years_with_license}} class="input1">
         </p>
         <br>
         <p>
             <label for="numberofseats">Max Number of Passengers</label>
-            <input type="text" id="numberofseats" name="numberofseats" value="{{user.driver_profile.num_seats}}" class="input1" required="required">
+            <input type="text" id="numberofseats" name="numberofseats" value="{{user.num_seats}}" class="input1" required="required">
         </p>
         <br>
         <p>
@@ -44,42 +44,42 @@
         <br>
         <p>
         <label for="cartype1">Primary Car Type</label>
-        <input type="text" id="cartype1" name="cartype1" value="{{user.driver_profile.car_type_1}}" class="input1" required="required">
+        <input type="text" id="cartype1" name="cartype1" value="{{user.car_type_1}}" class="input1" required="required">
         </p>
         <br>
         <p>
         <label for="carcolor1">Primary Car Color</label>
-        <input type="text" id="carcolor1" name="carcolor1" value="{{user.driver_profile.car_color_1}}" class="input1" required="required">
+        <input type="text" id="carcolor1" name="carcolor1" value="{{user.car_color_1}}" class="input1" required="required">
         </p>
         <br>
         <p>
             <label for="cartype2">Secondary Car Type</label>
-            <input type="text" id="cartype2" name="cartype2" value="{{user.driver_profile.car_type_2}}" class="input1">
+            <input type="text" id="cartype2" name="cartype2" value="{{user.car_type_2}}" class="input1">
             </p>
         <br>
         <p>
             <label for="carcolor2">Secondary Car Color</label>
-            <input type="text" id="carcolor2" name="carcolor2" value="{{user.driver_profile.car_color_2}}" class="input1">
+            <input type="text" id="carcolor2" name="carcolor2" value="{{user.car_color_2}}" class="input1">
         </p>
         <br>
         <p>
         <label for="email">Email Address</label>
-        <input type="text" id="email" name="email" value="{{user.driver_profile.email_address}}" class="input1" required="required">
+        <input type="text" id="email" name="email" value="{{user.email_address}}" class="input1" required="required">
         </p>
         <br>
         <p>
         <label for="phonenumber">Phone Number</label>
-        <input type="text" id="phonenumber" name="phonenumber" value="{{user.driver_profile.phone_number}}" class="input1" required="required">
+        <input type="text" id="phonenumber" name="phonenumber" value="{{user.phone_number}}" class="input1" required="required">
         </p>
         <br>
         <p>
             <label for="emergencycontact">Emergency Contact Phone Number</label>
-            <input type="text" id="emergencycontact" name="emergencycontact" value="{{user.driver_profile.emergency_contact_number}}" class="input1" required="required">
+            <input type="text" id="emergencycontact" name="emergencycontact" value="{{user.emergency_contact_number}}" class="input1" required="required">
             </p>
         <br> 
         <p>
             <label for="emergencycontactrelation">Emergency Contact Relationship</label>
-            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" value="{{user.driver_profile.emergency_contact_relation}}" class="input1" required="required">
+            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" value="{{user.emergency_contact_relation}}" class="input1" required="required">
         </p>
         <br>
 
@@ -94,28 +94,28 @@
         <br>
         <p>
             <label for="addressline1">Address Line 1</label>
-            <input type="text" id="addressline1" name="addressline1" placeholder="123 Example Drive" value= "{{user.driver_profile.address_line_1}}" class="input1" required="required">
+            <input type="text" id="addressline1" name="addressline1" placeholder="123 Example Drive" value= "{{user.addresses[0].address_line_1}}" class="input1" required="required">
             </p>
             <br>
         <p>
                 <label for="addressline2">Address Line 2</label>
-                <input type="text" id="addressline2" name="addressline2" placeholder="" value= "{{user.driver_profile.address_line_2}}" class="input1">
+                <input type="text" id="addressline2" name="addressline2" placeholder="" value= "{{user.addresses[0].address_line_2}}" class="input1">
                 </p>
         <br>
         <p>
             <label for="city">City</label>
-            <input type="text" id="city" name="city" placeholder="Richmond" class="input1" value="{{user.driver_profile.city}}" required="required">
+            <input type="text" id="city" name="city" placeholder="Richmond" class="input1" value="{{user.addresses[0].city}}" required="required">
             </p>
             <br>
         <p>
             <label for="zipcode">Zip Code</label>
-            <input type="text" id="zipcode" name="zipcode" placeholder="12345" class="input1" value ="{{user.driver_profile.zip_code}}" required="required">
+            <input type="text" id="zipcode" name="zipcode" placeholder="12345" class="input1" value ="{{user.addresses[0].zip_code}}" required="required">
             </p>
             <br>
 
         <p>
         <label for="note">Note</label>
-        <input type="text" id="note" name="note" value="{{user.driver_profile.extra_information}}" class="input1">
+        <input type="text" id="note" name="note" value="{{user.extra_information}}" class="input1">
         </p>
         <br>
 

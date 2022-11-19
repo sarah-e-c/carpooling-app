@@ -1,6 +1,5 @@
 import logging
-from carpooling.models import Address, DistanceMatrix, Destination
-from carpooling.models import User as Passenger
+from carpooling.models import Address, DistanceMatrix, Destination, User
 from .data_classes import API_KEY, PLACEHOLDER_HIGH_VALUE, MAX_TIME, Person
 import requests
 import numpy as np
@@ -332,8 +331,8 @@ def load_people(strio: StringIO):
 
     logger.debug('signups_df: {}'.format(signups_df))
     logger.debug('signups_df.columns: {}'.format(signups_df.columns))
-    users = Passenger.query.filter(and_(Passenger.first_name.in_(signups_df['first_name']),
-                                        Passenger.last_name.in_(signups_df['last_name']))).all()
+    users = User.query.filter(and_(User.first_name.in_(signups_df['first_name']),
+                                        User.last_name.in_(signups_df['last_name']))).all()
     people_list = []
     for user in users:
         try:
@@ -347,7 +346,7 @@ def load_people(strio: StringIO):
         new_person = Person(user.index, user.address.id,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
                                 s['last_name'] == user.last_name), axis=1)].iloc[0]['willing_to_drive'] == 'yes'),
-                            user.user.driver_profile.num_seats if user.user.driver_profile else 0,
+                            user.num_seats if user.num_seats else 0,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
                                 s['last_name'] == user.last_name), axis=1)].iloc[0]['needs_ride'] == 'yes'),
                             MAX_TIME  # NEEDS CHANGED TODO

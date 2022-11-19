@@ -42,27 +42,31 @@ def delete_event(event_index):
 
     # notifying the drivers of the event
     for carpool in event_to_delete.carpools:
-        send_async_email.delay(carpool.driver.user.passenger_profile.email_address, 'The event you signed up to carpool for has been deleted.', f"""
-                Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
-                The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
-                """)
+        if carpool.driver != None:
+            send_async_email.delay(carpool.driver.email_address, 'The event you signed up to carpool for has been deleted.', f"""
+                    Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
+                    The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
+                    """)
 
     # notifying the passengers of the event
     for carpool in event_to_delete.carpools:
-        send_async_email_to_many.delay([passenger.passenger_profile.email_address for passenger in carpool.passengers], 'The event you had signed up for a carpool for has been deleted', f"""
+        send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers], 'The event you had signed up for a carpool for has been deleted', f"""
                 Hello passengers, \n\n
                 The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                 """)
-
     # deleting the carpools of the event
     for carpool in event_to_delete.carpools:
         db.session.delete(carpool)
+
+    # deleting the carpool signups
+    for carpool_signup in event_to_delete.event_carpool_signups:
+        db.session.delete(carpool_signup)
 
     # deleting the event
     db.session.delete(event_to_delete)
     db.session.commit()
 
-    logger.info('Event {} deleted'.format(event_to_delete.event_name))
+    logger.info('Event {} deleted'.format(event_to_delete.name))
     return redirect(url_for('main.events_page'))
 
 
@@ -143,7 +147,7 @@ def admin_delete_user(user_id):
 
 
     # notifying the user that they are being deleted
-    send_async_email.delay(user_to_delete.passenger_profile.email_address, 'Your Account has been deleted', f"""
+    send_async_email.delay(user_to_delete.email_address, 'Your Account has been deleted', f"""
             Hello {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()}, \n\n
             Your account has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
             """)
@@ -151,26 +155,27 @@ def admin_delete_user(user_id):
     # notifying their passengers (if any) that they are being deleted
     try:
         user_to_delete_upcoming_carpools = [
-            carpool for carpool in user_to_delete.driver_profile.carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(days=1)]
+            carpool for carpool in user_to_delete.driver_profile.carpools if carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
     except AttributeError as e:
         logger.debug(e)
         user_to_delete_upcoming_carpools = []
 
     for carpool in user_to_delete_upcoming_carpools:
         for passenger in carpool.passengers:
-            send_async_email.delay(passenger.passenger_profile.email_address, 'Your driver has been deleted',f"""
+            send_async_email.delay(passenger.email_address, 'Your driver has been deleted',f"""
                 Hello {passenger.first_name.capitalize()} {passenger.last_name.capitalize()}, \n\n
                 Your driver {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                 """ )
 
     # notifying their drivers (if any) that they are being deleted
     user_to_delete_upcoming_carpools = [
-        carpool for carpool in user_to_delete.passenger_profile.carpools if carpool.event.event_date > datetime.datetime.now() - datetime.timedelta(days=1)]
+        carpool for carpool in user_to_delete.carpools if carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
     for carpool in user_to_delete_upcoming_carpools:
-        send_async_email.delay(carpool.driver.user.passenger_profile.email_address, 'A passenger of yours has been deleted', f"""
+        if carpool.driver is not None:
+            send_async_email.delay(carpool.driver.email_address, 'Your passenger has been deleted',f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                 Your passenger {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
-                """)
+                """ )
 
     # deleting the user and their carpools
     if user_to_delete.driver_profile is not None:
@@ -178,7 +183,7 @@ def admin_delete_user(user_id):
             carpool.driver = None
             carpool.driver_index = None
 
-    for carpool in user_to_delete.passenger_profile.carpools:
+    for carpool in user_to_delete.carpools:
         try:
             carpool.passengers.remove(user_to_delete)
         except ValueError as e:  # this means that the user was not in the carpool
@@ -186,7 +191,7 @@ def admin_delete_user(user_id):
             pass
 
     db.session.commit()
-    db.session.delete(user_to_delete.passenger_profile)
+    db.session.delete(user_to_delete)
     try:
         db.session.delete(user_to_delete.driver_profile)
     except Exception as e:
@@ -207,9 +212,9 @@ def cancel_carpool(carpool_id):
     Page that allows for the cancellation of a carpool. Is not really used except for through carpool management page. Emails the passengers.
     """
 
-    for carpool in current_user.driver_profile.carpools:
+    for carpool in current_user.driver_carpools:
         if str(carpool.index) == carpool_id:
-            send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers], 'Carpool Cancelled', f'Hello passengers, \n\n Your carpool for {carpool.event.event_name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
+            send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers], 'Carpool Cancelled', f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
 
             carpool.driver = None
             carpool.driver_id = None
@@ -218,7 +223,7 @@ def cancel_carpool(carpool_id):
             db.session.commit()
             return redirect(url_for('main.manage_carpools_page'))
 
-    logger.debug(f'{current_user.driver_profile.carpools}')
+    logger.debug(f'{current_user.driver}')
     return render_template('error_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
 
 
@@ -242,7 +247,7 @@ def change_carpool_destination():
             new_destination, current_user))
 
         send_async_email_to_many.delay([passenger.email_address for passenger in current_carpool.passengers], 'Carpool Destination Changed', f"""
-            Hello passengers of carpool for event {current_carpool.event.event_name}, \n\n
+            Hello passengers of carpool for event {current_carpool.event.name}, \n\n
             The driver of the carpool has changed the destination from {old_destination} to {new_destination}. 
             Please make sure that you are ready to go to {new_destination} at the time of the carpool.
             """)
@@ -255,14 +260,14 @@ def leave_carpool(carpool_id):
     """
     Route that allows a passenger to leave a carpool
     """
-    for carpool in current_user.passenger_profile.carpools:  # making sure that the current user is in the carpool
+    for carpool in current_user.passenger_carpools:  # making sure that the current user is in the carpool
         if str(carpool.index) == carpool_id:
             send_async_email.delay(carpool.driver.email_address, 'A passenger has left the carpool', f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                 {current_user.first_name.capitalize()} {current_user.last_name.capitalize()} has left the carpool. Please check the carpool management page to see if you need to cancel the carpool.
                 """)
 
-            carpool.passengers.remove(current_user.passenger_profile)
+            carpool.passengers.remove(current_user)
             db.session.commit()
             logger.info(f'User {current_user} left carpool {carpool}')
 
@@ -278,14 +283,14 @@ def event_check_in_page(event_index):
     """
 
     if EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first() is not None:
-        logger.info('Passenger {} already signed up for event {}'.format(current_user.passenger_profile, event_index))
+        logger.info('Passenger {} already signed up for event {}'.format(current_user, event_index))
         existing_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
         existing_check_in.re_check_in_time = datetime.datetime.now()
         db.session.commit()
-        logger.info('Passenger {} re-checked in for event {}'.format(current_user.passenger_profile, event_index))
+        logger.info('Passenger {} re-checked in for event {}'.format(current_user, event_index))
         return redirect(url_for('main.event_page', event_index=event_index))
 
-    logger.info('Passenger {} checking in for event {}'.format(current_user.passenger_profile, event_index))
+    logger.info('Passenger {} checking in for event {}'.format(current_user, event_index))
     new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
     db.session.add(new_event_check_in)
     db.session.commit()
@@ -297,7 +302,7 @@ def event_check_out_page(event_index):
     """
     Function to check out of an event.
     """
-    logger.info('Passenger {} checking out of event {}'.format(current_user.passenger_profile, event_index))
+    logger.info('Passenger {} checking out of event {}'.format(current_user, event_index))
     event_check_in = EventCheckIn.query.filter_by(event_id=event_index, user_id=current_user.id).first()
     event_check_in.re_check_in_time = None
     event_check_in.check_out_time = datetime.datetime.now()
@@ -312,7 +317,7 @@ def download_hours_csv(event_index):
     Function to download the hours csv as an admin
     """
     check_ins = EventCheckIn.query.filter_by(event_id=event_index)
-    event_name = Event.query.get(event_index).event_name
+    event_name = Event.query.get(event_index).name
     heading_row = ["First Name", "Last Name", "Check In Time", "Check Out Time", "Check In Hours"]
     strio = StringIO()
     cw = csv.writer(strio)
@@ -377,7 +382,7 @@ def get_generated_carpool_data(carpool_id):
     carpool = GeneratedCarpool.query.get(carpool_id)
 
     # checking if the person is eligible to view the carpool
-    if (carpool.driver.user.id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.user.id ==current_user.id]) == 0) and not current_user.is_admin:
+    if (carpool.driver.id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.id ==current_user.id]) == 0) and not current_user.is_admin:
         return redirect(url_for('main.index'))
 
     carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),

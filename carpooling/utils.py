@@ -121,7 +121,7 @@ def driver_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if current_user.is_authenticated:
-            if current_user.driver_profile is not None:
+            if current_user.num_seats is not None:
                 return function(*args, **kwargs)
             else:
                 return redirect(url_for('main.home_page'))

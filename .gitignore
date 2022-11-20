@@ -9,3 +9,4 @@ latest.dump
 instance
 dump.rdb
 .vscode
+.DS_Store

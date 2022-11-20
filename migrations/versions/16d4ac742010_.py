@@ -375,7 +375,7 @@ def downgrade():
 
     op.execute("""
     INSERT INTO passengers (index, last_name, first_name, phone_number, email_address, emergency_contact_number, emergency_contact_relation, extra_information, region_name, address_line_1, address_line_2, city, zip_code)
-    SELECT old_users.id + 100, old_users.last_name, old_users.first_name, old_users.phone_number, old_users.email_address, old_users.emergency_contact_number, old_users.emergency_contact_relation, old_users.extra_information, old_users.region_name, addresses.address_line_1, addresses.address_line_2, addresses.city, addresses.zip_code
+    SELECT DISTINCT old_users.id, old_users.last_name, old_users.first_name, old_users.phone_number, old_users.email_address, old_users.emergency_contact_number, old_users.emergency_contact_relation, old_users.extra_information, old_users.region_name, addresses.address_line_1, addresses.address_line_2, addresses.city, addresses.zip_code
     FROM old_users
     INNER JOIN address_user_links ON old_users.id = address_user_links.user_id
     INNER JOIN addresses ON address_user_links.address_id = addresses.id

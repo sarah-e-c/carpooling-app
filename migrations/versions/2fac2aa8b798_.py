@@ -32,12 +32,12 @@ def upgrade():
 
 def downgrade():
     op.execute("""
-    ALTER TABLE users
-    ALTER COLUMN id SET DEFAULT 0;
-    DROP SEQUENCE IF EXISTS users_id_seq;
+    CREATE SEQUENCE IF NOT EXISTS users_id_seq OWNED BY users.id;
+    SELECT setval('users_id_seq', coalesce(max(id), 0) + 1, false) FROM users;
+    ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq');
     """)
     op.execute("""
-    ALTER TABLE addresses
-    ALTER COLUMN id SET DEFAULT 0;
-    DROP SEQUENCE IF EXISTS addresses_id_seq;
+    CREATE SEQUENCE IF NOT EXISTS addresses_id_seq OWNED BY addresses.id;
+    SELECT setval('addresses_id_seq', coalesce(max(id), 0) + 1, false) FROM addresses;
+    ALTER TABLE addresses ALTER COLUMN id SET DEFAULT nextval('addresses_id_seq');
     """)

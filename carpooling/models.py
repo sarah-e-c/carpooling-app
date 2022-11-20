@@ -453,7 +453,7 @@ class Address(db.Model):
     Table to store addresses and geocodes
     """
     __tablename__ = 'addresses'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
     address_line_1 = db.Column(db.String, nullable=False)
     address_line_2 = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=False)
@@ -461,7 +461,7 @@ class Address(db.Model):
     zip_code = db.Column(db.String, nullable=False)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
-    code = db.Column(db.String, nullable=True) # change these once all of the addresses are loaded in properly
+    code = db.Column(db.String, nullable=True, unique=True) # change these once all of the addresses are loaded in properly
     destination = db.relationship('Destination', back_populates='address', uselist=False)
     users = db.relationship('User', back_populates='addresses', secondary='address_user_links')
 

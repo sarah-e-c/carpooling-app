@@ -233,7 +233,10 @@ def upgrade():
     INSERT INTO addresses (address_line_1, address_line_2, city, state, zip_code)
     SELECT passengers.address_line_1, passengers.address_line_2, passengers.city, 'VA', passengers.zip_code
     FROM passengers
-    WHERE passengers.address_line_1 IS NOT NULL;
+    FULL OUTER JOIN addresses
+    ON addresses.passenger_id = passengers.index
+    WHERE passengers.address_line_1 IS NOT NULL
+    AND addresses.address_line_1 IS NULL;
 
     UPDATE addresses
     SET passenger_id = passengers.index

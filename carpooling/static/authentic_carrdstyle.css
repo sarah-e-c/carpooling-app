@@ -87,7 +87,7 @@ body:before {
 }
 
 body:after {
-    background-color: #7E8083;
+    background-color: #333;
     content: '';
     display: block;
     height: 100%;
@@ -720,6 +720,10 @@ hr.style1:before {
     background-color: #00B259;
     color: white;
   }
+  .topnav a.active:hover {
+    background-color: #00B259;
+    color: white;
+  }
 
   .topnav a.user-info {
     float: right;
@@ -735,6 +739,11 @@ hr.style1:before {
     background-color: #ddd;
     color: black;
   }
+  .topnav a.user-info.active:hover {
+    background-color: #00B259;
+    color: white;
+  }
+
 
 @media (max-width: 1920px) {
 }

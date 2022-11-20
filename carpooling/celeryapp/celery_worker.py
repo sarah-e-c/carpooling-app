@@ -1,6 +1,6 @@
 """
 Run using the command:
-python celery -A app.celeryapp.celery_worker.celery worker --concurrency=2 -E -l info
+python celery -A carpooling.celeryapp.celery_worker.celery worker --concurrency=2 -E -l info
 """
 from carpooling import celeryapp, create_app
 

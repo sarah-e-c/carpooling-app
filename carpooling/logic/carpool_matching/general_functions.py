@@ -1,5 +1,5 @@
 import logging
-from carpooling.models import Address, DistanceMatrix, Destination, User
+from carpooling.models import Address, DistanceMatrix, Destination, User, EventCarpoolSignup, AddressUserLink
 from .data_classes import API_KEY, PLACEHOLDER_HIGH_VALUE, MAX_TIME, Person
 import requests
 import numpy as np
@@ -10,10 +10,7 @@ import time
 from io import StringIO
 from sqlalchemy import and_
 
-
-
 logger = logging.getLogger(__name__)
-
 
 
 def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
@@ -28,20 +25,24 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
             'too many origins and destinations, splitting into chunks')
         for origin_iter in range(0, len(origins), 10):
             for j in range(0, len(destinations), 10):
-                origins_chunk = origins[origin_iter:origin_iter+10]
-                destinations_chunk = destinations[j:j+10]
-                origins_chunk_addresses = [Address.query.get(origin) for origin in origins_chunk] # doing this to make sure that they are in same order
+                origins_chunk = origins[origin_iter:origin_iter + 10]
+                destinations_chunk = destinations[j:j + 10]
+                origins_chunk_addresses = [Address.query.get(origin) for origin in
+                                           origins_chunk]  # doing this to make sure that they are in same order
                 destinations_chunk_addresses = [Address.query.get(destination) for destination in destinations_chunk]
-                
 
                 if use_placeid:
                     origins_chunk_str = [f'place_id:{origin.code}' for origin in origins_chunk_addresses]
-                    destinations_chunk_str = [f'place_id:{destination.code}' for destination in destinations_chunk_addresses]
+                    destinations_chunk_str = [f'place_id:{destination.code}' for destination in
+                                              destinations_chunk_addresses]
                 else:
-                    origins_chunk_str = [f'{origin.address_line_1} {origin.city} {origin.state} {origin.zip_code}' for origin in 
-                        origins_chunk_addresses]
-                    destinations_chunk_str = [f'{destination.address_line_1} {destination.city} {destination.state} {destination.zip_code}' for destination in list(
-                        destinations_chunk_addresses)]
+                    origins_chunk_str = [f'{origin.address_line_1} {origin.city} {origin.state} {origin.zip_code}' for
+                                         origin in
+                                         origins_chunk_addresses]
+                    destinations_chunk_str = [
+                        f'{destination.address_line_1} {destination.city} {destination.state} {destination.zip_code}'
+                        for destination in list(
+                            destinations_chunk_addresses)]
                 origins_str = '|'.join(origins_chunk_str)
                 destinations_str = '|'.join(destinations_chunk_str)
                 url = f'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins={origins_str}&destinations={destinations_str}&key={API_KEY}'
@@ -76,10 +77,10 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
         return return_dict
 
     else:  # the number of origins and destinations is less than 100
-        origins_chunk_addresses = [Address.query.get(origin) for origin in origins_chunk]
-        destinations_chunk_addresses = [Address.query.get(destination) for destination in destinations_chunk]
+        origins_chunk_addresses = [Address.query.get(origin) for origin in origins]
+        destinations_chunk_addresses = [Address.query.get(destination) for destination in destinations]
         if use_placeid:
-            
+
             origins_for_url = ["place_id:" +
                                origin.code for origin in origins_chunk_addresses]
             destinations_for_url = [
@@ -89,10 +90,12 @@ def get_distance_matrix(origins, destinations, use_placeid=True) -> dict:
             url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins_for_url}&destinations={destinations_for_url}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
             headers = {}
         else:  # not using placeid
-            origins_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in
-                origins_chunk_addresses]
+            origins_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address
+                               in
+                               origins_chunk_addresses]
             origins_for_url = '|'.join(origins_for_url)
-            destinations_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for address in destinations_chunk_addresses]
+            destinations_for_url = [f"{address.address_line_1} {address.city} {address.state} {address.zip_code}" for
+                                    address in destinations_chunk_addresses]
             destinations_for_url = '|'.join(destinations_for_url)
             url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origins_for_url}&destinations={destinations_for_url}&key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI"
             headers = {}
@@ -119,6 +122,8 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
     """
     Method that uses Google Maps API to get the distances between all points.
     :param rsvp_list: the list of Person objects to use
+    :param destination_id: the id of the destination to use
+    :param use_placeid: whether to use placeid or not
     """
     # TODO only get the values that are reasonably close to each other already.
     # We don't need a northside distance to a southside distance.
@@ -126,10 +131,11 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
 
     destination_id = Destination.query.get(destination_id).address.id
     logger.info(destination_id)
+    logger.debug(rsvp_list)
 
     # query addresses
-    used_addresses_ids = [address.id for address in Address.query.filter(
-        Address.passenger_id.in_([user.id_ for user in rsvp_list])).all()]
+    used_addresses_ids = [address.id for address in Address.query.join(AddressUserLink).filter(
+        AddressUserLink.user_id.in_([user.id_ for user in rsvp_list])).all()]
     used_addresses_ids.append(destination_id)
 
     # filling in the distance matrix
@@ -186,7 +192,8 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                 if origin != destination:
                     try:
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=new_points[origin][destination]['kilos'], seconds=new_points[origin][destination]['seconds']))
+                                                      kilos=new_points[origin][destination]['kilos'],
+                                                      seconds=new_points[origin][destination]['seconds']))
                         db.session.commit()
                         logger.info(
                             f'Added {origin} to {destination} to the database')
@@ -198,7 +205,7 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                         logger.warning(
                             'An address was not found. Imputing a high value')
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
+                                                      kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
                         kilos_matrix.loc[origin,
                                          destination] = PLACEHOLDER_HIGH_VALUE
                         seconds_matrix.loc[origin,
@@ -220,7 +227,8 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                 if origin != destination:
                     try:
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=new_points_2[origin][destination]['kilos'], seconds=new_points_2[origin][destination]['seconds']))
+                                                      kilos=new_points_2[origin][destination]['kilos'],
+                                                      seconds=new_points_2[origin][destination]['seconds']))
                         kilos_matrix.loc[origin,
                                          destination] = new_points_2[origin][destination]['kilos']
                         seconds_matrix.loc[origin,
@@ -229,7 +237,7 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                         logger.warning(
                             'An address was not found. Skipping for now.')
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
+                                                      kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
                         kilos_matrix.loc[origin,
                                          destination] = PLACEHOLDER_HIGH_VALUE
                         seconds_matrix.loc[origin,
@@ -249,7 +257,8 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                 if origin != destination:
                     try:
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=new_points_3[origin][destination]['kilos'], seconds=new_points_3[origin][destination]['seconds']))
+                                                      kilos=new_points_3[origin][destination]['kilos'],
+                                                      seconds=new_points_3[origin][destination]['seconds']))
                         kilos_matrix.loc[origin,
                                          destination] = new_points_3[origin][destination]['kilos']
                         seconds_matrix.loc[origin,
@@ -258,7 +267,7 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                         logger.warning(
                             'An address was not found. Skipping for now.')
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
+                                                      kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
                         kilos_matrix.loc[origin,
                                          destination] = PLACEHOLDER_HIGH_VALUE
                         seconds_matrix.loc[origin,
@@ -296,7 +305,8 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                 if origin != destination:
                     try:
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=final_points[origin][destination]['kilos'], seconds=final_points[origin][destination]['seconds']))
+                                                      kilos=final_points[origin][destination]['kilos'],
+                                                      seconds=final_points[origin][destination]['seconds']))
                         kilos_matrix.loc[origin,
                                          destination] = final_points[origin][destination]['kilos']
                         seconds_matrix.loc[origin,
@@ -305,7 +315,7 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
                             f'Added {origin} to {destination} to the database')
                     except:
                         db.session.add(DistanceMatrix(origin_id=origin, destination_id=destination,
-                                       kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
+                                                      kilos=PLACEHOLDER_HIGH_VALUE, seconds=PLACEHOLDER_HIGH_VALUE))
                         kilos_matrix.loc[origin,
                                          destination] = PLACEHOLDER_HIGH_VALUE
                         seconds_matrix.loc[origin,
@@ -332,12 +342,12 @@ def load_people(strio: StringIO):
     logger.debug('signups_df: {}'.format(signups_df))
     logger.debug('signups_df.columns: {}'.format(signups_df.columns))
     users = User.query.filter(and_(User.first_name.in_(signups_df['first_name']),
-                                        User.last_name.in_(signups_df['last_name']))).all()
+                                   User.last_name.in_(signups_df['last_name']))).all()
     people_list = []
     for user in users:
         try:
             signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
-                s['last_name'] == user.last_name), axis=1)].iloc[0]
+                    s['last_name'] == user.last_name), axis=1)].iloc[0]
         except IndexError:
             logger.warning('User {} {} not found in the signups'.format(
                 user.first_name, user.last_name))
@@ -345,12 +355,26 @@ def load_people(strio: StringIO):
         logger.debug('user: {}'.format(user))
         new_person = Person(user.index, user.address.id,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
-                                s['last_name'] == user.last_name), axis=1)].iloc[0]['willing_to_drive'] == 'yes'),
+                                    s['last_name'] == user.last_name), axis=1)].iloc[0]['willing_to_drive'] == 'yes'),
                             user.num_seats if user.num_seats else 0,
                             (signups_df.loc[signups_df.apply(lambda s: (s['first_name'] == user.first_name) & (
-                                s['last_name'] == user.last_name), axis=1)].iloc[0]['needs_ride'] == 'yes'),
+                                    s['last_name'] == user.last_name), axis=1)].iloc[0]['needs_ride'] == 'yes'),
                             MAX_TIME  # NEEDS CHANGED TODO
                             )
         logger.info('new person: {}'.format(new_person))
+        people_list.append(new_person)
+    return people_list
+
+
+def load_people_from_sql(event_id: int) -> list[Person]:
+    """
+    Loads the people from the database. If they are not in the database, they are not included.
+    """
+    signups = EventCarpoolSignup.query.filter_by(event_id=event_id).all()
+    people_list = []
+    for signup in signups:
+        user = User.query.get(signup.user_id)
+        new_person = Person(signup.user_id, user.addresses[0].id,
+                            signup.willing_to_drive, user.num_seats, signup.needs_ride, MAX_TIME)
         people_list.append(new_person)
     return people_list

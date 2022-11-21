@@ -1,4 +1,4 @@
-first name,last name,willing to drive,needs ride
+first_name,last_name,willing_to_drive,needs_ride
 rafael,ryan,no,yes
 cassandra,harper,yes,yes
 amelia,wells,no,yes
@@ -24,3 +24,8 @@ kent,johnson,no,yes
 natalie,hudson,no,yes
 richard,price,yes,yes
 alice,lucas,no,yes
+erin,jacobs,no,yes
+bill,lewis,no,yes
+avery,duncan,no,yes
+noelle,mason,yes,yes
+arthur,martin,no,yes

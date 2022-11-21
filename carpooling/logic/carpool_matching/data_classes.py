@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import requests
 import time
-from carpooling.models import Event, Address, DistanceMatrix,  Destination
+from carpooling.models import Event, Address, DistanceMatrix, Destination
 from carpooling import db
 import numpy as np
 import logging
@@ -15,13 +15,10 @@ import json
 from numpy.random import choice
 from sqlalchemy import and_
 
-
 logger = logging.getLogger(__name__)
-
 
 MAX_TIME = 90  # no more than 90 minutes of travel
 DRIVER_WAITING_TIME = 5  # assuming 5 minutes of wait time between stops
-
 
 PLACEHOLDER_HIGH_VALUE = 9999999999999
 
@@ -29,7 +26,6 @@ MAX_COMPUTATION_TIME = 5  # 5 minutes
 MAX_ITER = 100  # 1000 iterations
 
 API_KEY = 'AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI'
-
 
 # weighting coefficients
 # weight for the total distance of the route compared to the default.
@@ -40,6 +36,8 @@ FAVORABLE_ROUTE_WEIGHT = 0.25
 ROUTE_TIME_WEIGHT = 0.25  # weight for total time for each passenger
 
 MAX_TIME = 23056
+
+
 # add support for multiple places?
 
 
@@ -91,12 +89,12 @@ class LocalPassenger:
         # this is here because im dumb
         new_driver_history.append(old_driver.id_)
         return LocalDriver(id_=self.id_,
-                      location_id=self.location_id,
-                      num_seats=old_driver.num_seats - 1,
-                      is_real_driver=False,
-                      time_tolerance=old_driver.time_tolerance - time_passage,
+                           location_id=self.location_id,
+                           num_seats=old_driver.num_seats - 1,
+                           is_real_driver=False,
+                           time_tolerance=old_driver.time_tolerance - time_passage,
 
-                      driver_history=tuple(new_driver_history))
+                           driver_history=tuple(new_driver_history))
 
 
 class LocalCarpool:
@@ -131,7 +129,8 @@ class Solution:
     TOTAL_LENGTH_OBJECTIVE_WEIGHT = 0.5
     PASSENGERS_SERVED_OBJECTIVE_WEIGHT = 0.5
 
-    def __init__(self, kilos_matrix: pd.DataFrame, seconds_matrix: pd.DataFrame, all_drivers, all_passengers, destination_id, type_='to'):
+    def __init__(self, kilos_matrix: pd.DataFrame, seconds_matrix: pd.DataFrame, all_drivers, all_passengers,
+                 destination_id, type_='to'):
         self.carpools = []
         self.kilos_matrix = kilos_matrix
         self.seconds_matrix = seconds_matrix
@@ -144,7 +143,6 @@ class Solution:
         self.favorable_route_objective_value = 0
         self.total_utility_value = 0
         self.type = type_
-
 
     def add_carpool(self, carpool: LocalCarpool):
         """
@@ -179,11 +177,11 @@ class Solution:
                 for i in range(len(carpool.route) - 1):
                     total_distance_after_carpool += self.kilos_matrix.loc[carpool.route[i]][carpool.route[i + 1]]
 
-                temp_value += (carpool.driver.num_seats/(carpool.driver.num_seats - 1)) * (1- total_distance_after_carpool/total_distance_before_carpool)
-            self.length_objective_value = temp_value/len(self.carpools) 
+                temp_value += (carpool.driver.num_seats / (carpool.driver.num_seats - 1)) * (
+                            1 - total_distance_after_carpool / total_distance_before_carpool)
+            self.length_objective_value = temp_value / len(self.carpools)
             logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
-            return self.length_objective_value  
-
+            return self.length_objective_value
 
     def calculate_needed_passengers_served_value(self):
         """
@@ -194,14 +192,14 @@ class Solution:
         for carpool in self.carpools:
             for passenger in carpool.passengers:
                 served_passengers.append(passenger)
-        
+
         needed_passengers = [passenger for passenger in self.all_passengers if not passenger.can_drive]
         served_passengers = [passenger for passenger in served_passengers if not passenger.can_drive]
 
-        self.needed_passengers_served_objective_value = len(served_passengers) / len(needed_passengers) # ratio
-        logger.info(f'Solution {self} has a needed passengers served objective value of {self.needed_passengers_served_objective_value}')
+        self.needed_passengers_served_objective_value = len(served_passengers) / len(needed_passengers)  # ratio
+        logger.info(
+            f'Solution {self} has a needed passengers served objective value of {self.needed_passengers_served_objective_value}')
         return self.needed_passengers_served_objective_value
-
 
     def calculate_favorable_time_value(self):
         """
@@ -215,7 +213,6 @@ class Solution:
         Calculating the utility function for the people who have been carpooling longer having a favorable time.
         """
 
-        
         return 1
 
     def calculate_total_utility_value(self):
@@ -223,17 +220,17 @@ class Solution:
         Weighted sums all of the utility functions.
         """
         for carpool in self.carpools:
-            carpool.route.append(self.destination_id) # doing this because its too much work to do it there
+            carpool.route.append(self.destination_id)  # doing this because its too much work to do it there
 
-        
         total_length_utility = self.calculate_length_objective_value()
         needed_passengers_served_utility = self.calculate_needed_passengers_served_value()
-        self.total_utility_value = self.TOTAL_LENGTH_OBJECTIVE_WEIGHT * total_length_utility +\
-             self.PASSENGERS_SERVED_OBJECTIVE_WEIGHT * needed_passengers_served_utility
-        
+        self.total_utility_value = self.TOTAL_LENGTH_OBJECTIVE_WEIGHT * total_length_utility + \
+                                   self.PASSENGERS_SERVED_OBJECTIVE_WEIGHT * needed_passengers_served_utility
+
         logger.info(f'Solution {self} has a total utility value of {self.total_utility_value}')
 
-
+    def __repr__(self):
+        return f'Solution with utility value {self.total_utility_value} and with carpools {self.carpools}'
 
 
 @dataclass()

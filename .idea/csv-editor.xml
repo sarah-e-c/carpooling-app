@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/testing/example_data/setup_data/example_signup_csv.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

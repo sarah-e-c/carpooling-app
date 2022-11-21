@@ -582,6 +582,7 @@ class CarpoolSolution(db.Model):
     favorable_time_objective_value = db.Column(db.Float, nullable=False, default=0)
     favorable_route_objective_value = db.Column(db.Float, nullable=False, default=0)
     is_best = db.Column(db.Boolean, nullable=True)
+    type = db.Column(db.String(4), nullable=False)  # to or from or both
 
 
 class EventCarpoolSignup(db.Model):
@@ -684,6 +685,7 @@ class UserUserLink(db.Model):
     user1_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     user2_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     description = db.Column(db.String(100), nullable=False)
+    good = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
         return f'UserUserLink: {self.user1_id} {self.user2_id}'

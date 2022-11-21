@@ -1,3 +1,4 @@
+from typing import Dict
 
 from .data_classes import Person, LocalPassenger, DRIVER_WAITING_TIME, Solution, MAX_ITER, LocalCarpool, LocalDriver
 from .general_functions import fill_distance_matrix
@@ -10,10 +11,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 TIME_TOLERANCE_CONSTANT = 1.5
 
-def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, return_='all_solutions', use_placeid=True) -> Solution:
+
+def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, return_='all_solutions',
+                              use_placeid=True) -> dict[str, Solution] | Solution:
     """
     Evaluating the best solution for a one-way event
     :param rsvp_list: the list of people who are going to the event, formatted into the Person class.
@@ -43,11 +45,13 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
                                    'Driver': None, 'Passenger': None}
         if person.is_driver:
             drivers.append(LocalDriver(id_=person.id_, location_id=person.location_id,
-                           num_seats=person.num_seats, is_real_driver=True, time_tolerance=person.time_tolerance))
+                                       num_seats=person.num_seats, is_real_driver=True,
+                                       time_tolerance=person.time_tolerance))
             people_dict[person.id_]['Driver'] = drivers[-1]
         if person.is_passenger:
             passengers.append(LocalPassenger(id_=person.id_, location_id=person.location_id,
-                              can_drive=person.is_driver, num_seats=person.num_seats, time_tolerance=person.time_tolerance))
+                                             can_drive=person.is_driver, num_seats=person.num_seats,
+                                             time_tolerance=person.time_tolerance))
             people_dict[person.id_]['Passenger'] = passengers[-1]
 
     # marking the compatibility of the distance matrix
@@ -64,16 +68,18 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
             if driver.id_ == passenger.id_:
                 frame.loc[driver, passenger] = False
             # determining if picking up the passenger is within the time tolerance
-            if seconds_matrix.loc[driver.location_id, passenger.location_id] + seconds_matrix.loc[passenger.location_id, destination_id] + DRIVER_WAITING_TIME <= driver.time_tolerance:
+            if seconds_matrix.loc[driver.location_id, passenger.location_id] + seconds_matrix.loc[
+                passenger.location_id, destination_id] + DRIVER_WAITING_TIME <= driver.time_tolerance:
                 # represents the extra time it would take for the driver to pick up the passenger
                 frame.loc[driver, passenger] = seconds_matrix.loc[driver.location_id, passenger.location_id] + \
-                    seconds_matrix.loc[passenger.location_id, destination_id] + \
-                    DRIVER_WAITING_TIME - \
-                    seconds_matrix.loc[driver.location_id, destination_id]
+                                               seconds_matrix.loc[passenger.location_id, destination_id] + \
+                                               DRIVER_WAITING_TIME - \
+                                               seconds_matrix.loc[driver.location_id, destination_id]
             else:
                 frame.loc[driver, passenger] = False
 
-    def calculate_selection_probability(frame: pd.DataFrame, driver: LocalDriver, passenger: LocalPassenger, max_value_in_frame: float) -> float:
+    def calculate_selection_probability(frame: pd.DataFrame, driver: LocalDriver, passenger: LocalPassenger,
+                                        max_value_in_frame: float) -> float:
         """
         Calculate the selection probability of a driver and passenger.
         :param frame: the carpool matching frame
@@ -148,7 +154,7 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
                 new_virtual_driver = passenger.make_virtual_driver(
                     driver, seconds_matrix.loc[driver.location_id, passenger.location_id])
                 carpool_matching_frame.loc[new_virtual_driver,
-                                           :] = carpool_matching_frame.loc[driver, :]
+                :] = carpool_matching_frame.loc[driver, :]
                 # deleting the passenger from the matrix
                 carpool_matching_frame.drop(
                     axis=1, columns=passenger, inplace=True)

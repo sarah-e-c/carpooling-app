@@ -3,17 +3,8 @@ File for implementing the matching algorithm. Inspired by works of
 """
 from dataclasses import dataclass
 import pandas as pd
-import random
-import requests
-import time
-from carpooling.models import Event, Address, DistanceMatrix, Destination
-from carpooling import db
-import numpy as np
 import logging
-from io import StringIO
-import json
-from numpy.random import choice
-from sqlalchemy import and_
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +156,7 @@ class Solution:
         """
         Calculating the utility function for the total length traveled compared to the default.
         """
-        if self.type == 'to':
+        if self.type == 'to' or self.type == 'from':
             temp_value = 0
             for carpool in self.carpools:
                 total_distance_before_carpool = 0
@@ -178,7 +169,7 @@ class Solution:
                     total_distance_after_carpool += self.kilos_matrix.loc[carpool.route[i]][carpool.route[i + 1]]
 
                 temp_value += (carpool.driver.num_seats / (carpool.driver.num_seats - 1)) * (
-                            1 - total_distance_after_carpool / total_distance_before_carpool)
+                        1 - total_distance_after_carpool / total_distance_before_carpool)
             self.length_objective_value = temp_value / len(self.carpools)
             logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
             return self.length_objective_value
@@ -217,10 +208,13 @@ class Solution:
 
     def calculate_total_utility_value(self):
         """
-        Weighted sums all of the utility functions.
+        Weighted sums all of the utility functions. It also does a little bit of processing based on the type.
         """
         for carpool in self.carpools:
             carpool.route.append(self.destination_id)  # doing this because its too much work to do it there
+        if self.type == 'from':
+            for carpool in self.carpools:
+                carpool.route = carpool.route[::-1]
 
         total_length_utility = self.calculate_length_objective_value()
         needed_passengers_served_utility = self.calculate_needed_passengers_served_value()

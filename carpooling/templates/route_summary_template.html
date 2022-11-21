@@ -57,8 +57,8 @@
 
     #mapdiv {
         position: relative;
+        height: 700px;
         width: 100%;
-        height: 500px;
         border-color: #fff;
         background-color: #fff;
     }
@@ -71,7 +71,7 @@
 {% block main %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI&callback=initMap"
     async="false"></script>
-    
+
 <h1 class="style1"> Route 1 </h1>
 <div id="mapdiv"></div>
 <!--- This is where the map will be rendered-->
@@ -79,8 +79,14 @@
     {% for carpool in generated_carpools %}
     <div id="carpool{{carpool.id}}">
         <div class="visibledetails details{{carpool.id}}" onclick="renderMap(event, '{{carpool.id}}')">
-            <p class="style2">{{carpool.from_address.passenger.first_name}}'s Home to
+            {%  if carpool_solution.type == 'to' %}
+            <p class="style2">{{carpool.from_address.users[0].first_name}}'s Home to
                 {{carpool.to_address.destination.name}}</p>
+            {%  elif carpool_solution.type == 'from' %}
+            <p class="style2">{{carpool.from_address.destination.name}}'s Home to
+                {{carpool.to_address.users[0].first_name}}</p>
+            {%  endif %}
+
         </div>
         <div class="hiddendetails details{{carpool.id}}">
             {% for part in carpool.generated_carpool_parts %}
@@ -92,14 +98,6 @@
         </div>
     </div>
     {% endfor %}
-
-    <div id="Richmond">
-        <div class="visibledetails details0" onclick="renderMap(event, '0')">
-            <p class="style2">Hi!</p>
-        </div>
-        <div class="hiddendetails">
-        </div>
-    </div>
 </div>
 <div class="buttondiv">
     <ul class="style1 buttons">

@@ -4,6 +4,7 @@ from carpooling.logic.carpool_matching import load_people, evaluate_best_solutio
 from io import StringIO
 import logging
 
+from carpooling.logic.carpool_matching.evaluate_best_from_solution import evaluate_best_solution_from
 from carpooling.logic.carpool_matching.general_functions import load_people_from_sql
 from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, User
 import click
@@ -14,13 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 @click.command('test-address-matching')
+@click.argument('type_', type=click.Choice(['to', 'from', 'both']))
 @with_appcontext
-def address_matching_test_command():
+def address_matching_test_command(type_):
     # with open('carpooling/logic/example_signup_csv.csv', 'r') as f:
     #     people = load_people(StringIO(f.read()))
     people = load_people_from_sql(1)
     event = Event.query.first()
-    solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
+    solutions = None
+    if type_ == 'to':
+        solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
+    elif type_ == 'from':
+        solutions = evaluate_best_solution_from(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
     logger.info(solutions)
     if type(solutions) is not list:
         solutions = {0: solutions}
@@ -29,7 +35,8 @@ def address_matching_test_command():
         new_solution = CarpoolSolution(
             utility_value=solution.total_utility_value,
             event_id=event.index,
-            is_best=False
+            is_best=False,
+            type=type_
         )
         db.session.add(new_solution)
 
@@ -59,18 +66,22 @@ def address_matching_test_command():
     db.session.commit()
 
 
-def address_matching_command_test_debug_mode():
+def address_matching_test_command_debug_mode(type_: str):
     app = create_app()
     with app.app_context():
         people = load_people_from_sql(1)
         event = Event.query.first()
-        solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
+        if type_ == 'to':
+            solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_='all_solutions')  # need to drop the addresses
+        if type_ == 'from':
+            solutions = evaluate_best_solution_from(people, 1, use_placeid=False, return_='all_solutions')  # need to drop the addresses
         # writing the solutions to the database
         for _, solution in solutions.items():
             new_solution = CarpoolSolution(
                 utility_value=solution.total_utility_value,
                 event_id=event.index,
-                is_best=False
+                is_best=False,
+                type=type_
             )
             db.session.add(new_solution)
 
@@ -98,3 +109,4 @@ def address_matching_command_test_debug_mode():
                     )
                     db.session.add(new_part)
         db.session.commit()
+

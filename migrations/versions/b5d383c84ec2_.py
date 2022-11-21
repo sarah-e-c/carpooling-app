@@ -26,9 +26,14 @@ def upgrade():
         'address_user_links': ['address_id'],
     }
 
+    op.execute("""
+    UPDATE addresses
+    SET code= NULL
+    WHERE code='0';
+    """)
+
     for table, columns in tables_depending_on_addresses.items():
         for column in columns:
-
             # getting general latlng done
             op.execute(f"""
             UPDATE {table}

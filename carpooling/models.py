@@ -7,15 +7,15 @@ import logging
 import datetime
 from sqlalchemy import event, Sequence
 
-
 logger = logging.getLogger(__name__)
+
 
 class EventCheckIn(db.Model):
     __tablename__ = 'event_sign_ups'
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('events.index'))
     event = db.relationship('Event', backref='events.event_sign_ups', uselist=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref='users.event_sign_ups', uselist=False)
     check_in_time = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     check_out_time = db.Column(db.DateTime, nullable=True)
@@ -23,8 +23,10 @@ class EventCheckIn(db.Model):
 
     def get_start_time(self):
         return self.check_in_time.strftime('%I:%M %p')
+
     def get_end_time(self):
         return self.check_out_time.strftime('%I:%M %p')
+
 
 # class Driver(db.Model):
 #     __tablename__ = 'drivers'
@@ -57,12 +59,12 @@ class EventCheckIn(db.Model):
 
 #     def __repr__(self):
 #         return f'Driver: {self.first_name.capitalize()} {self.last_name.capitalize()}'
-    
+
 #     @staticmethod
 #     def get_by_name(full_name):
 #         first_name, last_name = full_name.split(' ')
 #         return Driver.query.filter_by(first_name=first_name, last_name=last_name).first()
-    
+
 #     def get_address(self):
 #         """
 #         Gives a pretty version of the address
@@ -71,7 +73,6 @@ class EventCheckIn(db.Model):
 #             return f'{self.address_line_1}, {self.city}, VA {self.zip_code}'
 #         else:
 #             return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
-        
 
 
 class AuthKey(db.Model):
@@ -82,6 +83,7 @@ class AuthKey(db.Model):
 
     def __repr__(self):
         return f'AuthKey created at: {self.time_created}'
+
 
 class Carpool(db.Model):
     """
@@ -99,8 +101,6 @@ class Carpool(db.Model):
     region = db.relationship('Region', backref=db.backref('carpools'), lazy=True)
     region_name = db.Column(db.String(30), db.ForeignKey('regions.name'), nullable=False)
     passengers = db.relationship('User', back_populates='passenger_carpools', secondary='passenger_carpool_links')
-    
-
 
     def has_driver(self):
         return self.driver is not None
@@ -115,7 +115,8 @@ class Carpool(db.Model):
         except IndexError:
             return 'Open'
 
-        return self.passengers[number].first_name.capitalize() + ' ' + self.passengers[number].last_name[0].capitalize() + '.'
+        return self.passengers[number].first_name.capitalize() + ' ' + self.passengers[number].last_name[
+            0].capitalize() + '.'
 
     def get_dropoff_location(self):
         """
@@ -127,15 +128,12 @@ class Carpool(db.Model):
             return self.destination
         else:
             return self.region.dropoff_location
-    
+
     def __repr__(self):
         try:
             return f'Carpool with driver: {self.driver.first_name.capitalize()} {self.driver.last_name.capitalize()}'
-        except:
+        except Exception as e:
             return 'empty carpool'
-
-    
-
 
 
 class Event(db.Model):
@@ -154,12 +152,11 @@ class Event(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref=db.backref('events', lazy=True))
     passengers_needing_ride = db.relationship('User', secondary='passenger_event_links', lazy=True)
-    destination= db.relationship('Destination', backref=db.backref('events', lazy=True))
+    destination = db.relationship('Destination', backref=db.backref('events', lazy=True))
     destination_id = db.Column(db.Integer, db.ForeignKey('destinations.id'), nullable=True)
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='event', lazy=True)
 
-
-    #carpools = db.relationship('Carpool', backref='event', lazy=True)
+    # carpools = db.relationship('Carpool', backref='event', lazy=True)
 
     def get_description(self):
         if self.description is None:
@@ -168,7 +165,7 @@ class Event(db.Model):
 
     def get_date(self):
         return self.date.strftime('%A, %B %d, %Y')
-    
+
     def get_times(self):
         return f'{self.start_time.strftime("%I:%M %p")} - {self.end_time.strftime("%I:%M %p")}'
 
@@ -178,6 +175,7 @@ class Event(db.Model):
     def __repr__(self):
         return f'Event: {self.name}'
 
+
 class Region(db.Model):
     """
     A region is a group of students that are close to each other.
@@ -186,16 +184,17 @@ class Region(db.Model):
     name = db.Column(db.String, primary_key=True)
     dropoff_location = db.Column(db.String, nullable=False)
     color = db.Column(db.String, nullable=False, default='#fff')
-    #carpools = db.relationship('Carpool', backref=db.backref('region'))
-    #passengers = db.relationship('Passenger', backref=db.backref('region'))
-    #drivers = db.relationship('Driver', backref=db.backref('region'))
+
+    # carpools = db.relationship('Carpool', backref=db.backref('region'))
+    # passengers = db.relationship('Passenger', backref=db.backref('region'))
+    # drivers = db.relationship('Driver', backref=db.backref('region'))
 
     def get_carpools_in_event(self, event: Event):
         return [carpool for carpool in self.carpools if carpool.event == event]
 
     def __repr__(self):
         return f'Region: {self.name}'
-        
+
 
 # class Passenger(db.Model):
 #     """
@@ -237,7 +236,6 @@ class Region(db.Model):
 #             return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
 
 
-
 class User(UserMixin, db.Model):
     """
     Class for a user. Users have some special accesses.
@@ -249,7 +247,8 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(20), nullable=False)
     last_name = db.Column(db.String(20), nullable=False)
     student_or_parent = db.Column(db.String, nullable=True)
-    team_auth_key = db.Column(db.String(10), nullable=False, default='0') # a special key sent out by the team to allow access to the site
+    team_auth_key = db.Column(db.String(10), nullable=False,
+                              default='0')  # a special key sent out by the team to allow access to the site
     is_admin = db.Column(db.SmallInteger, nullable=False, default=0)
     pool_points = db.Column(db.Float, default=0.0, nullable=False)
     phone_number = db.Column(db.String, nullable=False)
@@ -264,11 +263,13 @@ class User(UserMixin, db.Model):
     car_type_2 = db.Column(db.String, nullable=True)
     car_color_2 = db.Column(db.String, nullable=True)
     region = db.relationship('Region', backref=db.backref('users'))
-    driver_carpools= db.relationship('Carpool', back_populates='driver', lazy=True)
+    driver_carpools = db.relationship('Carpool', back_populates='driver', lazy=True)
     passenger_carpools = db.relationship('Carpool', secondary='passenger_carpool_links')
-    passenger_generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers', secondary='generated_carpool_part_passenger_links', lazy=True)
+    passenger_generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers',
+                                                        secondary='generated_carpool_part_passenger_links', lazy=True)
     driver_generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='driver', lazy=True)
-    passenger_generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers', secondary='generated_carpool_passenger_links', lazy=True)
+    passenger_generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers',
+                                                   secondary='generated_carpool_passenger_links', lazy=True)
     driver_generated_carpools = db.relationship('GeneratedCarpool', back_populates='driver', lazy=True)
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='user')
     addresses = db.relationship('Address', secondary='address_user_links', back_populates='users')
@@ -286,7 +287,7 @@ class User(UserMixin, db.Model):
         """
         try:
             s = URLSafeSerializer(current_app.config['SECRET_KEY'])
-            data =  s.loads(token)
+            data = s.loads(token)
             if data[0] != self.id:
                 return False
             return True
@@ -301,8 +302,8 @@ class User(UserMixin, db.Model):
         """
         if self.team_auth_key == '0':
             return 'Not team verified'
-        return datetime.datetime.strftime(AuthKey.query.filter_by(key=self.team_auth_key).one().date_created, '%m-%d-%Y')
-
+        return datetime.datetime.strftime(AuthKey.query.filter_by(key=self.team_auth_key).one().date_created,
+                                          '%m-%d-%Y')
 
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -317,16 +318,16 @@ class User(UserMixin, db.Model):
             if EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).one().re_check_in_time is not None:
                 return True
             else:
-                return False # there is a check in, but it is checked out
-        else: # if there is not a check in for the event
+                return False  # there is a check in, but it is checked out
+        else:  # if there is not a check in for the event
             return False
 
-        
     def is_done_with_event(self, event: Event):
         """
         Returns true if the passenger is done with the event.
         """
-        return True if EventCheckIn.query.filter_by(user_id=self.id, event_id=event.index).first().check_out_time is not None else False
+        return True if EventCheckIn.query.filter_by(user_id=self.id,
+                                                    event_id=event.index).first().check_out_time is not None else False
 
     def get_event_check_in(self, event: Event):
         """
@@ -346,7 +347,7 @@ class User(UserMixin, db.Model):
                 return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
         except IndexError:
             return 'No address'
-        
+
     def get_address_line_1(self, address_number=1):
         """
         Gives the first line of the address
@@ -355,6 +356,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].address_line_1
         except IndexError:
             return None
+
     def get_address_line_2(self, address_number=1):
         """
         Gives the second line of the address
@@ -363,6 +365,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].address_line_2
         except IndexError:
             return None
+
     def get_zip_code(self, address_number=1):
         """
         Gives the zip code of the address
@@ -371,6 +374,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].zip_code
         except IndexError:
             return None
+
     def get_city(self, address_number=1):
         """
         Gives the city of the address
@@ -379,6 +383,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].city
         except IndexError:
             return None
+
     def get_state(self, address_number=1):
         """
         Gives the state of the address
@@ -387,6 +392,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].state
         except IndexError:
             return None
+
     def get_address_code(self, address_number=1):
         """
         Gives the address code of the address
@@ -395,6 +401,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].address_code
         except IndexError:
             return None
+
     def get_latitude(self, address_number=1):
         """
         Gives the latitude of the address
@@ -403,6 +410,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].latitude
         except IndexError:
             return None
+
     def get_longitude(self, address_number=1):
         """
         Gives the longitude of the address
@@ -411,13 +419,7 @@ class User(UserMixin, db.Model):
             return self.addresses[address_number - 1].longitude
         except IndexError:
             return None
-    
 
-
-
-    
-
-    
     def is_driver(self):
         """
         Returns true if the user is a driver
@@ -425,12 +427,12 @@ class User(UserMixin, db.Model):
         if self.num_seats is not None:
             return True
         return False
-    
+
     @staticmethod
     def get_by_name(full_name):
         first_name, last_name = full_name.split(' ')
         return User.query.filter_by(first_name=first_name, last_name=last_name).first()
-    
+
 
 class DistanceMatrix(db.Model):
     """
@@ -438,15 +440,16 @@ class DistanceMatrix(db.Model):
     """
     __tablename__ = 'distance_matrix'
     index = db.Column(db.Integer, primary_key=True)
-    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents one location
+    origin_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)  # represents one location
     origin = db.relationship('Address', backref='address.origin_distances', foreign_keys=[origin_id])
-    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False) # represents another location
+    destination_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)  # represents another location
     destination = db.relationship('Address', backref='address.destination_distances', foreign_keys=[destination_id])
-    seconds = db.Column(db.Float, nullable=False) # time in minutes
-    kilos = db.Column(db.Float, nullable=False) # distance in kilometers
+    seconds = db.Column(db.Float, nullable=False)  # time in minutes
+    kilos = db.Column(db.Float, nullable=False)  # distance in kilometers
 
     def __repr__(self):
         return f'DistanceMatrix: {self.origin} {self.destination}'
+
 
 class Address(db.Model):
     """
@@ -461,7 +464,8 @@ class Address(db.Model):
     zip_code = db.Column(db.String, nullable=False)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
-    code = db.Column(db.String, nullable=True, unique=True) # change these once all of the addresses are loaded in properly
+    code = db.Column(db.String, nullable=True,
+                     unique=True)  # change these once all of the addresses are loaded in properly
     destination = db.relationship('Destination', back_populates='address', uselist=False)
     users = db.relationship('User', back_populates='addresses', secondary='address_user_links')
 
@@ -493,12 +497,15 @@ class GeneratedCarpool(db.Model):
     carpool_solution_id = db.Column(db.Integer, db.ForeignKey('carpool_solutions.id'), nullable=False)
     from_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
     to_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
-    from_address = db.relationship('Address', backref=db.backref('from_generated_carpools'), foreign_keys=[from_address_id])
+    from_address = db.relationship('Address', backref=db.backref('from_generated_carpools'),
+                                   foreign_keys=[from_address_id])
     to_address = db.relationship('Address', backref=db.backref('to_generated_carpools'), foreign_keys=[to_address_id])
     driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     driver = db.relationship('User', back_populates='driver_generated_carpools', foreign_keys=[driver_id])
-    passengers = db.relationship('User', back_populates='passenger_generated_carpools', secondary='generated_carpool_passenger_links', lazy='subquery')
-    carpool_solution= db.relationship('CarpoolSolution', backref=db.backref('generated_carpools'), foreign_keys=[carpool_solution_id])
+    passengers = db.relationship('User', back_populates='passenger_generated_carpools',
+                                 secondary='generated_carpool_passenger_links', lazy='subquery')
+    carpool_solution = db.relationship('CarpoolSolution', backref=db.backref('generated_carpools'),
+                                       foreign_keys=[carpool_solution_id])
     event = db.relationship('Event', backref=db.backref('generated_carpools'), foreign_keys=[event_id], uselist=False)
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -522,16 +529,18 @@ class LegacyDriver(db.Model):
     emergency_contact_number = db.Column(db.String(), nullable=True)
     emergency_contact_relation = db.Column(db.String(), nullable=True)
     extra_information = db.Column(db.String(length=200), nullable=True)
-    student_or_parent= db.Column(db.String(), nullable=True)
+    student_or_parent = db.Column(db.String(), nullable=True)
+
 
 class GeneratedCarpoolResponse(db.Model):
     """
     Table to store the responses to generated carpools. Whenever one is created, always check to see if they all are.
     """
-    __tablename__ = 'generated_carpool_response' #TODO rename table
+    __tablename__ = 'generated_carpool_response'  # TODO rename table
     id = db.Column(db.Integer, primary_key=True)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
-    generated_carpool = db.relationship('GeneratedCarpool', backref=db.backref('generated_carpool_responses'), foreign_keys=[generated_carpool_id])
+    generated_carpool = db.relationship('GeneratedCarpool', backref=db.backref('generated_carpool_responses'),
+                                        foreign_keys=[generated_carpool_id])
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('generated_carpool_responses'), foreign_keys=[user_id])
@@ -545,14 +554,18 @@ class GeneratedCarpoolPart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     idx = db.Column(db.Integer, nullable=False)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
-    generated_carpool = db.relationship('GeneratedCarpool', backref=db.backref('generated_carpool_parts'), foreign_keys=[generated_carpool_id])
+    generated_carpool = db.relationship('GeneratedCarpool', backref=db.backref('generated_carpool_parts'),
+                                        foreign_keys=[generated_carpool_id])
     from_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
-    from_address = db.relationship('Address', backref=db.backref('from_generated_carpool_parts'), foreign_keys=[from_address_id])
+    from_address = db.relationship('Address', backref=db.backref('from_generated_carpool_parts'),
+                                   foreign_keys=[from_address_id])
     to_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
-    to_address = db.relationship('Address', backref=db.backref('to_generated_carpool_parts'), foreign_keys=[to_address_id])
+    to_address = db.relationship('Address', backref=db.backref('to_generated_carpool_parts'),
+                                 foreign_keys=[to_address_id])
     driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     driver = db.relationship('User', back_populates='driver_generated_carpool_parts', foreign_keys=[driver_id])
-    passengers = db.relationship('User', back_populates='passenger_generated_carpool_parts', secondary='generated_carpool_part_passenger_links', lazy='subquery')
+    passengers = db.relationship('User', back_populates='passenger_generated_carpool_parts',
+                                 secondary='generated_carpool_part_passenger_links', lazy='subquery')
 
 
 class CarpoolSolution(db.Model):
@@ -584,6 +597,7 @@ class EventCarpoolSignup(db.Model):
     willing_to_drive = db.Column(db.Boolean, nullable=False)
     needs_ride = db.Column(db.Boolean, nullable=False)
 
+
 class GeneratedCarpoolPassengerLink(db.Model):
     """
     Table with the links between generated carpools and passengers
@@ -591,9 +605,10 @@ class GeneratedCarpoolPassengerLink(db.Model):
     __tablename__ = 'generated_carpool_passenger_links'
     id = db.Column(db.Integer, primary_key=True)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # person who is a passenger
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # person who is a passenger
     # generated_carpool = db.relationship('GeneratedCarpool', foreign_keys=[generated_carpool_id])
     # passenger = db.relationship('Passenger', foreign_keys=[passenger_id])
+
 
 class GeneratedCarpoolPartPassengerLink(db.Model):
     """
@@ -601,10 +616,12 @@ class GeneratedCarpoolPartPassengerLink(db.Model):
     """
     __tablename__ = 'generated_carpool_part_passenger_links'
     id = db.Column(db.Integer, primary_key=True)
-    generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpool_parts.id'), nullable=False, primary_key=True)
+    generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpool_parts.id'), nullable=False,
+                                     primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, primary_key=True)
     # generated_carpool_part = db.relationship('GeneratedCarpoolPart', back_populates='generated_carpool_parts', foreign_keys=[generated_carpool_id])
     # passenger = db.relationship('Passenger', foreign_keys=[passenger_id])
+
 
 class PassengerCarpoolLink(db.Model):
     """
@@ -618,6 +635,7 @@ class PassengerCarpoolLink(db.Model):
     def __repr__(self):
         return f'UserCarpoolLink: {self.user_id} {self.carpool_id}'
 
+
 class PassengerEventLink(db.Model):
     """
     Table to link passengers that need carpools to events
@@ -629,6 +647,7 @@ class PassengerEventLink(db.Model):
 
     def __repr__(self):
         return f'UserEventLink: {self.user_id} {self.event_id}'
+
 
 class StudentAndRegion(db.Model):
     """
@@ -644,6 +663,7 @@ class StudentAndRegion(db.Model):
     def __repr__(self):
         return f'StudentAndRegion: {self.student_id} {self.region_name}'
 
+
 class AddressUserLink(db.Model):
     """
     Table to link addresses to users
@@ -654,3 +674,16 @@ class AddressUserLink(db.Model):
 
     def __repr__(self):
         return f'AddressUserLink: {self.address_id} {self.user_id}'
+
+
+class UserUserLink(db.Model):
+    """
+    Table that links users to users. Used to represent the relationships between users.
+    """
+    __tablename__ = 'user_user_links'
+    user1_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    user2_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    description = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f'UserUserLink: {self.user1_id} {self.user2_id}'

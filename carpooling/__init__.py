@@ -1,4 +1,3 @@
-import flask_sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, session
 import os
@@ -16,9 +15,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-
-
-#database_url = 'sqlite:///test.db' # for testing
+# database_url = 'sqlite:///test.db' # for testing
 
 celery = Celery(__name__)
 mail = Mail()
@@ -31,7 +28,7 @@ migrate = Migrate()
 # global tasks_
 # tasks_ = []
 
-@login_manager.user_loader # yes this is awful, im sorry i couldn't gt the takss to work any other way :(
+@login_manager.user_loader  # yes this is awful, im sorry i couldn't gt the takss to work any other way :(
 def load_user(user_id):
     global user_
     try:
@@ -39,14 +36,14 @@ def load_user(user_id):
             from carpooling.models import User as user_
             logger.info('imported User')
     except NameError as e:
-        from carpooling.models import User as user_ 
+        from carpooling.models import User as user_
         logger.info('imported User with nameerror')
 
     return user_.query.get(int(user_id))
 
 
-
 celery = Celery(__name__)
+
 
 def create_app(extra_config_settings=None):
     app = Flask(__name__)
@@ -59,7 +56,6 @@ def create_app(extra_config_settings=None):
     if extra_config_settings is not None:
         app.config.update(extra_config_settings)
 
-
     db.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
@@ -69,7 +65,7 @@ def create_app(extra_config_settings=None):
     logger.info('celery app updated')
     celery.conf.update(app.config)
     global tasks_
-    from carpooling import tasks as tasks_ # this is really weird im sorry
+    from carpooling import tasks as tasks_  # this is really weird im sorry
     logger.debug(tasks_)
     migrate.init_app(app, db)
     from .routes import register_blueprints
@@ -81,12 +77,9 @@ def create_app(extra_config_settings=None):
     register_commands(app)
 
     return app
-    
+
+
 app = create_app()
 
-
-
-#import carpooling.routes
-#from carpooling.models import User
-
-
+# import carpooling.routes
+# from carpooling.models import User

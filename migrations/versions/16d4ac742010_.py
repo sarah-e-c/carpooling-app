@@ -29,9 +29,7 @@ def upgrade():
     op.alter_column('events', 'event_name', new_column_name='name')
     op.alter_column('events', 'user_id', new_column_name='creator_id')
 
-
-
-    op.rename_table('users', 'old_users') # renaming it so the new users table can fit right in
+    op.rename_table('users', 'old_users')  # renaming it so the new users table can fit right in
 
     # defining a new users table and copying the data over
     new_users_table = op.create_table(
@@ -149,30 +147,29 @@ def upgrade():
     FROM drivers
     FULL OUTER JOIN old_users ON drivers.index = old_users.driver_id
     WHERE old_users.first_name IS NULL
-    """ # the logic here is that if the first_name is null, then the user does not exist in the old_users table, and therefore is a legacy driver
+    """
+        # the logic here is that if the first_name is null, then the user does not exist in the old_users table, and therefore is a legacy driver
     )
 
-
-
-    # moving data from the keys 
-    
+    # moving data from the keys
 
     # will fix this later
-    
+
     # getting the new foreign keys
 
     # dict -- tablename: [oldname, newname]
-    tables_to_change_foreign_keys_passengers = {'event_carpool_signups': ['passenger_id', 'user_id'], 
+    tables_to_change_foreign_keys_passengers = {'event_carpool_signups': ['passenger_id', 'user_id'],
                                                 'passenger_carpool_links': ['passenger_id', 'user_id'],
                                                 'passenger_event_links': ['passenger_id', 'user_id'],
                                                 'generated_carpool_part_passenger_links': ['passenger_id', 'user_id'],
                                                 'generated_carpool_passenger_links': ['passenger_id', 'user_id'],
                                                 }
-                    
+
     tables_to_change_foreign_keys_drivers = {'generated_carpool_parts': ['driver_id', 'driver_id'],
-                                                'generated_carpools': ['driver_id', 'driver_id'],
-                                                'carpools': ['driver_index', 'driver_index'],
-                                                }
+                                             'generated_carpools': ['driver_id', 'driver_id'],
+                                             'carpools': ['driver_index', 'driver_index'],
+                                             }
+
     # address is not included because it is turning into many to many: more on that later
 
     # changing the foreign keys
@@ -182,24 +179,22 @@ def upgrade():
                            table,
                            type_='foreignkey')
         op.add_column(table, sa.Column(f'{names[1]}', sa.Integer(), nullable=True, unique=True))
-
         op.execute(f"""
         UPDATE {table}
         SET {names[1]} = old_users.id
         FROM old_users
         WHERE {table}.{names[0]} = old_users.passenger_id
         """)
-        
+
         op.create_foreign_key(None, table, 'users', [f'{names[1]}'], ['id'])
         op.drop_column(table, 'passenger_id')
-    
 
     for table, names in tables_to_change_foreign_keys_drivers.items():
         op.drop_constraint(f'{table}_{names[0]}_fkey',
                            table,
                            type_='foreignkey')
         op.alter_column(table, names[1], new_column_name='old_column')
-        op.add_column(table, sa.Column(f'{names[1]}', sa.Integer(), nullable=True, unique=True))
+        op.add_column(table, sa.Column(f'{names[1]}', sa.Integer(), nullable=True, unique=False))
         op.execute(f"""
         UPDATE {table}
         SET {names[1]} = old_users.id
@@ -223,7 +218,6 @@ def upgrade():
         ), sa.PrimaryKeyConstraint('address_id', 'user_id'))
 
     # moving data into the links
-    
 
     # moving the address data that are not linked to a passenger into the address table
     op.alter_column('addresses', 'code', nullable=True)
@@ -260,20 +254,19 @@ def upgrade():
 
     op.drop_column('addresses', 'driver_id')
     op.drop_column('addresses', 'passenger_id')
-        # handling addresses
-
-
+    # handling addresses
 
     # moving the keys that depended on the old users table
     op.drop_constraint('generated_carpool_response_user_id_fkey', 'generated_carpool_response', type_='foreignkey')
-    op.create_foreign_key('generated_carpool_response_user_id_fkey', 'generated_carpool_response', 'users', ['user_id'], ['id'])
+    op.create_foreign_key('generated_carpool_response_user_id_fkey', 'generated_carpool_response', 'users', ['user_id'],
+                          ['id'])
     op.drop_constraint('event_sign_ups_user_id_fkey', 'event_sign_ups', type_='foreignkey')
     op.create_foreign_key('event_sign_ups_user_id_fkey', 'event_sign_ups', 'users', ['user_id'], ['id'])
     op.drop_constraint('events_user_id_fkey', 'events', type_='foreignkey')
     op.create_foreign_key('events_user_id_fkey', 'events', 'users', ['creator_id'], ['id'])
     op.drop_constraint('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', type_='foreignkey')
-    op.create_foreign_key('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', 'users', ['passenger_id'], ['id'])
-    
+    op.create_foreign_key('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', 'users',
+                          ['passenger_id'], ['id'])
 
     # dropping the tables
     op.drop_table('old_users')
@@ -283,8 +276,6 @@ def upgrade():
 
 
 def downgrade():
-
-    
     # renaming users table
     op.alter_column('events', 'date', new_column_name='event_date')
     op.alter_column('events',
@@ -295,7 +286,6 @@ def downgrade():
     op.alter_column('events', 'end_time', new_column_name='event_end_time')
     op.alter_column('events', 'name', new_column_name='event_name')
     op.alter_column('events', 'creator_id', new_column_name='user_id')
-    
 
     op.rename_table('users', 'old_users')
 
@@ -313,7 +303,7 @@ def downgrade():
         sa.Column('passenger_id', sa.Integer(), nullable=True, unique=True),
         sa.Column('driver_id', sa.Integer(), nullable=True, unique=True),
     )
-    
+
     conn = op.get_bind()
     conn.execute("""
     INSERT INTO users (id, password, first_name, last_name, team_auth_key, is_admin, pool_points)
@@ -494,19 +484,18 @@ def downgrade():
     WHERE drivers.last_name = users.last_name AND drivers.first_name = users.first_name
     """)
 
-    tables_to_change_foreign_keys_passengers = {'event_carpool_signups': ['user_id', 'passenger_id'], 
+    tables_to_change_foreign_keys_passengers = {'event_carpool_signups': ['user_id', 'passenger_id'],
                                                 'passenger_carpool_links': ['user_id', 'passenger_id'],
                                                 'passenger_event_links': ['user_id', 'passenger_id'],
                                                 'generated_carpool_part_passenger_links': ['user_id', 'passenger_id'],
                                                 'generated_carpool_passenger_links': ['user_id', 'passenger_id'],
                                                 }
-                    
-    tables_to_change_foreign_keys_drivers = {'generated_carpool_parts': ['driver_id', 'driver_id'],
-                                                'generated_carpools': ['driver_id', 'driver_id'],
-                                                'carpools': ['driver_index', 'driver_index'],
-                                                }
-    # address is not included because it is turning into many to many: more on that later
 
+    tables_to_change_foreign_keys_drivers = {'generated_carpool_parts': ['driver_id', 'driver_id'],
+                                             'generated_carpools': ['driver_id', 'driver_id'],
+                                             'carpools': ['driver_index', 'driver_index'],
+                                             }
+    # address is not included because it is turning into many to many: more on that later
 
     # changing the foreign keys
     for table, names in tables_to_change_foreign_keys_passengers.items():
@@ -524,10 +513,9 @@ def downgrade():
         ON users.passenger_id = passengers.index
         WHERE {table}.{names[0]} = users.id
         """)
-        
+
         op.create_foreign_key(None, table, 'passengers', [f'{names[1]}'], ['index'])
         op.drop_column(table, names[0])
-    
 
     for table, names in tables_to_change_foreign_keys_drivers.items():
         print('starting table', table)
@@ -549,13 +537,15 @@ def downgrade():
 
     # redoing the primary key constraints
     op.drop_constraint('generated_carpool_response_user_id_fkey', 'generated_carpool_response', type_='foreignkey')
-    op.create_foreign_key('generated_carpool_response_user_id_fkey', 'generated_carpool_response', 'users', ['user_id'], ['id'])
+    op.create_foreign_key('generated_carpool_response_user_id_fkey', 'generated_carpool_response', 'users', ['user_id'],
+                          ['id'])
     op.drop_constraint('event_sign_ups_user_id_fkey', 'event_sign_ups', type_='foreignkey')
     op.create_foreign_key('event_sign_ups_user_id_fkey', 'event_sign_ups', 'users', ['user_id'], ['id'])
     op.drop_constraint('events_user_id_fkey', 'events', type_='foreignkey')
     op.create_foreign_key('events_user_id_fkey', 'events', 'users', ['user_id'], ['id'])
     op.drop_constraint('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', type_='foreignkey')
-    op.create_foreign_key('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', 'passengers', ['passenger_id'], ['index'])
+    op.create_foreign_key('generated_carpool_response_passenger_id_fkey', 'generated_carpool_response', 'passengers',
+                          ['passenger_id'], ['index'])
 
     # handling addresses
     op.add_column('addresses', sa.Column('passenger_id', sa.Integer(), nullable=True, unique=True))
@@ -587,7 +577,6 @@ def downgrade():
     DELETE FROM addresses
     WHERE latitude IS NULL;
     """)
-    
 
     op.alter_column('addresses', 'latitude', nullable=False)
     op.alter_column('addresses', 'longitude', nullable=False)

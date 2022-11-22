@@ -113,7 +113,7 @@ def maintenance_task():
                 user.address_id = new_address.id
                 if user.num_seats is not None:
                     user.address_id = new_address.id
-                db.session.commit()
+                db_session.commit()
                 logger.info(f'identified address for user {user.id} successfully!')
         except Exception as e:
             logger.info(f'failed to identify address for user {user.id}')

@@ -297,6 +297,9 @@ def update_user_information_page():
                 current_user.addresses[0].address_line_2 = request.form['addressline2']
                 current_user.addresses[0].city = request.form['city']
                 current_user.addresses[0].zip_code = request.form['zipcode']
+                current_user.addresses[0].latitude = request.form['latitude']
+                current_user.addresses[0].longitude = request.form['longitude']
+                current_user.addresses[0].code = request.form['place_id']
                 current_user.first_name = request.form['firstname'].lower()
                 current_user.last_name = request.form['lastname'].lower()
                 current_user.email_address = request.form['email']
@@ -320,6 +323,9 @@ def update_user_information_page():
                 current_user.addresses[0].address_line_2 = request.form['addressline2']
                 current_user.addresses[0].city = request.form['city']
                 current_user.addresses[0].zip_code = request.form['zipcode']
+                current_user.addresses[0].latitude = request.form['latitude']
+                current_user.addresses[0].longitude = request.form['longitude']
+                current_user.addresses[0].code = request.form['place_id']
                 current_user.first_name = request.form['firstname'].lower()
                 current_user.last_name = request.form['lastname'].lower()
                 current_user.email_address = request.form['email']
@@ -329,6 +335,7 @@ def update_user_information_page():
                 current_user.emergency_contact_number = request.form['emergencycontact']
                 current_user.emergency_contact_relation = request.form['emergencycontactrelation']
                 db.session.commit()
+                return redirect(url_for('auth.user_profile_page'))
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template_passenger.html', message='There was an error. Please try again.', user=current_user, regions=regions)

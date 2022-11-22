@@ -1,26 +1,27 @@
-from typing import Dict
+import logging
 
-from .data_classes import Person, LocalPassenger, DRIVER_WAITING_TIME, Solution, MAX_ITER, LocalCarpool, LocalDriver
-from .general_functions import fill_distance_matrix
-from carpooling.models import Destination
 import numpy as np
 import pandas as pd
 from numpy.random import choice
 
-import logging
+from carpooling.models import Destination
+from .data_classes import Person, LocalPassenger, DRIVER_WAITING_TIME, Solution, MAX_ITER, LocalCarpool, LocalDriver
+from .general_functions import fill_distance_matrix
 
 logger = logging.getLogger(__name__)
 
 TIME_TOLERANCE_CONSTANT = 1.5
 
 
-def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, return_='all_solutions',
-                              use_placeid=True) -> dict[str, Solution] | Solution:
+def evaluate_best_solution_one_way(rsvp_list: list[Person], destination_id: int, type_: str, return_='all_solutions',
+                                   use_placeid=True) -> dict[str, Solution] | Solution:
     """
     Evaluating the best solution for a one-way event
     :param rsvp_list: the list of people who are going to the event, formatted into the Person class.
     :param destination_id: the id of the destination in the Destinations table.
+    :param type: the type of the event. Can be 'to' or 'from'.
     :param return_: the type of return value. Can be 'all_solutions' or 'best_solution'.
+    :param use_placeid: whether to use the placeid or the address id for the distance matrix.
     :return: The best found solution for the event
     """
 
@@ -28,7 +29,7 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
     solutions_dict = {}
     kilos_matrix, seconds_matrix = fill_distance_matrix(
         rsvp_list, destination_id, use_placeid=use_placeid)
-    # updating the perople with their distances
+    # updating the people with their distances
 
     destination_id = Destination.query.get(destination_id).address.id
 
@@ -111,7 +112,8 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
         solutions_dict[f'iteration_{i}'] = Solution(kilos_matrix=kilos_matrix, seconds_matrix=seconds_matrix,
                                                     all_passengers=passengers,
                                                     all_drivers=drivers,
-                                                    destination_id=destination_id)
+                                                    destination_id=destination_id,
+                                                    type_=type_)
         # while there are still viable pairs in the matrix
         logger.info('carpool_matching_frame: {}'.format(
             carpool_matching_frame))
@@ -153,8 +155,7 @@ def evaluate_best_solution_to(rsvp_list: list[Person], destination_id: int, retu
             if driver.num_seats > 0:
                 new_virtual_driver = passenger.make_virtual_driver(
                     driver, seconds_matrix.loc[driver.location_id, passenger.location_id])
-                carpool_matching_frame.loc[new_virtual_driver,
-                :] = carpool_matching_frame.loc[driver, :]
+                carpool_matching_frame.loc[new_virtual_driver, :] = carpool_matching_frame.loc[driver, :]
                 # deleting the passenger from the matrix
                 carpool_matching_frame.drop(
                     axis=1, columns=passenger, inplace=True)

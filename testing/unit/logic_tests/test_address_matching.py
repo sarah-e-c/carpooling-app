@@ -6,7 +6,7 @@ import unittest.mock as mock
 from carpooling.models import EventCarpoolSignup
 from testing.unit import client, app
 import logging
-from carpooling.logic.carpool_matching import evaluate_best_solution_to
+from carpooling.logic.carpool_matching import evaluate_best_solution_two_ways
 import json
 from carpooling.logic.carpool_matching import load_people
 from carpooling import db
@@ -45,7 +45,7 @@ def test_address_matching_to(client, app):
                 writer.writerow([signup.passenger.first_name, signup.passenger.last_name, signup.willing_to_drive, signup.needs_ride])
             string_io.seek(0)
 
-            solution = evaluate_best_solution_to(load_people(string_io), destination_id=1, use_placeid=False)
+            solution = evaluate_best_solution_one_way(load_people_with_sql(1), destination_id=1, type_='to', use_placeid=False)
         
 
     assert client.get('/').status_code == 200

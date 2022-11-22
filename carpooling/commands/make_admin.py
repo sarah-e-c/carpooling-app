@@ -4,7 +4,6 @@ from flask.cli import with_appcontext
 import click
 
 
-
 @click.command('make-admin')
 @click.argument('first_name')
 @click.argument('last_name')

@@ -1,10 +1,8 @@
 from carpooling import create_app
 from carpooling import db
-from carpooling.logic.carpool_matching import load_people, evaluate_best_solution_to
-from io import StringIO
 import logging
 
-from carpooling.logic.carpool_matching.evaluate_best_from_solution import evaluate_best_solution_from
+from carpooling.logic.carpool_matching.evaluate_best_solution_one_way import evaluate_best_solution_one_way
 from carpooling.logic.carpool_matching.general_functions import load_people_from_sql
 from carpooling.models import CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart, Event, User
 import click
@@ -23,10 +21,7 @@ def address_matching_test_command(type_):
     people = load_people_from_sql(1)
     event = Event.query.first()
     solutions = None
-    if type_ == 'to':
-        solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
-    elif type_ == 'from':
-        solutions = evaluate_best_solution_from(people, 1, use_placeid=False, return_=False)  # need to drop the addresses
+    evaluate_best_solution_one_way(people, 1, type_=type_, use_placeid=False, return_='all_solutions')  # need to drop the addresses
     logger.info(solutions)
     if type(solutions) is not list:
         solutions = {0: solutions}
@@ -71,10 +66,7 @@ def address_matching_test_command_debug_mode(type_: str):
     with app.app_context():
         people = load_people_from_sql(1)
         event = Event.query.first()
-        if type_ == 'to':
-            solutions = evaluate_best_solution_to(people, 1, use_placeid=False, return_='all_solutions')  # need to drop the addresses
-        if type_ == 'from':
-            solutions = evaluate_best_solution_from(people, 1, use_placeid=False, return_='all_solutions')  # need to drop the addresses
+        solutions = evaluate_best_solution_one_way(people, 1, type_, use_placeid=False, return_='all_solutions')  # need to drop the addresses
         # writing the solutions to the database
         for _, solution in solutions.items():
             new_solution = CarpoolSolution(

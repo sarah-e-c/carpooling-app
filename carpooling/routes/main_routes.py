@@ -4,7 +4,8 @@ Main, user-facing routes for the application
 
 from carpooling import db
 from carpooling import mail
-from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination
+from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination, \
+    GeneratedCarpool
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
@@ -456,3 +457,19 @@ def passenger_carpool_request_page(event_index, region_name):
 
 
 
+@main_blueprint.route('/user-route-summary/<carpool_index>')
+@login_required
+def view_carpool_page(carpool_index):
+    """
+    Page to view a carpool
+    """
+    carpool = GeneratedCarpool.query.get(carpool_index)
+    if carpool is None:
+        logger.info('Carpool {} not found'.format(carpool_index))
+        return redirect(url_for('main.events_page'))
+
+    # if (current_user.id != carpool.driver.id) and (current_user not in carpool.passengers):
+    #     logger.info('User {} is not authorized to view {}'.format(current_user, carpool_index))
+    #     return redirect(url_for('main.events_page')) TODO
+
+    return render_template('user_route_summary_template.html', carpool=carpool, user=current_user)

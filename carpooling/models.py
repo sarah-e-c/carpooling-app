@@ -441,6 +441,14 @@ class User(UserMixin, db.Model):
             return True
         return False
 
+    def is_confirmed_for_carpool(self, carpool_id):
+        for response in self.generated_carpool_responses:
+            if response.generated_carpool_id == carpool_id:
+                logger.debug(f'{self} is has response {response.is_accepted} to the carpool {carpool_id}')
+                return response.is_accepted
+        logger.debug(f'{self} has not responded to carpool {carpool_id}')
+        return False
+
     @staticmethod
     def get_by_name(full_name):
         first_name, last_name = full_name.split(' ')

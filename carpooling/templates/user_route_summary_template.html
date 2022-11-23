@@ -1,0 +1,282 @@
+{% extends 'bases/carrd_base.html' %}
+
+
+{% block title %}Carpools for Event {% endblock %}
+
+{% block styles %}
+<style>
+    #detailsdiv {
+        display: block;
+        position: absolute;
+        top: 20%;
+        left: 90%;
+        width: 40%;
+        height: inherit;
+        background-color: #888;
+        border-radius: 3%;
+        box-shadow: 0px 0px 5px 0px rgba(255, 225, 225, 0.75);
+        padding: 10px;
+        margin: 10px;
+        z-index: 1;
+    }
+
+    .hiddendetails {
+        display: none;
+        max-height: 0;
+    }
+
+    span.style2 {
+        color: white;
+        font-family: 'Fira Sans', sans-serif;
+        font-size: small;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        display: block;
+        margin-top: 3px;
+    }
+
+    .visibledetails:hover {
+        background-color: #AAA;
+        transition: none;
+        cursor: pointer;
+    }
+
+    .visibledetails:hover .active {
+        background-color: #888;
+        transition: none;
+        cursor: pointer;
+        transition: scale(1.1);
+    }
+
+    .hiddendetails.active {
+        background-color: #999;
+        display: block;
+        height: max-content;
+        max-height: max-content;
+    }
+
+    #mapdiv {
+        position: relative;
+        height: 700px;
+        width: 100%;
+        border-color: #fff;
+        background-color: #fff;
+    }
+
+    .buttondiv {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+{% block main %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI&callback=initMap"
+    async="false"></script>
+
+<h1 class="style1"> Carpools for {{ carpool.event.name }}</h1>
+<div id="mapdiv"></div>
+<!--- This is where the map will be rendered-->
+<div id="detailsdiv">
+    <div id="carpool{{carpool.id}}">
+        <div class="visibledetails details{{carpool.id}}" onclick="renderMap(event, '{{carpool.id}}')">
+            {%  if carpool.carpool_solution.type == 'to' %}
+            <p class="style2">{{carpool.from_address.users[0].first_name}}'s Home to
+                {{carpool.to_address.destination.name}}</p>
+            {%  elif carpool.carpool_solution.type == 'from' %}
+            <p class="style2">{{carpool.from_address.destination.name}}'s Home to
+                {{carpool.to_address.users[0].first_name}}</p>
+            {%  endif %}
+
+        </div>
+        <div class="hiddendetails details{{carpool.id}}">
+            {% for part in carpool.generated_carpool_parts %}
+            <span class="style2" class="partshowing">
+                <b>{{part.from_address.address_line_1}} {{part.to_address.city }} </b> to <b>{{part.to_address.address_line_1}} {{ part.to_address.city }}</b>
+            </span>
+            <br>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+    {%  if not user.is_confirmed_for_carpool(carpool.id) %}
+<div class="buttondiv">
+    <ul class="style1 buttons">
+        <li>
+
+            <a class="button n01" id="leftbutton"
+                href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}"><svg>
+                    <use xlink:href="#icon-b64"></use>
+                </svg>
+                <span class="label">Confirm</span>
+            </a>
+
+            <a class="button n01" id="rightbutton"
+                href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}"><svg>
+                    <use xlink:href="#icon-b64"></use>
+                </svg>
+                <span class="label">
+                    Deny
+                </span>
+            </a>
+        </li>
+    </ul>
+</div>
+    {%  else %}
+    <h3 class="style2">You have confirmed this carpool.</h3>
+        <ul class="style1 buttons">
+        <li>
+            <a class="button n01" id="leftbutton"
+                href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}"><svg>
+                    <use xlink:href="#icon-b64"></use>
+                </svg>
+                <span class="label">Cancel Carpool</span>
+            </a>
+        </li>
+        </ul>
+    {%  endif %}
+{% endblock %}
+
+{% block scripts %}
+
+
+<script>
+    console.log("starting script");
+    var map = "";
+    let rendered_carpool;
+
+
+
+    window.initMap = initMap
+
+    function initMap() {
+        window.directionsService = new google.maps.DirectionsService();
+        window.directionsRenderer = new google.maps.DirectionsRenderer();
+
+        map = new google.maps.Map(document.getElementById("mapdiv"), {
+            zoom: 6,
+            center: { lat: 41.85, lng: -87.65 },
+        });
+        directionsRenderer.setMap(map);
+        document.getElementById("submit").addEventListener("click", () => {
+            calculateAndDisplayRoute(directionsService, directionsRenderer);
+        });
+        console.log("map initialized");
+    }
+
+    function calculateAndDisplayRoute(directionsService, directionsRenderer) {
+        //const waypts = [];
+        //const checkboxArray = document.getElementById("waypoints");
+        //
+        //for (let i = 0; i < checkboxArray.length; i++) {
+        //    if (checkboxArray.options[i].selected) {
+        //        waypts.push({
+        //            location: checkboxArray[i].value,
+        //            stopover: true,
+        //        });
+        //    }
+        //}
+
+
+        directionsService
+            .route({
+                origin: 'Richmond, VA',
+                destination: 'Chicago, IL',
+                //waypoints: waypts,
+                //optimizeWaypoints: true,
+                travelMode: google.maps.TravelMode.DRIVING,
+            })
+            .then((response) => {
+                directionsRenderer.setDirections(response);
+                console.log('test request successful');
+
+                const route = response.routes[0];
+                //const summaryPanel = document.getElementById("directions-panel");
+                //
+                //summaryPanel.innerHTML = "";
+                //
+                //// For each route, display summary information.
+                //for (let i = 0; i < route.legs.length; i++) {
+                //    const routeSegment = i + 1;
+                //
+                //    summaryPanel.innerHTML +=
+                //        "<b>Route Segment: " + routeSegment + "</b><br>";
+                //    summaryPanel.innerHTML += route.legs[i].start_address + " to ";
+                //    summaryPanel.innerHTML += route.legs[i].end_address + "<br>";
+                //    summaryPanel.innerHTML += route.legs[i].distance.text + "<br><br>";
+                //}
+            })
+            .catch((e) => window.alert("Directions request failed due to " + status + e));
+    }
+
+    function renderMap(event, carpool_id) {
+
+        //toggling the visibility
+        const detailsdiv = document.getElementById('carpool' + carpool_id);
+        const hiddendetails = detailsdiv.children[1];
+        const visibledetails = detailsdiv.children[0];
+        for (let i = 0; i < document.getElementById('detailsdiv').children.length; i++) {
+            document.getElementById('detailsdiv').children[i].children[1].classList.remove('active')
+            document.getElementById('detailsdiv').children[i].children[0].classList.remove('active')
+        }
+        if (hiddendetails.classList.contains("active")) {
+            hiddendetails.classList.remove("active");
+            visibledetails.classList.remove("active");
+            console.log('deactivated the details div')
+        } else {
+            console.log('activated the details div.')
+            hiddendetails.classList.add("active");
+            visibledetails.classList.add("active");
+        }
+
+
+
+        // getting data for map
+        let http_request = new XMLHttpRequest();
+        window.directionsRenderer.setDirections({ routes: [] });
+
+        console.log('recieved request to render map');
+        http_request.open("GET", "{{url_for('internal.get_generated_carpool_data', carpool_id='CHANGETHIS')}}".replace('CHANGETHIS', carpool_id), true);
+        http_request.send();
+        http_request.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let data = JSON.parse(this.responseText);
+                console.log(data);
+
+                directionsService
+                    .route({
+                        origin: data.origin,
+                        destination: data.destination,
+                        waypoints: data.waypoints,
+                        optimizeWaypoints: false,
+                        travelMode: google.maps.TravelMode.DRIVING,
+                    })
+                    .then((response) => {
+                        directionsRenderer.setDirections(response);
+                        console.log('request was successful for map render')
+                        const route = response.routes[0];
+
+
+                    })
+                //const summaryPanel = document.getElementById("directions-panel");
+
+                rendered_carpool = carpool_id; // this is the carpool that is currently rendered
+            }
+
+            //function render_map() {
+            //    const mapdiv = document.getElementById("mapdiv");
+            //    const map = new google.maps.Map(mapdiv, {
+            //        zoom: 6,
+            //        center: { lat: 41.85, lng: -87.65 },
+            //    });
+            //    directionsRenderer.setMap(map);
+            //}
+
+
+            //window.initMap = initMap;
+        }
+    }
+
+</script>
+
+
+{% endblock %}

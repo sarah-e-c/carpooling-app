@@ -184,21 +184,20 @@
     function verify_and_submit_form(event) {
         // this function is called when the submit button is clicked
         // it verifies that the passwords match and then submits the form
-        let password = document.getElementById("password").value;
-        let confirmpassword = document.getElementById("confirmpassword").value;
-        if (password != confirmpassword) {
-            alert("Passwords do not match");
-            event.preventDefault();
-            return false;
+
+        //makes sure that the lat and long are different than the original
+        if (("{{user.addresses[0].address_line_1}}" !== addressLine1Field.value) && (parseFloat("{{ user.addresses[0].latitude }}")=== latitude)) {
+            alert("Please select an address from the dropdown")
+            return;
         }
-        else {
-            event.preventDefault();
-            console.log(latitude, longitude)
-            document.getElementById("latitude").value = latitude;
-            document.getElementById("longitude").value = longitude;
-            document.getElementById("place_id").value = place_id;
-            document.getElementById("registerform").submit();
-        }
+        event.preventDefault();
+        console.log(latitude, longitude)
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+        document.getElementById("place_id").value = place_id;
+        document.getElementById("registerform").submit();
+
+
     }
 </script>
 {% endblock %}

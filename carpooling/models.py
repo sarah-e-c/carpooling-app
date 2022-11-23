@@ -275,6 +275,18 @@ class User(UserMixin, db.Model):
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='user')
     addresses = db.relationship('Address', secondary='address_user_links', back_populates='users')
 
+    def is_signed_up_for_event(self, event_index):
+        """
+        Checks if the user is signed up for an event
+        """
+        logger.debug(f'Checking if user {self.id} is signed up for event {event_index}')
+        for signup in self.event_carpool_signups:
+            if signup.event_id == event_index:
+                logger.debug(f'User {self.id} is signed up for event {event_index}')
+                return True
+        logger.debug(f'User {self.id} is not signed up for event {event_index}')
+        return False
+
     def get_reset_password_token(self, expires_in=600):
         """
         Method to get the reset password token from the user

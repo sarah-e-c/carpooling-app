@@ -3,7 +3,8 @@ Routes that are used only for internal purposes. (Like leaving carpools). Usuall
 """
 
 from carpooling import db, mail
-from carpooling.models import Event, Carpool,  User, EventCheckIn, Destination, Address, GeneratedCarpool
+from carpooling.models import Event, Carpool, User, EventCheckIn, Destination, Address, GeneratedCarpool, \
+    EventCarpoolSignup
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
@@ -14,7 +15,6 @@ from flask_mail import Message
 from io import StringIO
 import csv
 import json
-
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -43,14 +43,16 @@ def delete_event(event_index):
     # notifying the drivers of the event
     for carpool in event_to_delete.carpools:
         if carpool.driver != None:
-            send_async_email.delay(carpool.driver.email_address, 'The event you signed up to carpool for has been deleted.', f"""
+            send_async_email.delay(carpool.driver.email_address,
+                                   'The event you signed up to carpool for has been deleted.', f"""
                     Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                     The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                     """)
 
     # notifying the passengers of the event
     for carpool in event_to_delete.carpools:
-        send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers], 'The event you had signed up for a carpool for has been deleted', f"""
+        send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers],
+                                       'The event you had signed up for a carpool for has been deleted', f"""
                 Hello passengers, \n\n
                 The event {event_to_delete.name} has been deleted by the event creator or admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
                 """)
@@ -81,7 +83,8 @@ def remove_admin(user_id):
     # checking that the person removing is of higher admin than user
     if user_to_change.is_admin >= current_user.is_admin:
         logger.info('User {} {} is of higher admin than user {} {}'.format(current_user.first_name.capitalize(
-        ), current_user.last_name.capitalize(), user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+        ), current_user.last_name.capitalize(), user_to_change.first_name.capitalize(),
+            user_to_change.last_name.capitalize()))
         return redirect(url_for('admin.manage_users_page'))
 
     if user_to_change.is_admin > 1:
@@ -145,7 +148,6 @@ def admin_delete_user(user_id):
     if user_to_delete.is_admin >= current_user.is_admin:
         return redirect(url_for('admin.manage_users_page'))
 
-
     # notifying the user that they are being deleted
     send_async_email.delay(user_to_delete.email_address, 'Your Account has been deleted', f"""
             Hello {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()}, \n\n
@@ -155,27 +157,29 @@ def admin_delete_user(user_id):
     # notifying their passengers (if any) that they are being deleted
     try:
         user_to_delete_upcoming_carpools = [
-            carpool for carpool in user_to_delete.driver_profile.carpools if carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
+            carpool for carpool in user_to_delete.driver_profile.carpools if
+            carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
     except AttributeError as e:
         logger.debug(e)
         user_to_delete_upcoming_carpools = []
 
     for carpool in user_to_delete_upcoming_carpools:
         for passenger in carpool.passengers:
-            send_async_email.delay(passenger.email_address, 'Your driver has been deleted',f"""
+            send_async_email.delay(passenger.email_address, 'Your driver has been deleted', f"""
                 Hello {passenger.first_name.capitalize()} {passenger.last_name.capitalize()}, \n\n
                 Your driver {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
-                """ )
+                """)
 
     # notifying their drivers (if any) that they are being deleted
     user_to_delete_upcoming_carpools = [
-        carpool for carpool in user_to_delete.carpools if carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
+        carpool for carpool in user_to_delete.carpools if
+        carpool.event.date > datetime.datetime.now() - datetime.timedelta(days=1)]
     for carpool in user_to_delete_upcoming_carpools:
         if carpool.driver is not None:
-            send_async_email.delay(carpool.driver.email_address, 'Your passenger has been deleted',f"""
+            send_async_email.delay(carpool.driver.email_address, 'Your passenger has been deleted', f"""
                 Hello {carpool.driver.first_name.capitalize()} {carpool.driver.last_name.capitalize()}, \n\n
                 Your passenger {user_to_delete.first_name.capitalize()} {user_to_delete.last_name.capitalize()} has been deleted by admin {current_user.first_name.capitalize()} {current_user.last_name.capitalize()}. If you believe this is an error, please contact them.
-                """ )
+                """)
 
     # deleting the user and their carpools
     if user_to_delete.driver_profile is not None:
@@ -214,7 +218,9 @@ def cancel_carpool(carpool_id):
 
     for carpool in current_user.driver_carpools:
         if str(carpool.index) == carpool_id:
-            send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers], 'Carpool Cancelled', f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
+            send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers],
+                                           'Carpool Cancelled',
+                                           f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
 
             carpool.driver = None
             carpool.driver_id = None
@@ -224,7 +230,8 @@ def cancel_carpool(carpool_id):
             return redirect(url_for('main.manage_carpools_page'))
 
     logger.debug(f'{current_user.driver}')
-    return render_template('error_template.html', main_message='Go Away', sub_message='You do not have access to cancel this carpool.', user=current_user)
+    return render_template('error_template.html', main_message='Go Away',
+                           sub_message='You do not have access to cancel this carpool.', user=current_user)
 
 
 @internal_blueprint.route('/change-carpool-destination', methods=['GET', 'POST'])
@@ -234,7 +241,8 @@ def change_carpool_destination():
     Page that allows for the change of the destination of a carpool.
     """
     if request.method == 'GET':
-        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.',
+                               user=current_user)
     else:
         logger.info('changing carpool destination')
         new_destination = request.headers['New-Carpool-Destination']
@@ -246,7 +254,8 @@ def change_carpool_destination():
         logger.info('carpool destination changed to {} by {}'.format(
             new_destination, current_user))
 
-        send_async_email_to_many.delay([passenger.email_address for passenger in current_carpool.passengers], 'Carpool Destination Changed', f"""
+        send_async_email_to_many.delay([passenger.email_address for passenger in current_carpool.passengers],
+                                       'Carpool Destination Changed', f"""
             Hello passengers of carpool for event {current_carpool.event.name}, \n\n
             The driver of the carpool has changed the destination from {old_destination} to {new_destination}. 
             Please make sure that you are ready to go to {new_destination} at the time of the carpool.
@@ -274,7 +283,6 @@ def leave_carpool(carpool_id):
     return redirect(url_for('main.manage_carpools_page'))
 
 
-
 @internal_blueprint.route('/event-checkin/<event_index>', methods=['GET', 'POST'])
 @login_required
 def event_check_in_page(event_index):
@@ -295,6 +303,7 @@ def event_check_in_page(event_index):
     db.session.add(new_event_check_in)
     db.session.commit()
     return redirect(url_for('main.event_page', event_index=event_index))
+
 
 @internal_blueprint.route('/event-checkout/<event_index>', methods=['GET', 'POST'])
 @login_required
@@ -325,10 +334,10 @@ def download_hours_csv(event_index):
     csv_content = []
     for check_in in check_ins:
         new_row = [check_in.user.first_name.capitalize(),
-        check_in.user.last_name.capitalize(),
-        check_in.check_in_time.strftime('%I:%M %p'),
-        check_in.check_out_time.strftime('%I:%M %p'),
-        str(check_in.check_out_time - check_in.check_in_time)]
+                   check_in.user.last_name.capitalize(),
+                   check_in.check_in_time.strftime('%I:%M %p'),
+                   check_in.check_out_time.strftime('%I:%M %p'),
+                   str(check_in.check_out_time - check_in.check_in_time)]
         csv_content.append(new_row)
     cw.writerows(csv_content)
     output = make_response(strio.getvalue())
@@ -348,7 +357,7 @@ def create_destination():
         return redirect(url_for('main.create_event_page'))
     # creating the destination
     new_address = Address(id=None,
-        address_line_1=request.form['addressline1'],
+                          address_line_1=request.form['addressline1'],
                           zip_code=request.form['zipcode'],
                           city=request.form['city'],
                           state=request.form['state'],
@@ -361,9 +370,8 @@ def create_destination():
 
     logger.info('Address {} created'.format(new_address))
 
-
     new_destination = Destination(name=request.form['destinationname'],
-                                    address_id=new_address.id)
+                                  address_id=new_address.id)
 
     db.session.add(new_destination)
     db.session.commit()
@@ -382,19 +390,59 @@ def get_generated_carpool_data(carpool_id):
     carpool = GeneratedCarpool.query.get(carpool_id)
 
     # checking if the person is eligible to view the carpool
-    if (carpool.driver.id != current_user.id and len([passenger for passenger in carpool.passengers if passenger.id ==current_user.id]) == 0) and not current_user.is_admin:
+    if (carpool.driver.id != current_user.id and len([passenger for passenger in carpool.passengers if
+                                                      passenger.id == current_user.id]) == 0) and not current_user.is_admin:
         return redirect(url_for('main.index'))
 
     carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),
                     'driverPhone': carpool.driver.phone_number,
                     'driverEmail': carpool.driver.email_address,
-                    'passengers': [{'passengerName': passenger.first_name.capitalize() + ' ' + passenger.last_name.capitalize()} for passenger in carpool.passengers],
+                    'passengers': [
+                        {'passengerName': passenger.first_name.capitalize() + ' ' + passenger.last_name.capitalize()}
+                        for passenger in carpool.passengers],
                     'origin': f"{carpool.from_address.address_line_1} {carpool.from_address.city} {carpool.from_address.state}",
                     'destination': f'{carpool.to_address.address_line_1} {carpool.to_address.city} {carpool.to_address.state}',
-                    'waypoints': [{'location': f'{part.to_address.address_line_1} {part.to_address.city} {part.to_address.state}', 
-                                   'stopover': True} for part in carpool.generated_carpool_parts[:-1]],
-    }
+                    'waypoints': [
+                        {'location': f'{part.to_address.address_line_1} {part.to_address.city} {part.to_address.state}',
+                         'stopover': True} for part in carpool.generated_carpool_parts[:-1]],
+                    }
     return json.dumps(carpool_data)
 
 
+@internal_blueprint.route('/create-carpool-signup/<event_index>', methods=['GET', 'POST'])
+@login_required
+def create_carpool_signup(event_index):
+    """
+    Function to sign up for a carpool event
+    """
+    if request.method == 'GET':
+        return redirect(url_for('main.event_page', event_index=event_index))
 
+    if request.method == 'POST':
+        logger.info('Passenger {} signing up for carpool event {}'.format(current_user, event_index))
+
+        willing_to_drive = request.form.get('willing_to_drive') == 'on'
+        logger.info(f'willing to drive: {willing_to_drive}, {request.form}')
+        needs_ride = request.form.get('needs_ride') == 'on'
+
+        new_signup = EventCarpoolSignup(event_id=event_index,
+                                        user_id=current_user.id,
+                                        willing_to_drive=willing_to_drive,
+                                        needs_ride=needs_ride)
+        current_user.event_carpool_signups.append(new_signup)
+        db.session.commit()
+        logger.info('Passenger {} signed up for carpool event {}'.format(current_user, event_index))
+        return redirect(url_for('main.event_page', event_index=event_index))
+
+
+@internal_blueprint.route('/cancel-carpool-signup/<event_index>', methods=['GET'])
+@login_required
+def cancel_carpool_signup(event_index):
+    """
+    Function to cancel a carpool signup
+    """
+    logger.info('Passenger {} cancelling carpool signup for event {}'.format(current_user, event_index))
+    signup = EventCarpoolSignup.query.filter_by(event_id=event_index, user_id=current_user.id).first()
+    db.session.delete(signup)
+    db.session.commit()
+    return redirect(url_for('main.event_page', event_index=event_index))

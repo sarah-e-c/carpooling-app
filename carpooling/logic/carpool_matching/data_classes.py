@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import pandas as pd
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 MAX_TIME = 90  # no more than 90 minutes of travel
@@ -79,12 +78,12 @@ class LocalPassenger:
             new_driver_history.append(item)
         # this is here because im dumb
         new_driver_history.append(old_driver.id_)
+
         return LocalDriver(id_=self.id_,
                            location_id=self.location_id,
                            num_seats=old_driver.num_seats - 1,
                            is_real_driver=False,
                            time_tolerance=old_driver.time_tolerance - time_passage,
-
                            driver_history=tuple(new_driver_history))
 
 
@@ -97,17 +96,20 @@ class LocalCarpool:
         self.passengers = []
         self.driver = driver
         self.route = [driver.location_id]
+        self.route_times = [0.0]
         self.total_time = 0
         self.location_frame = location_frame
 
     def add_passenger(self, passenger: LocalPassenger) -> None:
         """
         Adds a passenger to the carpool.
+        :param passenger: the passenger to add.
         """
         self.passengers.append(passenger)
         self.route.append(passenger.location_id)
-        self.total_time += self.calculate_time_between_locations(
-            self.route[-2], self.route[-1])
+        time_between_locations = self.calculate_time_between_locations(self.route[-2], self.route[-1])
+        self.total_time += time_between_locations + DRIVER_WAITING_TIME
+        self.route_times.append(time_between_locations)
 
     def calculate_time_between_locations(self, location_id_1: int, location_id_2: int) -> float:
         """
@@ -215,6 +217,8 @@ class Solution:
         if self.type == 'from':
             for carpool in self.carpools:
                 carpool.route = carpool.route[::-1]
+                carpool.route_times = carpool.route_times[::-1]
+
 
         total_length_utility = self.calculate_length_objective_value()
         needed_passengers_served_utility = self.calculate_needed_passengers_served_value()

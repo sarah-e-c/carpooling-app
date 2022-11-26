@@ -73,6 +73,13 @@
     async="false"></script>
 
 <h1 class="style1"> Carpools for {{ carpool.event.name }}</h1>
+    <h3 class="style2"> {{ carpool.event.date }} </h3>
+    {%   if carpool.driver == user %}
+    <h3 class="style2"> You are driving this carpool.</h3>
+    {%  else %}
+    <h3 class="style2"> You are riding in this carpool. </h3>
+    {%  endif %}
+
 <div id="mapdiv"></div>
 <!--- This is where the map will be rendered-->
 <div id="detailsdiv">
@@ -85,11 +92,8 @@
             <p class="style2">{{carpool.from_address.destination.name}}'s Home to
                 {{carpool.to_address.users[0].first_name}}</p>
             {%  endif %}
-
-        </div>
-        <div class="hiddendetails details{{carpool.id}}">
             {% for part in carpool.generated_carpool_parts %}
-            <span class="style2" class="partshowing">
+            <span class="style2 partshowing">
                 <b>{{part.from_address.address_line_1}} {{part.to_address.city }} </b> to <b>{{part.to_address.address_line_1}} {{ part.to_address.city }}</b>
             </span>
             <br>
@@ -97,6 +101,7 @@
         </div>
     </div>
 </div>
+    {# TODO add pool points calculation and reward, also show estimated arrival time and things #}
 
     {%  if not user.is_confirmed_for_carpool(carpool.id) %}
 <div class="buttondiv">
@@ -104,14 +109,14 @@
         <li>
 
             <a class="button n01" id="leftbutton"
-                href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}"><svg>
+                href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}" onclick="confirmConfirmCarpool(event)"><svg>
                     <use xlink:href="#icon-b64"></use>
                 </svg>
                 <span class="label">Confirm</span>
             </a>
 
             <a class="button n01" id="rightbutton"
-                href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}"><svg>
+                href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}" onclick="confirmDenyCarpool(event)"><svg>
                     <use xlink:href="#icon-b64"></use>
                 </svg>
                 <span class="label">
@@ -126,7 +131,7 @@
         <ul class="style1 buttons">
         <li>
             <a class="button n01" id="leftbutton"
-                href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}"><svg>
+                href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}" onclick="confirmCancelCarpool(event)"><svg>
                     <use xlink:href="#icon-b64"></use>
                 </svg>
                 <span class="label">Cancel Carpool</span>
@@ -147,6 +152,26 @@
 
 
     window.initMap = initMap
+    function confirmConfirmCarpool(event) {
+        if (!confirm("By confirming this carpool, you are confirming that you will be attending the event and that " +
+            "you will be participating in this carpool. Do you wish to continue?")) {
+            event.preventDefault();
+        }
+    }
+
+    function confirmDenyCarpool(event) {
+        if (!confirm("By denying, you are opting out of this carpool and will not be able to participate in it." +
+            "Additionally, if you were driving, the passengers will have their carpools cancelled. Do you wish to continue?")) {
+            event.preventDefault();
+        }
+    }
+
+    function confirmCancelCarpool(event) {
+        if (!confirm("By cancelling, you are opting out of this carpool and will not be able to participate in it." +
+            "Additionally, if you were driving, the passengers will have their carpools cancelled. Do you wish to continue?")) {
+            event.preventDefault();
+        }
+    }
 
     function initMap() {
         window.directionsService = new google.maps.DirectionsService();
@@ -157,9 +182,6 @@
             center: { lat: 41.85, lng: -87.65 },
         });
         directionsRenderer.setMap(map);
-        document.getElementById("submit").addEventListener("click", () => {
-            calculateAndDisplayRoute(directionsService, directionsRenderer);
-        });
         console.log("map initialized");
     }
 
@@ -212,19 +234,17 @@
 
         //toggling the visibility
         const detailsdiv = document.getElementById('carpool' + carpool_id);
-        const hiddendetails = detailsdiv.children[1];
+        //const hiddendetails = detailsdiv.children[1];
         const visibledetails = detailsdiv.children[0];
         for (let i = 0; i < document.getElementById('detailsdiv').children.length; i++) {
-            document.getElementById('detailsdiv').children[i].children[1].classList.remove('active')
+            //document.getElementById('detailsdiv').children[i].children[1].classList.remove('active')
             document.getElementById('detailsdiv').children[i].children[0].classList.remove('active')
         }
-        if (hiddendetails.classList.contains("active")) {
-            hiddendetails.classList.remove("active");
+        if (visibledetails.classList.contains("active")) {
             visibledetails.classList.remove("active");
             console.log('deactivated the details div')
         } else {
             console.log('activated the details div.')
-            hiddendetails.classList.add("active");
             visibledetails.classList.add("active");
         }
 

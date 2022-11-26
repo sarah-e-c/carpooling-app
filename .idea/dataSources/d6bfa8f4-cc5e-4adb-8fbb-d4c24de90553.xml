@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<dataSource name="test_carpooling_app_2@localhost">
+<dataSource name="test_carpooling_app@localhost">
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.43">
     <root id="1">
       <DateStyle>mdy</DateStyle>
@@ -11,7 +11,7 @@
 14020||10|c|G
 14020||10|C|G
 14020||10|T|G</Grants>
-      <IntrospectionStateNumber>12452</IntrospectionStateNumber>
+      <IntrospectionStateNumber>12475</IntrospectionStateNumber>
       <ServerVersion>14.5</ServerVersion>
       <StartupTime>1668810833</StartupTime>
       <TimeZones>true ACDT
@@ -796,9 +796,9 @@ false Z
 false Zulu
 </TimeZones>
     </root>
-    <database id="2" parent="1" name="test_carpooling_app_2">
+    <database id="2" parent="1" name="test_carpooling_app">
       <Current>1</Current>
-      <ObjectId>29750</ObjectId>
+      <ObjectId>29369</ObjectId>
       <OwnerName>sarahcrowder</OwnerName>
     </database>
     <database id="3" parent="1" name="postgres">
@@ -818,8 +818,8 @@ false Zulu
       <ObjectId>19431</ObjectId>
       <OwnerName>sarahcrowder</OwnerName>
     </database>
-    <database id="7" parent="1" name="test_carpooling_app">
-      <ObjectId>29369</ObjectId>
+    <database id="7" parent="1" name="test_carpooling_app_2">
+      <ObjectId>29750</ObjectId>
       <OwnerName>sarahcrowder</OwnerName>
     </database>
     <database id="8" parent="1" name="test_carpooling_app_3">

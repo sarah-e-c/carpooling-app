@@ -6,7 +6,7 @@
 
 {% block main %}
 
-{% if not driver_carpools and not passenger_carpools %}
+{% if not driver_carpools and not passenger_carpools and not user.driver_generated_carpools and not user.passenger_generated_carpools%}
 <h2 class="style2">You have no upcoming carpools.</h2>
 {% endif %}
 
@@ -17,7 +17,6 @@
 {% for carpool in driver_carpools%}
 <div class="regiondiv">
     <h3 class="style2">Carpool for {{carpool.event.name}} on {{carpool.event.date.strftime('%m/%d/%Y')}}</h3>
-    </p>
     <p class="style2">Departing from {{carpool.event.destination.name}}
         <br>
     Event Start Time {{carpool.event.start_time.strftime('%I:%M %p')}}
@@ -91,6 +90,106 @@ Driver: <a
     </ul>
 </div>
 {%endfor%}
+    {% if user.driver_generated_carpools %}
+    <h2 class="style2"> Carpools I'm Driving for</h2>
+        {% for carpool in user.driver_generated_carpools %}
+        <div class="regiondiv">
+            <h3 class="style2">Carpool for {{carpool.event.name}} on {{carpool.event.date.strftime('%m/%d/%Y')}}</h3>
+
+            <p class="style2">Departing from {{carpool.event.destination.name}}
+                <br>
+            Event Start Time {{carpool.event.start_time.strftime('%I:%M %p')}}
+            <br>
+            Event End Time {{carpool.event.end_time.strftime('%I:%M %p')}}
+            <br>
+            Destination: {{ carpool.destination }}
+            </p>
+            {% if carpool.passengers %}
+            <p class="style2"> Passengers
+            <ul class="style2">
+                {% for passenger in carpool.passengers %}
+                <li><p class="style2"> <a
+                        href="{{url_for('main.passenger_page', firstname=passenger.first_name, lastname=passenger.last_name )}}">
+                        {{passenger.first_name.capitalize()}} {{passenger.last_name.capitalize()}} </a>
+                    {{passenger.phone_number}}</p></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="style2">There are no passengers for this carpool.</p>
+            {% endif %}
+            {%  if user.is_confirmed_for_carpool(carpool.id) %}
+            <p class="style2">You are confirmed for this carpool. No action is required.</p>
+            {% else %}
+            <p class="style2"><b>You are not confirmed for this carpool.</b> Please view the carpool and confirm to finalize the carpool.</p>
+            {% endif %}
+            {%  if carpool.is_accepted %}
+            <p class="style2">This carpool has been confirmed by all participants!</p>
+            {% else %}
+            <p class="style2">This carpool is pending confirmation by all participants.</p>
+            {% endif %}
+
+            <div class="style1">
+                <ul id="buttons01" class="style1 buttons">
+                    <li>
+                        <a href="{{url_for('main.view_carpool_page', carpool_index=carpool.id)}}"
+                           class="button n01">
+                            <span class="label"> View Carpool </span>
+                        </a>
+                        <a href="{{url_for('internal.cancel_generated_carpool', carpool_id = carpool.index)}}"
+                            onclick="confirm_carpool_delete(event, '{{carpool.index}}')" class="button n01">
+                            <span class="label"> Cancel Carpool </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {%  if user.passenger_generated_carpools %}
+    <h2 class="style2"> Carpools I'm riding in</h2>
+    {%endif%}
+
+    {% for carpool in user.passenger_generated_carpools%}
+    <div class="regiondiv">
+    <h3 class="style2">Carpool for {{carpool.event.name}} on {{carpool.event.date.strftime('%m/%d/%Y')}}</h3>
+    <p class="style2">Departing from {{carpool.event.destination.name}}
+        <br>
+    Event Start Time {{carpool.event.start_time.strftime('%I:%M %p')}}
+    <br>
+    Event End Time {{carpool.event.end_time.strftime('%I:%M %p')}}
+    <br>
+    Destination: {{ carpool.destination }}
+    <br>
+    Driver: <a
+            href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}">
+            {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a>:
+        {{carpool.driver.phone_number}}</p>
+    <br>
+    {%  if user.is_confirmed_for_carpool(carpool.id) %}
+    <p class="style2">You are confirmed for this carpool. No action is required.</p>
+    {% else %}
+    <p class="style2"><b>You are not confirmed for this carpool.</b> Please view the carpool and confirm it to make sure you get picked up.</p>
+    {% endif %}
+    {%  if carpool.is_accepted %}
+    <p class="style2">This carpool has been confirmed by all participants!</p>
+    {% else %}
+    <p class="style2">This carpool is pending confirmation by all participants.</p>
+    {% endif %}
+
+    <ul id="buttons01" class="style1 buttons">
+                    <li>
+                        <a href="{{url_for('main.view_carpool_page', carpool_index=carpool.id)}}"
+                           class="button n01">
+                            <span class="label"> View Carpool </span>
+                        </a>
+                        <a href="{{ url_for('internal.cancel_generated_carpool', carpool_id = carpool.id)}}"
+                            onclick="confirm_carpool_leave(event, '{{carpool.index}}')" class="button n01">
+                            <span class="label"> Leave Carpool </span>
+                        </a>
+                    </li>
+                </ul>
+    </div>
+    {%endfor%}
 
 {% endblock %}
 

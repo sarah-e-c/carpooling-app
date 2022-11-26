@@ -443,8 +443,10 @@ def cancel_carpool_signup(event_index):
     """
     logger.info('Passenger {} cancelling carpool signup for event {}'.format(current_user, event_index))
     signup = EventCarpoolSignup.query.filter_by(event_id=event_index, user_id=current_user.id).first()
-    db.session.delete(signup)
-    db.session.commit()
+    if signup is not None:
+        db.session.delete(signup)
+        db.session.commit()
+        logger.info('Passenger {} cancelled carpool signup for event {}'.format(current_user, event_index))
     return redirect(url_for('main.event_page', event_index=event_index))
 
 
@@ -464,7 +466,7 @@ def confirm_carpool(carpool_id):
     db.session.add(new_response)
     db.session.commit()
 
-    # checking if all of the passengers have confirmed
+    # checking if all the passengers have confirmed
     for person in carpool.passengers:
         if len([response for response in carpool.generated_carpool_responses if
                 response.user.id == person.id and response.is_accepted]) == 0:
@@ -479,14 +481,14 @@ def confirm_carpool(carpool_id):
 
     # notify the driver
     send_async_email_to_many.delay(
-        to=[carpool.driver.email_address] + [passenger.email_address for passenger in carpool.passengers],
+        to=[passenger.email_address for passenger in carpool.passengers] + [carpool.driver.email_address],
         subject='You\'re all good to go!',
         message="""
         You're all good to go! Your carpool for {} has been confirmed by everyone. You can view the details of your carpool at the following link: {}""".format(
             carpool.event.name,
             url_for('main.manage_carpools_page', _external=True))
     )
-    return redirect(url_for('main.carpool_summary_page', carpool_id=carpool_id))
+    return redirect(url_for('main.carpool_summary_page', carpool_index=carpool_id))
 
 
 @internal_blueprint.route('/decline-carpool/<carpool_id>', methods=['GET'])
@@ -516,10 +518,9 @@ def decline_carpool(carpool_id):
                 carpool.event.name,
                 url_for('main.manage_carpools_page', _external=True))
         )
-    else:  # if they weren't the driver, then we need to notify everyone and remove them from the route
+    elif current_user in carpool.passengers:  # if they weren't the driver, then we need to notify everyone and remove them from the route
         send_async_email_to_many.delay(
-            to=[carpool.driver.email_address] + [passenger.email_address for passenger in carpool.passengers].remove(
-                current_user.email_address),
+            to=[passenger.email_address for passenger in carpool.passengers if passenger.email_address != current_user.email_address] + [carpool.driver.email_address],
             subject='{} declined the carpool.'.format(current_user.first_name.capitalize()),
             message=f"""
             {current_user.first_name.capitalize()} declined the carpool :(. Your route has been modified to reflect the
@@ -540,6 +541,8 @@ def decline_carpool(carpool_id):
         carpool.generated_carpool_parts.remove(from_address_part)
         db.session.delete(from_address_part)
         db.session.commit()
+    else:
+        logger.error('User {} is not in carpool {}'.format(current_user, carpool_id))
 
     return redirect(url_for('main.carpool_summary_page', carpool_id=carpool_id))
 
@@ -568,10 +571,12 @@ def cancel_generated_carpool(carpool_id):
         db.session.delete(carpool)
         db.session.commit()
         return redirect(url_for('main.manage_carpools_page'))
-    else:
+    elif current_user in carpool.passengers:
+        logger.info(f"passengers: {carpool.passengers}")
+        logger.debug(f"current users email addresses: {[passenger.email_address for passenger in carpool.passengers]}")
         send_async_email_to_many.delay(
-            to=[carpool.driver.email_address] + [passenger.email_address for passenger in carpool.passengers].remove(
-                current_user.email_address),
+
+            to=[carpool.driver.email_address] + [passenger.email_address for passenger in carpool.passengers if passenger.email_address != current_user.email_address],
             subject='{} declined the carpool.'.format(current_user.first_name.capitalize()),
             message=f"""
                     {current_user.first_name.capitalize()} had to leave the carpool :(. Your route has been modified to reflect the
@@ -599,4 +604,10 @@ def cancel_generated_carpool(carpool_id):
         carpool.generated_carpool_parts.remove(from_address_part)
         db.session.delete(from_address_part)
         db.session.commit()
+        logger.info('Passenger {} cancelled carpool {}'.format(current_user, carpool_id))
+        return redirect(url_for('main.manage_carpools_page'))
+    else:
+        logger.info(f"User {current_user} is not a part of carpool {carpool_id}")
+        return redirect(url_for('main.manage_carpools_page'))
+
 

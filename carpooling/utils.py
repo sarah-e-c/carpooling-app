@@ -146,3 +146,4 @@ def driver_required(function):
             return redirect(url_for('main.home_page'))
 
     return wrapper
+

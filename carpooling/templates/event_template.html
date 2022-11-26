@@ -270,7 +270,7 @@
                        </label>
                         <input type="checkbox" id="needs_ride" name="needs_ride">
                     </p>
-                    {%  if len(user.addresses > 0) %}
+                    {%  if user.addresses|length > 1 %}
                     <br>
                     <p>
                         <label for="address">

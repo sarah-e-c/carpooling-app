@@ -529,6 +529,8 @@ class GeneratedCarpool(db.Model):
                                        foreign_keys=[carpool_solution_id])
     event = db.relationship('Event', backref=db.backref('generated_carpools'), foreign_keys=[event_id], uselist=False)
     is_accepted = db.Column(db.Boolean, nullable=False, default=False)
+    from_time = db.Column(db.DateTime, nullable=False)
+    to_time = db.Column(db.DateTime, nullable=False)
 
 
 class LegacyDriver(db.Model):
@@ -580,9 +582,11 @@ class GeneratedCarpoolPart(db.Model):
     from_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
     from_address = db.relationship('Address', backref=db.backref('from_generated_carpool_parts'),
                                    foreign_keys=[from_address_id])
+    from_time = db.Column(db.DateTime, nullable=False)
     to_address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
     to_address = db.relationship('Address', backref=db.backref('to_generated_carpool_parts'),
                                  foreign_keys=[to_address_id])
+    to_time = db.Column(db.DateTime, nullable=False)
     driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     driver = db.relationship('User', back_populates='driver_generated_carpool_parts', foreign_keys=[driver_id])
     passengers = db.relationship('User', back_populates='passenger_generated_carpool_parts',
@@ -625,7 +629,7 @@ class GeneratedCarpoolPassengerLink(db.Model):
     Table with the links between generated carpools and passengers
     """
     __tablename__ = 'generated_carpool_passenger_links'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpools.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # person who is a passenger
     # generated_carpool = db.relationship('GeneratedCarpool', foreign_keys=[generated_carpool_id])
@@ -637,7 +641,7 @@ class GeneratedCarpoolPartPassengerLink(db.Model):
     Table with the links between generated carpools and passengers
     """
     __tablename__ = 'generated_carpool_part_passenger_links'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     generated_carpool_id = db.Column(db.Integer, db.ForeignKey('generated_carpool_parts.id'), nullable=False,
                                      primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, primary_key=True)

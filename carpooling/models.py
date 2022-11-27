@@ -155,7 +155,8 @@ class Event(db.Model):
     destination = db.relationship('Destination', backref=db.backref('events', lazy=True))
     destination_id = db.Column(db.Integer, db.ForeignKey('destinations.id'), nullable=True)
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='event', lazy=True)
-    needs_matching_build = db.Column(db.Boolean, default=False)
+    needs_matching_build_to = db.Column(db.Boolean, default=False)
+    needs_matching_build_from = db.Column(db.Boolean, default=False)
 
     # carpools = db.relationship('Carpool', backref='event', lazy=True)
 

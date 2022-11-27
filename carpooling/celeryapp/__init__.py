@@ -16,7 +16,6 @@ CELERY_TASK_LIST = [
 db_session = None
 celery = None
 
-
 def create_celery_app(_app=None):
     """
     Create a new Celery object and tie together the Celery config to the app's config.
@@ -40,7 +39,7 @@ def create_celery_app(_app=None):
     # if _app.config['CELERY_REDIS_USE_SSL']:
     #     broker_use_ssl = {'ssl_cert_reqs': ssl.CERT_NONE}
     #     celery.conf.update({'BROKER_USE_SSL': broker_use_ssl})
-
+    celery.__setattr__('to_add_to_session', [])
     TaskBase = celery.Task
 
     class ContextTask(TaskBase):
@@ -79,12 +78,24 @@ def create_celery_app(_app=None):
             Flask-SQLAlchemy uses create_scoped_session at startup which avoids any setup on a
             per-request basis. This means Celery can piggyback off of this initialization.
             """
+
             if _app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if not isinstance(retval, Exception):
-                    db.session.commit()
+                    with _app.app_context():
+                        for item in celery.__getattribute__('to_add_to_session'):
+                            db.session.add(item)
+                            celery.__getattribute__('to_add_to_session').remove(item)
+                        db.session.commit()
+                        db.session.remove()
+                        db.session.close_all()
+                        db.engine.dispose()
+
             # If we aren't in an eager request (i.e. Flask will perform teardown), then teardown
             if not celery.conf.CELERY_ALWAYS_EAGER:
-                db.session.remove()
+                with _app.app_context():
+                    db.session.remove()
+                    db.session.close_all()
+                    db.engine.dispose()
 
     celery.Task = ContextTask
 

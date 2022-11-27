@@ -3,6 +3,7 @@
 # An example file (env_settings_example.py) can be used as a starting point
 
 import os
+from datetime import timedelta
 
 # Application settings
 APP_NAME = "Flask-Celery-SQLAlchemy"
@@ -36,3 +37,4 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_REDIS_MAX_CONNECTIONS = 5
+CELERY_IMPORTS = ('carpooling.tasks',)

@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 from load_dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +13,7 @@ load_dotenv()
 # credit: flask/sqlalchemy/celery repository on github
 
 # DO NOT use "DEBUG = True" in production environments
-DEBUG = True
+DEBUG = bool(os.environ.get('DEBUG', False))
 
 # DO NOT use Unsecure Secrets in production environments
 # Generate a safe one with:
@@ -45,7 +47,20 @@ MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
 #     ]
 
 CELERY_BROKER_URL = os.environ['REDIS_URL']
-CELERY_BACKENT_URL = os.environ['REDIS_URL']
+CELERY_BACKEND_URL = os.environ['REDIS_URL']
 
+
+if DEBUG:
+    schedule = timedelta(seconds=10)
+else:
+    schedule = timedelta(minutes=10)
+
+CELERYBEAT_SCHEDULE = {
+    # Executes every minute for testing purposes, every 10 minutes in production
+    'periodic_task-every-minute': {
+        'task': 'maintenance_task',
+        'schedule': schedule
+    }
+}
 
 GOOGLE_API_KEY = 'asdlkfjadsflkj' # not used

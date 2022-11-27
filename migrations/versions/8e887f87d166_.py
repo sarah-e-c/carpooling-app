@@ -17,7 +17,7 @@ depends_on = None
 
 def upgrade():
     op.execute("""
-    CREATE SEQUENCE generated_carpool_part_passenger_links_id_seq;
+    CREATE SEQUENCE IF NOT EXISTS generated_carpool_part_passenger_links_id_seq;
     ALTER TABLE generated_carpool_part_passenger_links ALTER COLUMN id SET DEFAULT nextval('generated_carpool_part_passenger_links_id_seq');
     """
                )

@@ -104,7 +104,7 @@ def maintenance_task():
         db_session.commit()
 
     # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
-    problematic_users = [user for user in User.query.all() if len(user.addresses) == 0]
+    problematic_users = [user for user in User.query.all() if user.addresses[0].latitude is None]
     if len(problematic_users) > 0:
         logger.debug('found {} users with no addresses'.format(len(problematic_users)))
 

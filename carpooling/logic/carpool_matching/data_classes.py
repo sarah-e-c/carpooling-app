@@ -137,6 +137,12 @@ class Solution:
         self.total_utility_value = 0
         self.type = type_
 
+    def calculate_time_between_locations(self, location_id_1: int, location_id_2: int) -> float:
+        """
+        Calculates the time between locations.
+        """
+        return self.seconds_matrix.loc[location_id_1, location_id_2]
+
     def add_carpool(self, carpool: LocalCarpool):
         """
         Adds a carpool to the solution.
@@ -208,17 +214,18 @@ class Solution:
 
         return 1
 
-    def calculate_total_utility_value(self):
+    def calculate_total_utility_and_postprocess(self):
         """
-        Weighted sums all of the utility functions. It also does a little bit of processing based on the type.
+        Weighted sums all of the utility functions.
+        It also does a bit of processing based on the type.
         """
         for carpool in self.carpools:
             carpool.route.append(self.destination_id)  # doing this because its too much work to do it there
+            carpool.route_times.append(self.calculate_time_between_locations(carpool.route[-2], carpool.route[-1]))
         if self.type == 'from':
             for carpool in self.carpools:
                 carpool.route = carpool.route[::-1]
                 carpool.route_times = carpool.route_times[::-1]
-
 
         total_length_utility = self.calculate_length_objective_value()
         needed_passengers_served_utility = self.calculate_needed_passengers_served_value()

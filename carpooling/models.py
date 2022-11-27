@@ -532,6 +532,55 @@ class GeneratedCarpool(db.Model):
     from_time = db.Column(db.DateTime, nullable=False)
     to_time = db.Column(db.DateTime, nullable=False)
 
+    def get_carpool_pickup_time_for_user(self, user: User):
+        """
+        Returns the time the user should be picked up for this carpool
+        """
+        if user == self.driver or self.carpool_solution.type == 'from':
+            logger.debug('Carpool start time: {}'.format(self.from_time))
+            return self.from_time
+        else:  # carpool is 'to' and user is a passenger
+            try:
+                user_address_id = user.addresses[0].id
+                return \
+                    [part.from_time for part in self.generated_carpool_parts if
+                     part.from_address_id == user_address_id][0]
+            except IndexError:
+                try:
+                    user_address_id = user.addresses[1].id
+                    return [part.from_time for part in self.generated_carpool_parts if
+                            part.from_address_id == user_address_id][0]
+                finally:
+                    logger.error('Could not find a carpool part for user {} in carpool {}'.format(user, self))
+                    return None
+
+    def get_carpool_dropoff_time_for_user(self, user: User):
+        if user == self.driver or self.carpool_solution.type == 'to':
+            logger.debug(f'Carpool End Time: {self.to_time}')
+            return self.to_time
+        else:  # carpool is 'to' and user is a passenger
+            try:
+                user_address_id = user.addresses[0].id
+                return \
+                    [part.to_time for part in self.generated_carpool_parts if part.from_address_id == user_address_id][
+                        0]
+            except IndexError:
+                try:
+                    user_address_id = user.addresses[1].id
+                    return \
+                        [part.to_time for part in self.generated_carpool_parts if
+                         part.from_address_id == user_address_id][
+                            0]
+                finally:
+                    logger.error('Could not find a carpool part for user {} in carpool {}'.format(user, self))
+                    return None
+
+    def get_carpool_points(self, user: User):
+        """
+        Returns the points for this carpool
+        """
+        return 0  # TODO implement the algorithm for this -- i probably also need to add a column for the distances for this
+
 
 class LegacyDriver(db.Model):
     """

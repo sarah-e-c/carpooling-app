@@ -102,7 +102,16 @@
     </div>
 </div>
     {# TODO add pool points calculation and reward, also show estimated arrival time and things #}
-
+    <h1 class="style1">More Carpool Details</h1>
+    <h3 class="style2">Estimated Carpool Start Time {{ carpool.from_time.strftime('%-I:%M %p') }} </h3>
+    <h3 class="style2">Estimated Pickup Time {{ carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p') }}</h3>
+    <h3 class="style2">Estimated Drop-off Time {{ carpool.get_carpool_dropoff_time_for_user(user).strftime('%-I:%M %p') }}</h3>
+    <h3 class="style2">Driver: <a class="style2" href="{{ url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name) }}">{{ carpool.driver.first_name.capitalize() }} {{ carpool.driver.last_name.capitalize() }}</a></h3>
+    <h3 class="style2">Riders: </h3>
+    {% for rider in carpool.passengers %}
+    <h3 class="style2">{{ rider.first_name.capitalize() }} {{ rider.last_name.capitalize() }}</h3>
+    {% endfor %}
+    <h3 class="style2">Carpool Points For participating: {{ carpool.get_carpool_points(user) }}</h3>
     {%  if not user.is_confirmed_for_carpool(carpool.id) %}
 <div class="buttondiv">
     <ul class="style1 buttons">
@@ -125,6 +134,7 @@
             </a>
         </li>
     </ul>
+
 </div>
     {%  else %}
     <h3 class="style2">You have confirmed this carpool.</h3>
@@ -185,51 +195,6 @@
         console.log("map initialized");
     }
 
-    function calculateAndDisplayRoute(directionsService, directionsRenderer) {
-        //const waypts = [];
-        //const checkboxArray = document.getElementById("waypoints");
-        //
-        //for (let i = 0; i < checkboxArray.length; i++) {
-        //    if (checkboxArray.options[i].selected) {
-        //        waypts.push({
-        //            location: checkboxArray[i].value,
-        //            stopover: true,
-        //        });
-        //    }
-        //}
-
-
-        directionsService
-            .route({
-                origin: 'Richmond, VA',
-                destination: 'Chicago, IL',
-                //waypoints: waypts,
-                //optimizeWaypoints: true,
-                travelMode: google.maps.TravelMode.DRIVING,
-            })
-            .then((response) => {
-                directionsRenderer.setDirections(response);
-                console.log('test request successful');
-
-                const route = response.routes[0];
-                //const summaryPanel = document.getElementById("directions-panel");
-                //
-                //summaryPanel.innerHTML = "";
-                //
-                //// For each route, display summary information.
-                //for (let i = 0; i < route.legs.length; i++) {
-                //    const routeSegment = i + 1;
-                //
-                //    summaryPanel.innerHTML +=
-                //        "<b>Route Segment: " + routeSegment + "</b><br>";
-                //    summaryPanel.innerHTML += route.legs[i].start_address + " to ";
-                //    summaryPanel.innerHTML += route.legs[i].end_address + "<br>";
-                //    summaryPanel.innerHTML += route.legs[i].distance.text + "<br><br>";
-                //}
-            })
-            .catch((e) => window.alert("Directions request failed due to " + status + e));
-    }
-
     function renderMap(event, carpool_id) {
 
         //toggling the visibility
@@ -277,22 +242,10 @@
 
 
                     })
-                //const summaryPanel = document.getElementById("directions-panel");
 
                 rendered_carpool = carpool_id; // this is the carpool that is currently rendered
             }
 
-            //function render_map() {
-            //    const mapdiv = document.getElementById("mapdiv");
-            //    const map = new google.maps.Map(mapdiv, {
-            //        zoom: 6,
-            //        center: { lat: 41.85, lng: -87.65 },
-            //    });
-            //    directionsRenderer.setMap(map);
-            //}
-
-
-            //window.initMap = initMap;
         }
     }
 

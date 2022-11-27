@@ -168,7 +168,7 @@ def evaluate_best_solution_one_way(rsvp_list: list[Person], destination_id: int,
             carpool_matching_frame.drop(driver, inplace=True)
 
         # now we have to calculate the fitness of the solution
-        solutions_dict[f'iteration_{i}'].calculate_total_utility_value()
+        solutions_dict[f'iteration_{i}'].calculate_total_utility_and_postprocess()
 
     if return_ == 'all_solutions':
         return solutions_dict

@@ -152,7 +152,11 @@ Driver: <a
     {% for carpool in user.passenger_generated_carpools%}
     <div class="regiondiv">
     <h3 class="style2">Carpool for {{carpool.event.name}} on {{carpool.event.date.strftime('%m/%d/%Y')}}</h3>
+    {%  if carpool.carpool_solution.type == 'from' %}
     <p class="style2">Departing from {{carpool.event.destination.name}}
+{% else %}
+    <p class="style2">Going to {{carpool.event.destination.name}}
+{% endif %}
         <br>
     Event Start Time {{carpool.event.start_time.strftime('%I:%M %p')}}
     <br>

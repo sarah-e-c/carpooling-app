@@ -34,23 +34,36 @@ def address_matching_test_implementation(type_: str):
 
     solutions = evaluate_best_solution_one_way(people, 1, type_, use_placeid=False,
                                                return_='all_solutions')  # need to drop the addresses
-    # calculating all the times needed
+    # calculating all the specific times
     for _, solution in solutions.items():
-        total_time = 0
-        route_specific_times = []
-        last_time = event.start_time
-        for carpool in solution.carpools:  # lol i love for loops
-            for i, route in enumerate(carpool.route[::-1]):
-                route_specific_times.append(last_time - datetime.timedelta(
-                    seconds=carpool.route_times[len(carpool.route_times) - 1 - i]) - datetime.timedelta(minutes=DRIVER_WAITING_TIME))
-                last_time = route_specific_times[-1]
+        if solution.type == 'to':
+            for carpool in solution.carpools:
+                route_specific_times = [event.start_time]
+                last_time = event.start_time
+                for i, route in enumerate(carpool.route[::-1]):
+                    driver_waiting_time_taken = datetime.timedelta(minutes=DRIVER_WAITING_TIME)
+                    last_route_time_taken = datetime.timedelta(seconds=carpool.route_times[
+                        len(carpool.route_times) - 1 - i])  # Google Maps gives seconds for some reason
+                    route_specific_times.append(last_time - driver_waiting_time_taken - last_route_time_taken)
+                    last_time = route_specific_times[-1]
+                route_specific_times = route_specific_times[::-1]
+                carpool.__setattr__('route_specific_times', route_specific_times)
 
-            route_specific_times = route_specific_times[::-1]
-            carpool.__setattr__('route_specific_times', route_specific_times)
-        solution.__setattr__('total_time', total_time)
+        elif solution.type == 'from':
+            for carpool in solution.carpools:
+                route_specific_times = [event.end_time]
+                last_time = event.end_time
+                for i, route in enumerate(carpool.route):
+                    driver_waiting_time_taken = datetime.timedelta(minutes=DRIVER_WAITING_TIME)
+                    last_route_time_taken = datetime.timedelta(seconds=carpool.route_times[i])
+                    route_specific_times.append(last_time + driver_waiting_time_taken + last_route_time_taken)
+                    last_time = route_specific_times[-1]
+
+                carpool.__setattr__('route_specific_times', route_specific_times)
 
     # writing the solutions to the database
-    for _, solution in solutions.items():
+    for name, solution in solutions.items():
+        logger.debug(f'Writing solution {name} to the database')
         new_solution = CarpoolSolution(
             utility_value=solution.total_utility_value,
             event_id=event.index,
@@ -72,7 +85,6 @@ def address_matching_test_implementation(type_: str):
                 to_time=carpool.route_specific_times[-1],
             )
             for passenger in carpool.passengers:
-                logger.debug("adding passenger to carpool")
                 new_carpool.passengers.append(User.query.get(passenger.id_))
             db.session.add(new_carpool)
             for i in range(len(carpool.route) - 1):

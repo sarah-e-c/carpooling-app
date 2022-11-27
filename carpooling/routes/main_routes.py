@@ -155,7 +155,9 @@ def create_event_page():
             'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
             'description': request.form['eventdescription'],
             'creator_id': current_user.id,
-            'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id
+            'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,
+            'needs_matching_build_to': bool(request.form.get('needsmatchingbuildto', False)),
+            'needs_matching_build_from': bool(request.form.get('needsmatchingbuildfrom', False)),
         }
 
         try:

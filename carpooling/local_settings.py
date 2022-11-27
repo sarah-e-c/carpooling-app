@@ -25,8 +25,6 @@ SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL'].replace('postgres://', 'pos
 SQLALCHEMY_TRACK_MODIFICATIONS = False    # Avoids a SQLAlchemy Warning
 
 # Flask-Mail settings
-# For smtp.gmail.com to work, you MUST set "Allow less secure apps" to ON in Google Accounts.
-# Change it in https://myaccount.google.com/security#connectedapps (near the bottom).
 MAIL_SERVER = 'smtp.zoho.com'
 MAIL_PORT = 587
 MAIL_USE_SSL = False

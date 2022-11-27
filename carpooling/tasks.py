@@ -100,8 +100,7 @@ def maintenance_task():
     if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(
             days=28):
         new_auth_key = AuthKey(key=secrets.token_hex(4))
-        db_session.session.add(new_auth_key)
-        db_session.commit()
+        celery.__getattribute__('to_add_to_session').append(new_auth_key)
 
     # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
     problematic_users = [user for user in User.query.all() if user.addresses[0].latitude is None]
@@ -121,14 +120,8 @@ def maintenance_task():
                                       place_id=source.json()['results'][0]['place_id'],
                                       city=user.get_city(),
                                       state='VA', )
-                db_session.add(new_address)
-                db_session.commit()
-                # TODO this doesn't work with the new address model
-
-                user.address_id = new_address.id
-                if user.num_seats is not None:
-                    user.address_id = new_address.id
-                db_session.commit()
+                celery.__getattribute__('to_add_to_session').append(new_address)
+                user.addresses[0] = new_address
                 logger.info(f'identified address for user {user.id} successfully!')
         except Exception as e:
             logger.info(f'failed to identify address for user {user.id}')

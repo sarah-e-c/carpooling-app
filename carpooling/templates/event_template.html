@@ -73,7 +73,7 @@
 
 <div class="tabbar">
     <div class="tab">
-        <button class="tablinks activetab" onclick="openTab(event, 'event_signup_div')">Sign Up</button>
+        <!--<button class="tablinks activetab" onclick="openTab(event, 'event_signup_div')">Sign Up</button> -->
         <button class="tablinks" onclick="openTab(event, 'signup')">Check In</button>
         <button class="tablinks" onclick="openTab(event, 'carpool')">Carpool</button>
     </div>
@@ -193,7 +193,8 @@
     {% endif %}
 </div>
 
-<div class="sign_up_div tabcontent" id="signup">
+
+<div class="sign_up_div tabcontent" style="display:block" id="signup">
     <div class="style1">
         <h3 class="style2">Check in Details</h3>
         {% if user.is_authenticated %}
@@ -232,7 +233,7 @@
 </div>
 
 
-
+<!--
 <div class="event_signup_div tabcontent" id="event_signup_div" style="display:block" id="signup">
     <div class="style1">
         <h3 class="style2">Sign up for Event</h3>
@@ -307,7 +308,7 @@
         </ul>
     </div>
 </div>
-
+-->
 {% endblock %}
 
 {% block scripts %}

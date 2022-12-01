@@ -538,7 +538,6 @@ class GeneratedCarpool(db.Model):
         Returns the time the user should be picked up for this carpool
         """
         if user == self.driver or self.carpool_solution.type == 'from':
-            logger.debug('Carpool start time: {}'.format(self.from_time))
             return self.from_time
         else:  # carpool is 'to' and user is a passenger
             try:

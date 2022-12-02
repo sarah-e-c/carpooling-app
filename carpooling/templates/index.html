@@ -87,8 +87,8 @@
 
                         <p class="card-text" style="margin: 0px;">You are driving for this carpool.
                             <br>Date: {{ carpool.event.start_time.strftime('%b %d') }}
-                            <br>Carpool Start Time: {{ carpool.from_time.strftime('%H:%M %p') }}
-                            <br>Carpool Drop-off Time: {{ carpool.to_time.strftime('%H:%M %p') }}
+                            <br>Carpool Start Time: {{ carpool.from_time.strftime('%I:%M %p') }}
+                            <br>Carpool Drop-off Time: {{ carpool.to_time.strftime('%I:%M %p') }}
                             <br>Passengers:<br></p>
                         <ul style="padding: 0px 0px 0px 32px;">
                             {% for passenger in carpool.passengers %}
@@ -110,8 +110,8 @@
                             </svg></div>
                         <h4 class="card-title">{{ carpool.event.name }}</h4>
                         <p class="card-text" style="margin: 0px;">You are riding in this carpool.
-                            <br>Carpool Pick Up Time: {{ carpool.get_carpool_pickup_time_for_user(user) }}
-                            <br>Carpool Drop-off Time: {{ carpool.get_carpool_dropoff_time_for_user(user) }}
+                            <br>Carpool Pick Up Time: {{ carpool.get_carpool_pickup_time_for_user(user).strftime('%I:%M %p') }}
+                            <br>Carpool Drop-off Time: {{ carpool.get_carpool_dropoff_time_for_user(user).strftime('%I:%M %p') }}
                             <br>Driver:&nbsp;<a href="{{ url_for('main.driver_page', lastname=carpool.driver.last_name, firstname=carpool.driver.first_name) }}">
                                 {{ carpool.driver.first_name.capitalize() }} {{ carpool.driver.last_name.capitalize() }}</a><br>Other passengers:<br></p>
                         <ul style="padding: 0px 0px 0px 32px;">
@@ -151,8 +151,8 @@
                                 <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"></path>
                             </svg></div>
                         <h4 class="card-title">{{ event.name }}</h4>
-                        <p class="card-text">{{ event.description }}<br><br>Start Time: {{ event.start_time.strftime('%H:%M %p') }}
-                            <br>End Time: {{ event.end_time.strftime('%H:%M 5p') }}<br>Carpools will be scheduled <strong><span style="text-decoration: underline;">{{ event.get_carpool_type_string() }}</span> </strong>this event. View to sign up or check in!<br></p><a href="{{ url_for('main.event_page', event_index=event.index) }}"><button class="btn btn-primary" type="button">View<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-arrow-right">
+                        <p class="card-text">{{ event.description }}<br><br>Start Time: {{ event.start_time.strftime('%I:%M %p') }}
+                            <br>End Time: {{ event.end_time.strftime('%I:%M 5p') }}<br>Carpools will be scheduled <strong><span style="text-decoration: underline;">{{ event.get_carpool_type_string() }}</span> </strong>this event. View to sign up or check in!<br></p><a href="{{ url_for('main.event_page', event_index=event.index) }}"><button class="btn btn-primary" type="button">View<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-arrow-right">
                         <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"></path>
                     </svg></button></a>
                     </div>

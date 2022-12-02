@@ -199,7 +199,7 @@
         <h3 class="style2">Check in Details</h3>
         {% if user.is_authenticated %}
         {% if user.is_checked_in_for_event(event) %}
-        <h4 class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%H:%M') }}</h4>
+        <h4 class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%I:%M') }}</h4>
         {% endif %}
         {% endif %}
 

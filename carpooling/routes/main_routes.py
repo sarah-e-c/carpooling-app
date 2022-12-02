@@ -164,8 +164,8 @@ def create_event_page():
         event_info = {
             'name': request.form['eventname'],
             'date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
-            'start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
-            'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
+            'start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%I:%M %p'),
+            'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%I:%M %p'),
             'description': request.form['eventdescription'],
             'creator_id': current_user.id,
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,

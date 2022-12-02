@@ -45,7 +45,7 @@ def manage_users_page():
 
 @admin_blueprint.route('/view-checkins')
 @admin_required
-def view_checkins():
+def view_checkins_page():
     """
     Function to view all the check ins.
     """

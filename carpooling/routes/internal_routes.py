@@ -15,6 +15,7 @@ from flask_mail import Message
 from io import StringIO
 import csv
 import json
+from werkzeug.security import generate_password_hash
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -611,3 +612,42 @@ def cancel_generated_carpool(carpool_id):
         return redirect(url_for('main.manage_carpools_page'))
 
 
+@internal_blueprint.route('/register_new_user', methods=['POST'])
+def register_new_user():
+    def valid(s: str) -> str | None:
+        return s if s else None
+
+    address = Address(
+        address_line_1=request.form['addressline1'],
+        address_line_2=request.form['addressline2'],
+        city=request.form['city'],
+        state='VA',
+        zip_code=request.form['zipcode'],
+        latitude=request.form['latitude'],
+        longitude=request.form['longitude'],
+        code=request.form['placeid']
+    )
+
+    new_user = User(
+        first_name=request.form['firstname'].lower(),
+        last_name=request.form['lastname'].lower(),
+        email_address=request.form['email'],
+        phone_number=request.form['phonenumber'],
+        team_auth_key='0',
+        region_name=request.form['regionname'],
+        car_type_1=valid(request.form['cartype1']),
+        car_type_2=valid(request.form['cartype2']),
+        car_color_1=valid(request.form['carcolor1']),
+        car_color_2=valid(request.form['carcolor2']),
+        emergency_contact_number=request.form['emergencycontact'],
+        emergency_contact_relation=request.form['emergencycontactrelation'],
+        num_years_with_license = valid(request.form['numyearswithlicense']),
+        extra_information=request.form['note'],
+        num_seats=valid(request.form['numberofseats']),
+        student_or_parent=valid(request.form['studentorparent']),
+        password=generate_password_hash(request.form['password'])
+    )
+
+    db.session.add(new_user)
+    # db.session.commit()
+    return redirect(url_for('main.home_page'))

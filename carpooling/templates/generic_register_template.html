@@ -1,47 +1,400 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 {% block title %}Register for Mech Tech Dragons Carpooling{% endblock %}
 
 {% set active_page='register' %}
 
 {% block main %}
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
+    <section id='firstsection' class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-md-8 col-xl-6 text-center mx-auto">
+                    <h2 style="font-family: ostrich_sansheavy;color: var(--bs-link-color);font-size: 64.632px;">Register</h2>
+                    <p class="w-lg-50">Register now!</p>
+                </div>
+            </div>
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+                    <div class="card mb-5">
+                        <div class="card-body shadow d-flex flex-column align-items-center">
+                            <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-person">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"></path>
+                                </svg></div>
+                            <form class="text-center" id="firstForm" onsubmit="fakeSubmit(event, 'firstForm')">
+                                <div class="mb-3"><input class="form-control" type="email" name="email" placeholder="Email" required></div>
+                                <div class="mb-3"><input class="form-control" id="inputpassword" type="password" name="password" placeholder="Password" required></div>
+                                <div class="mb-3"><input class="form-control" id="inputconfirmpassword" type="password" name="password" placeholder="Confirm Password" required></div>
+                                <div class="mb-3"><select class="form-select" id="passengerordriver" name="passengerordriver">
+                                        <optgroup label="Select">
+                                            <option value="12">Passenger</option>
+                                            <option value="14">Driver</option>
+                                        </optgroup>
+                                    </select></div>
+                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  onclick="renderRoleSpecificForm(event)" type="button">Register</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="driversection" class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%); display: none;">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h2 style="font-family: ostrich_sansheavy;color: var(--bs-link-color);font-size: 64.632px;">Driver Information</h2>
+                <p class="w-lg-50">Just a little bit more information to complete your registration...</p>
+            </div>
+        </div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="card mb-5">
+                    <div class="card-body shadow d-flex flex-column align-items-center">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg class="bi bi-person" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"></path>
+                            </svg></div>
+                        <form class="text-center" method="post" id="driverForm">
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="First Name" name="firstname" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Last Name" name="lastname" required /></div>
+                            <div class="mb-3"><input class="form-control" type="tel" name="phonenumber" placeholder="Phone Number" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Number" name="emergencycontact" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Relation" name="emergencycontactrelation" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Primary Car Type" name="cartype1" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Primary Car Color" name="carcolor1" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Secondary Car Type" name="cartype2" /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Secondary Car Color" name="carcolor2" /></div>
+                            <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
+                                    <optgroup label="Region">
+                                        {% for region in regions %}
+                                        <option value="{{ region.name }}">{{ region.name }}</option>
+                                        {%  endfor %}
+                                    </optgroup>
+                                </select></div>
+                            <div class="mb-3"><label class="form-label" name="studentorparent">Student or Parent</label><select class="form-select">
+                                    <optgroup label="Region">
+                                        <option value="12">Student</option>
+                                        <option value="14">Parent</option>
+                                    </optgroup>
+                                </select></div>
+                            <div class="mb-3"><label class="form-label" for="Number of Available Seats" name="numberofseats">Number of Available Seats</label><input class="form-control" type="number" /></div>
+                            <div class="mb-3"><label class="form-label" for="Years with License" name="numyearswithlicense">Years With License</label><input class="form-control" type="number" /></div>
 
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
-    </span>
-</div>
-<h1 id="text01" class="style1">Mech Tech Dragons Carpooling</h1>
-<hr id="divider02" class="style1">
-<div id="text02" class="style2">
-    <p class="style2">
-        Would you like to register a passenger or a driver?<br>
-        (If you have your license, it is recommended that you sign up as a driver. You don't have to drive if you don't want to.)
-    </p>
-</div>
-<ul id="buttons01" class="style1 buttons">
-    <li>
-        <a href="{{url_for('auth.register_new_driver_page')}}" class="button n01">
-            <svg>
-                <use xlink:href="#icon-b64"></use>
-            </svg>
-            <span class="label">Driver</span>
-        </a>
-        <a href="{{url_for('auth.register_passenger_page')}}" class="button n01">
-            <svg>
-                <use xlink:href="#icon-b64"></use>
-            </svg>
-            <span class="label">Passenger</span>
-        </a>
-        <br>
-        <a href="{{url_for('auth.legacy_driver_to_login_page')}}" class="button n01">
-            <svg>
-                <use xlink:href="#icon-b64"></use>
-            </svg>
-            <span class="label">I already registered as a driver</span>
-        </a>
-    
-    </li>
-</ul>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Note" name="note"/></div>
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" onclick="renderAddressForm(event)" type="button">Continue</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <section class="position-relative py-4 py-xl-5" id="passengersection" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%); display: none;">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h2 style="font-family: ostrich_sansheavy, sans-serif;color: var(--bs-link-color);font-size: 64.632px;">Passenger Information</h2>
+                <p class="w-lg-50">Just a little bit more information to complete your registration...</p>
+            </div>
+        </div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="card mb-5">
+                    <div class="card-body shadow d-flex flex-column align-items-center">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg class="bi bi-person" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"></path>
+                            </svg></div>
+                        <form class="text-center" id="passengerForm" method="post">
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="First Name" name="firstname" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Last Name" name="lastname" required /></div>
+                            <div class="mb-3"><input class="form-control" type="tel" name="phonenumber" placeholder="Phone Number" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Number" name="emergencycontact" required /></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Relation" name="emergencycontactrelation" required /></div>
+                            <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
+                                    <optgroup label="Region">
+                                        {% for region in regions %}
+                                        <option value="{{ region.name }}">{{ region.name }}</option>
+                                        {%  endfor %}
+                                    </optgroup>
+                                </select></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Note" name="note"/></div>
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" onclick="renderAddressForm(event)">Continue</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <section id="addresssection" class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%); display: none;">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h2 style="font-family: ostrich_sansheavy;color: var(--bs-link-color);font-size: 64.632px;">Finish Registration</h2>
+                <p class="w-lg-50">Fill in address information to complete your registration! This will allow for us to coordinate carpooling services and more.</p>
+            </div>
+        </div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="card mb-5">
+                    <div class="card-body shadow d-flex flex-column align-items-center">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg class="bi bi-house" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"></path>
+                                <path fill-rule="evenodd" d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z"></path>
+                            </svg></div>
+                        <form class="text-center" id="addressForm" onsubmit="return false">
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Address Line 1" name="addressline1" required id="inputaddressline1"/></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Address Line 2" name="addressline2" id="inputaddressline2" /></div>
+                            <div class="mb-3"><input class="form-control" type="text" name="city" placeholder="City" required id="inputcity"/></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="State" name="state" required id="inputstate"/></div>
+                            <div class="mb-3"><input class="form-control" type="text" placeholder="Zip Code" name="zipcode" required id="inputzipcode"/></div>
 
-{% endblock %}
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" onclick="submitForm()">Finish Registration</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <form id="submitForm" method="POST" action="{{ url_for('internal.register_new_user') }}" style="display:none">
+        <input type="hidden" required name="email" id="email">
+        <input type="hidden" required name="firstname" id="firstname">
+        <input type="hidden" required name="lastname" id="lastname">
+        <input type="hidden" required name="password" id="password">
+        <input type="hidden" required name="phonenumber" id="phonenumber">
+        <input type="hidden" required name="emergencycontact" id="emergencycontact">
+        <input type="hidden" required name="emergencycontactrelation" id="emergencycontactrelation">
+        <input type="hidden" name="cartype1" id="cartype1">
+        <input type="hidden" name="carcolor1" id="carcolor1">
+        <input type="hidden" name="cartype2" id="cartype2">
+        <input type="hidden" name="carcolor2" id="carcolor2">
+        <input type="hidden" name="numberofseats" id="numberofseats">
+        <input type="hidden" required name="regionname" id="regionname">
+        <input type="hidden" required name="addressline1" id="addressline1">
+        <input type="hidden" name="addressline2" id="addressline2">
+        <input type="hidden" required name="city" id="city">
+        <input type="hidden" required name="zipcode" id="zipcode">
+        <input type="hidden" name="studentorparent" id="studentorparent">
+        <input type="hidden" name="note" id="note">
+        <input type="hidden" name="numyearswithlicense" id="numyearswithlicense">
+
+    <input type="hidden" required name="state" id="state">
+    <input type="hidden" required name="latitude" id="latitude">
+    <input type="hidden" required name="longitude" id="longitude">
+    <input type="hidden" required name="placeid" id="placeid">
+    <input type="submit"/>
+
+    </form>
+
+{% endblock main %}
+
+{%  block scripts %}
+    <script>
+    let roleSelector = document.getElementById('passengerordriver');
+
+    let autocomplete = google.maps.places.Autocomplete;
+    let addressLine1Field = document.getElementById("inputaddressline1");
+    let addressLine2Field = document.getElementById("inputaddressline2");
+    let zipCodeField = document.getElementById("inputzipcode");
+    let cityField = document.getElementById("inputcity");
+    let stateField = document.getElementById('inputstate')
+
+    let latitude; // making these global so we can use them in the submit function without having to be in the form
+    let longitude;
+    let place_id;
+
+    initAutocomplete()
+
+    function initAutocomplete() {
+        console.log("initAutocomplete")
+
+
+      // Create the autocomplete object, restricting the search predictions to
+      // addresses in the US
+      autocomplete = new google.maps.places.Autocomplete(addressLine1Field, {
+        componentRestrictions: { country: ["us"] },
+        fields: ["address_components", "geometry", "place_id"],
+        types: ["address"],
+      });
+
+      addressLine1Field.focus();
+      console.log("autocomplete initialized")
+
+      // When the user selects an address from the drop-down, populate the
+      // address fields in the form.
+      autocomplete.addListener("place_changed", fillInAddress);
+    }
+
+    function fillInAddress() {
+        // Get the place details from the autocomplete object.
+        const place = autocomplete.getPlace();
+        let address1 = "";
+        let postcode = "";
+        let city = "";
+        let state = "";
+
+        // Get each component of the address from the place details,
+        // and then fill-in the corresponding field on the form.
+        // place.address_components are google.maps.GeocoderAddressComponent objects
+        // which are documented at http://goo.gle/3l5i5Mr
+        console.log(place.address_components)
+        for (var i = 0; i < place.address_components.length; i++) {
+          // @ts-ignore remove once typings fixed
+          let component = place.address_components[i];
+          const componentType = component.types[0];
+
+
+          switch (componentType) {
+            case "street_number": {
+              address1 = `${component.long_name} ${address1}`;
+              break;
+            }
+            case "route": {
+              address1 += component.short_name;
+              break;
+            }
+            case "locality": {
+                city = component.long_name;
+                break;
+            }
+            case "postal_code": {
+              postcode = `${component.long_name}${postcode}`;
+              break;
+            }
+            case "administrative_area_level_1": {
+                state = component.short_name
+                break;
+            }
+          }
+        }
+
+        addressLine1Field.value = address1;
+        zipCodeField.value = postcode;
+        cityField.value = city;
+        latitude = place.geometry.location.lat();
+        longitude = place.geometry.location.lng();
+        place_id = place.place_id;
+        stateField.value = state;
+        console.log(latitude, longitude)
+        console.log(place_id)
+        document.getElementById("addressline2").focus() // focusing the cursor on address line 2
+      }
+
+
+
+    function confirmPasswordsEqual() {
+        return document.getElementById('inputpassword').value === document.getElementById('inputconfirmpassword').value;
+         // help
+    }
+
+
+    function renderRoleSpecificForm(event) {
+        console.log('attempting to render the passenger or driver page.')
+        if (!confirmPasswordsEqual()) {
+            alert('Passwords must match.');
+            event.preventDefault();
+            return
+        }
+
+        let firstForm = document.getElementById('firstForm')
+        if (!firstForm.reportValidity()) {
+            event.preventDefault()
+            return
+        }
+
+        document.getElementById('firstsection').style.display = 'none';
+
+        if (roleSelector.options[roleSelector.selectedIndex].text === 'Passenger') {
+            document.getElementById('passengersection').style.display = 'block';
+
+        } else { // person is a driver
+            document.getElementById('driversection').style.display = 'block';
+        }
+
+    }
+    function renderAddressForm(event) {
+        console.log('attempting to render address form');
+        let roleForm;
+        let roleSection;
+        if (roleSelector.options[roleSelector.selectedIndex].text === 'Passenger') {
+            roleForm = document.getElementById('passengerForm');
+            roleSection = document.getElementById('passengersection');
+        } else {
+            roleForm = document.getElementById('driverForm');
+            roleSection = document.getElementById('driversection');
+        }
+
+        if (!roleForm.reportValidity()) {
+            event.preventDefault();
+            return;
+        }
+
+        roleSection.style.display = 'none';
+        document.getElementById('addresssection').style.display = 'block';
+    }
+
+    function fakeSubmit(event, formId) {
+        let form = document.getElementById(formId);
+        if (!form.reportValidity()) {
+            event.preventDefault()
+        }
+        return false
+    }
+
+
+    function submitForm() {
+        // checking whether user is a passenger or a driver
+
+        let firstForm = document.getElementById('firstForm');
+        for (let i=0; i<firstForm.length; i++) {
+            //setting the value of the submit form to the value of the filled out form
+            console.log(i)
+            let inputName = firstForm.children[i].firstElementChild.getAttribute("name");
+            if (inputName != null) {
+                document.getElementById(inputName).value = firstForm.children[i].firstElementChild.value;
+            }
+        }
+
+        let roleSpecificForm;
+        if (roleSelector.options[roleSelector.selectedIndex].text === 'Passenger') {
+            roleSpecificForm = document.getElementById('passengerForm');
+        } else {
+            roleSpecificForm = document.getElementById('driverForm');
+        }
+        // adding the address elements to the form
+        for (let i=0; i<roleSpecificForm.length; i++) {
+            console.log(i);
+            let inputName = roleSpecificForm.children[i].firstElementChild.getAttribute("name");
+            console.log(inputName)
+            if (inputName != null) {
+                document.getElementById(inputName).value = roleSpecificForm.children[i].firstElementChild.value;
+            } else {
+                break;
+            }
+            if (document.getElementById(inputName).value === 'undefined') {
+                console.log("found a selection element!")
+                console.log(roleSpecificForm.children[i].children[1].options[roleSpecificForm.children[i].children[1].selectedIndex].text)
+                document.getElementById(inputName).value = roleSpecificForm.children[i].children[1].options[roleSpecificForm.children[i].children[1].selectedIndex].text
+            }
+        }
+
+
+        // loading the addresses data into the hidden form
+        let addressForm = document.getElementById('addressForm')
+        for (let i=0; i<addressForm.length; i++) {
+            let inputName = addressForm.children[i].firstElementChild.getAttribute("name");
+            console.log(inputName);
+            console.log(i);
+            if (inputName != null) {
+                document.getElementById(inputName).value = roleSpecificForm.children[i].firstElementChild.value;
+            }
+        }
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+        document.getElementById("placeid").value = place_id;
+        document.getElementById('submitForm').submit()
+    }
+    </script>
+
+{%  endblock scripts %}

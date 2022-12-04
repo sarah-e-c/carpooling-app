@@ -471,5 +471,5 @@ def generic_register_page():
     """
     Page that points to driver or passenger registration
     """
-    return render_template('generic_register_template.html', user=current_user)
+    return render_template('generic_register_template.html', user=current_user, regions=Region.query.all())
 

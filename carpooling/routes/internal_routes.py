@@ -8,7 +8,7 @@ from carpooling.models import Event, Carpool, User, EventCheckIn, Destination, A
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
-from flask import render_template, request, redirect, url_for, Blueprint, make_response
+from flask import render_template, request, redirect, url_for, Blueprint, make_response, jsonify
 import datetime
 from flask_login import login_required, current_user
 from flask_mail import Message
@@ -651,3 +651,12 @@ def register_new_user():
     db.session.add(new_user)
     db.session.commit()
     return redirect(url_for('main.home_page'))
+
+
+@internal_blueprint.route('/email-address-exists/<email_address>')
+def email_address_exists(email_address):
+    user = User.query.filter_by(email_address=email_address).first()
+    if user:
+        return 'True'
+    else:
+        return 'False'

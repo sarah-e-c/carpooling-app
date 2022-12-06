@@ -649,5 +649,5 @@ def register_new_user():
     )
 
     db.session.add(new_user)
-    # db.session.commit()
+    db.session.commit()
     return redirect(url_for('main.home_page'))

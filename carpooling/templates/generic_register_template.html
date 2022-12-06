@@ -31,7 +31,7 @@
                                             <option value="14">Driver</option>
                                         </optgroup>
                                     </select></div>
-                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  onclick="renderRoleSpecificForm(event)" type="button">Register</button></div>
+                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="startContinueButton" onclick="renderRoleSpecificForm(event)" type="button">Register</button></div>
                             </form>
                         </div>
                     </div>
@@ -81,7 +81,7 @@
                             <div class="mb-3"><label class="form-label" for="Years with License" name="numyearswithlicense">Years With License</label><input class="form-control" type="number" /></div>
 
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Note" name="note"/></div>
-                            <div class="mb-3"><button class="btn btn-primary d-block w-100" onclick="renderAddressForm(event)" type="button">Continue</button></div>
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" id="driverContinueButton" onclick="renderAddressForm(event)" type="button">Continue</button></div>
                         </form>
                     </div>
                 </div>
@@ -118,7 +118,7 @@
                                     </optgroup>
                                 </select></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Note" name="note"/></div>
-                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" onclick="renderAddressForm(event)">Continue</button></div>
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" id="passengerContinueButton" onclick="renderAddressForm(event)">Continue</button></div>
                         </form>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                             <div class="mb-3"><input class="form-control" type="text" placeholder="State" name="state" required id="inputstate"/></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Zip Code" name="zipcode" required id="inputzipcode"/></div>
 
-                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" onclick="submitForm()">Finish Registration</button></div>
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" id="submitButton" onclick="submitForm()">Finish Registration</button></div>
                         </form>
                     </div>
                 </div>
@@ -191,6 +191,32 @@
 
 {%  block scripts %}
     <script>
+
+    // this doesn't work but hopefully you get the idea
+    const buttons = ['startContinueButton', 'passengerContinueButton', 'driverContinueButton', 'submitButton'];
+    const buttonSections = ['firstsection', 'passengersection', 'driversection', 'addresssection'];
+
+    function eventListener(event, buttonName, sectionName) {
+        // preventing the hidden sections from pressing (im not actually sure if this is needed)
+        console.log("event listener called");
+        function tempFunction(event) {
+            console.log("inner event listener called");
+            if (document.getElementById(sectionName).style.display === 'none') {
+                return
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById(buttonName).click();
+            }
+        }
+        return tempFunction;
+    }
+
+    for (let i = 0; i < buttons.length; i++) {
+        document.getElementById(buttons[i]).addEventListener('keypress', eventListener(event, buttons[i], buttonSections[i]));
+    }
+
+
     let roleSelector = document.getElementById('passengerordriver');
 
     let autocomplete = google.maps.places.Autocomplete;
@@ -372,6 +398,7 @@
             } else {
                 break;
             }
+
             if (document.getElementById(inputName).value === 'undefined') {
                 console.log("found a selection element!")
                 console.log(roleSpecificForm.children[i].children[1].options[roleSpecificForm.children[i].children[1].selectedIndex].text)

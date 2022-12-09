@@ -164,8 +164,8 @@ def create_event_page():
         event_info = {
             'name': request.form['eventname'],
             'date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
-            'start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%I:%M %p'),
-            'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%I:%M %p'),
+            'start_time': datetime.datetime.strptime(request.form['eventstarttime'], '%H:%M'),
+            'end_time': datetime.datetime.strptime(request.form['eventendtime'], '%H:%M'),
             'description': request.form['eventdescription'],
             'creator_id': current_user.id,
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,
@@ -211,6 +211,7 @@ def driver_carpool_signup_page(carpool_index):
         if current_user.is_authenticated:
             carpool = Carpool.query.get(carpool_index)
             if carpool.driver is not None:
+                logger.info(f"Carpool {carpool} already has a driver")
                 return redirect(url_for('main.event_page', event_index=carpool.event_index))
             carpool.driver = current_user
             carpool.num_passengers = current_user.num_seats

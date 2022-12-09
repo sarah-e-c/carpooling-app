@@ -10,3 +10,5 @@ instance
 dump.rdb
 .vscode
 .DS_Store
+.idea
+*.pyc

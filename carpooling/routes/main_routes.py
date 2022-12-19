@@ -9,7 +9,7 @@ from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentA
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
 import datetime
 from flask_login import login_required, current_user, logout_user
 from carpooling.utils import requires_auth_key
@@ -67,6 +67,8 @@ def home_page(logout=False):
     else:
         driver_carpools = []
         passenger_carpools = []
+
+    flash("Welcome to Mech Techs Carpooling!")
     return render_template('index.html', user=current_user, driver_carpools=driver_carpools,
                            passenger_carpools=passenger_carpools, events=events)
 

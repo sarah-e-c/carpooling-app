@@ -394,10 +394,7 @@ def user_profile_page():
     """
     Page that allows for the management of the user profile
     """
-    if current_user.is_driver():
-        return render_template('user_profile_template.html', user=current_user)
-    else: 
-        return render_template('user_profile_passenger_template.html', user=current_user)
+    return render_template('user_profile_template.html', user=current_user)
 
 @auth_blueprint.route('/legacy-driver-to-current', methods=['GET', 'POST'])
 def legacy_driver_to_login_page():

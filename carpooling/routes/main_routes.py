@@ -50,6 +50,7 @@ def home_page(logout=False):
     logout = request.args.get('logout')
     if logout:
         logout_user()
+        flash('You have been logged out.', 'success')
         logger.info(f'User {current_user} logged out')
 
     # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
@@ -68,7 +69,6 @@ def home_page(logout=False):
         driver_carpools = []
         passenger_carpools = []
 
-    flash("Welcome to Mech Techs Carpooling!")
     return render_template('index.html', user=current_user, driver_carpools=driver_carpools,
                            passenger_carpools=passenger_carpools, events=events)
 
@@ -401,7 +401,7 @@ def safety():
 
 
 @main_blueprint.route('/request-carpool/<event_index>/<region_name>', methods=['GET', 'POST'])
-def passenger_carpool_request_page(event_index, region_name):
+def passenger_carpool_request_page(event_index, region_name): # temp disabled
     """
     Page for a passenger to request a carpool
     event_index: index of the event

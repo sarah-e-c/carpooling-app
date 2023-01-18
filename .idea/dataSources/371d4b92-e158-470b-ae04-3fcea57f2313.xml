@@ -904,23 +904,5 @@ false Zulu
       <StateNumber>1</StateNumber>
       <OwnerName>postgres</OwnerName>
     </tablespace>
-    <schema id="28" parent="2" name="information_schema">
-      <ObjectId>13655</ObjectId>
-      <StateNumber>532</StateNumber>
-      <OwnerName>postgres</OwnerName>
-    </schema>
-    <schema id="29" parent="2" name="pg_catalog">
-      <Comment>system catalog schema</Comment>
-      <ObjectId>11</ObjectId>
-      <StateNumber>525</StateNumber>
-      <OwnerName>postgres</OwnerName>
-    </schema>
-    <schema id="30" parent="2" name="public">
-      <Comment>standard public schema</Comment>
-      <Current>1</Current>
-      <ObjectId>2200</ObjectId>
-      <StateNumber>526</StateNumber>
-      <OwnerName>postgres</OwnerName>
-    </schema>
   </database-model>
 </dataSource>

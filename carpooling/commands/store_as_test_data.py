@@ -79,8 +79,8 @@ def get_events_data():
         event_dict = {}
         event_dict['event_name'] = event.name
         event_dict['event_description'] = event.description
-        event_dict['event_start_time'] = event.start_time.strftime('%H:%M:%S')
-        event_dict['event_end_time'] = event.end_time.strftime('%H:%M:%S')
+        event_dict['event_start_time'] = event.start_time.strftime('%I:%M:%S')
+        event_dict['event_end_time'] = event.end_time.strftime('%I:%M:%S')
         event_dict['event_date'] = event.date.strftime('%Y-%m-%d')
         event_dict['event_location'] = event.location
         event_dict['destination_id'] = event.destination_id

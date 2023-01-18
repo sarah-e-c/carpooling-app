@@ -9,7 +9,7 @@ from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentA
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
 import datetime
 from flask_login import login_required, current_user, logout_user
 from carpooling.utils import requires_auth_key
@@ -21,9 +21,9 @@ main_blueprint = Blueprint('main', __name__, template_folder='templates')
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4
 
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 # logFormatter = logging.Formatter(fmt=' %(name)s :: %(levelname)-8s :: %(message)s')
 # logging.RootLogger(logging.DEBUG)
@@ -50,6 +50,7 @@ def home_page(logout=False):
     logout = request.args.get('logout')
     if logout:
         logout_user()
+        flash('You have been logged out.', 'success')
         logger.info(f'User {current_user} logged out')
 
     # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
@@ -67,7 +68,9 @@ def home_page(logout=False):
     else:
         driver_carpools = []
         passenger_carpools = []
-    return render_template('index.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools, events=events)
+
+    return render_template('index.html', user=current_user, driver_carpools=driver_carpools,
+                           passenger_carpools=passenger_carpools, events=events)
 
 
 @main_blueprint.route('/driver/<lastname>/<firstname>')
@@ -88,7 +91,7 @@ def driver_page(lastname, firstname):
 
     logger.info('driver found')
     driver_info = {'lastname': driver.last_name.capitalize(),
-                   'firstname':  driver.first_name.capitalize(),
+                   'firstname': driver.first_name.capitalize(),
                    'car_type_1': driver.car_type_1,
                    'car_color_1': driver.car_color_1,
                    'car_type_2': driver.car_type_2,
@@ -144,10 +147,22 @@ def create_event_page():
         message = request.args.get('message')
         if message is None:
             message = 'Create an Event'
-        return render_template('create_event_template.html', message=message, user=current_user, destinations=destinations)
+        return render_template('create_event_template.html', message=message, user=current_user,
+                               destinations=destinations)
 
     if request.method == 'POST':
         # getting the event info from the form
+        # getting the matching build type
+        matching_build_type = 0
+        needs_matching_build_to = bool(request.form.get('needsmatchingbuildto', False))
+        needs_matching_build_from = bool(request.form.get('needsmatchingbuildfrom', False))
+        if needs_matching_build_to and needs_matching_build_from:
+            matching_build_type = 3
+        elif needs_matching_build_to:
+            matching_build_type = 1
+        elif needs_matching_build_from:
+            matching_build_type = 2
+
         event_info = {
             'name': request.form['eventname'],
             'date': datetime.datetime.strptime(request.form['eventdate'], '%Y-%m-%d'),
@@ -156,8 +171,9 @@ def create_event_page():
             'description': request.form['eventdescription'],
             'creator_id': current_user.id,
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,
-            'needs_matching_build_to': bool(request.form.get('needsmatchingbuildto', False)),
-            'needs_matching_build_from': bool(request.form.get('needsmatchingbuildfrom', False)),
+            'needs_matching_build_to': needs_matching_build_to,
+            'needs_matching_build_from': needs_matching_build_from,
+            'matching_build_type': matching_build_type
         }
 
         try:
@@ -176,11 +192,13 @@ def create_event_page():
 
         except Exception as e:  # i don't really know how this happens but its good to have
             logger.debug(e)
-            return redirect(url_for("main.create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
+            return redirect(
+                url_for("main.create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
 
         return redirect(url_for('main.events_page'))
     else:
-        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.', user=current_user)
+        return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.',
+                               user=current_user)
 
 
 @main_blueprint.route('/driver-signup/<carpool_index>', methods=['GET', 'POST'])
@@ -195,6 +213,7 @@ def driver_carpool_signup_page(carpool_index):
         if current_user.is_authenticated:
             carpool = Carpool.query.get(carpool_index)
             if carpool.driver is not None:
+                logger.info(f"Carpool {carpool} already has a driver")
                 return redirect(url_for('main.event_page', event_index=carpool.event_index))
             carpool.driver = current_user
             carpool.num_passengers = current_user.num_seats
@@ -202,7 +221,8 @@ def driver_carpool_signup_page(carpool_index):
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
             # messaging the passengers in region that requested a carpool
-            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if passenger.region_name == carpool.region_name]:
+            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if
+                              passenger.region_name == carpool.region_name]:
                 if passenger.region_name == carpool.region_name:
                     tasks_.send_async_email.delay(
                         passenger.email_address,
@@ -210,15 +230,19 @@ def driver_carpool_signup_page(carpool_index):
                         f'Hi {passenger.first_name.capitalize()},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nTeam 422'
                     )
             # removing the passengers needing a ride in the region
-            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if passenger.region_name == carpool.region_name]:
+            for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if
+                              passenger.region_name == carpool.region_name]:
                 carpool.event.passengers_needing_ride.remove(passenger)
                 logger.info(f'passenger {passenger} removed from carpool {carpool}.')
             db.session.commit()
 
-            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up to drive! Thank you for helping the team!', user=current_user)
+            return render_template('error_template.html', main_message='Success!',
+                                   sub_message='You have signed up to drive! Thank you for helping the team!',
+                                   user=current_user)
 
         carpool = Carpool.query.get(carpool_index)
-        return render_template('driver_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
+        return render_template('driver_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!',
+                               user=current_user)
     if request.method == 'POST':
         try:
             carpool = Carpool.query.get(carpool_index)
@@ -229,7 +253,8 @@ def driver_carpool_signup_page(carpool_index):
         ), last_name=request.form['lastname'].lower()).first()
         logger.debug(driver)
         if driver is None:
-            return render_template('driver_carpool_signup_template.html', carpool=carpool, message='That driver does not exist. Please try again.', user=current_user)
+            return render_template('driver_carpool_signup_template.html', carpool=carpool,
+                                   message='That driver does not exist. Please try again.', user=current_user)
         else:
             carpool.driver = driver
             try:
@@ -240,7 +265,8 @@ def driver_carpool_signup_page(carpool_index):
 
             db.session.commit()
             logger.info(f'Driver {driver} signed up for carpool {carpool}')
-            return render_template('error_template.html', main_message='Success!', sub_message='You have successfully signed up for a carpool!', user=current_user)
+            return render_template('error_template.html', main_message='Success!',
+                                   sub_message='You have successfully signed up for a carpool!', user=current_user)
 
 
 @main_blueprint.route('/passenger-carpool-signup/<carpool_index>')
@@ -257,10 +283,12 @@ def passenger_carpool_signup_page(carpool_index):
             carpool.passengers.append(current_user)
             db.session.commit()
             logger.info(f'{current_user} signed up for carpool {carpool}')
-            return render_template('error_template.html', main_message='Success!', sub_message='You have signed up for a carpool!', user=current_user)
+            return render_template('error_template.html', main_message='Success!',
+                                   sub_message='You have signed up for a carpool!', user=current_user)
         else:
             carpool = Carpool.query.get(carpool_index)
-            return render_template('passenger_carpool_signup_template.html', carpool=carpool, message='Sign up for a carpool!', user=current_user)
+            return render_template('passenger_carpool_signup_template.html', carpool=carpool,
+                                   message='Sign up for a carpool!', user=current_user)
 
     if request.method == 'POST':
         carpool = Carpool.query.get(carpool_index)
@@ -301,8 +329,11 @@ def passenger_carpool_signup_page(carpool_index):
             logger.info('existing passenger added to carpool without sign in')
 
             # send email to driver about new passenger
-            send_async_email.delay(carpool.driver.email_address, 'New Passenger Sign Up', f'New passenger {passenger} signed up for carpool {carpool}!')
-            return render_template('error_template.html', main_message='Success!', sub_message='The passenger already existed in the database. Please register to use all features.', user=current_user)
+            send_async_email.delay(carpool.driver.email_address, 'New Passenger Sign Up',
+                                   f'New passenger {passenger} signed up for carpool {carpool}!')
+            return render_template('error_template.html', main_message='Success!',
+                                   sub_message='The passenger already existed in the database. Please register to use all features.',
+                                   user=current_user)
 
     carpool = Carpool.query.get(carpool_index)
     return str(carpool.passengers[0].carpools) + str(len(carpool.passengers))
@@ -331,7 +362,8 @@ def manage_carpools_page():
                           datetime.datetime.now() - datetime.timedelta(hours=30)]
     logger.debug(passenger_carpools)
 
-    return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools, passenger_carpools=passenger_carpools)
+    return render_template('manage_carpools_template.html', user=current_user, driver_carpools=driver_carpools,
+                           passenger_carpools=passenger_carpools)
 
 
 @main_blueprint.route('/passenger/<lastname>/<firstname>')
@@ -356,7 +388,8 @@ def passenger_page(lastname, firstname):
                     return render_template('passenger_template.html', user=current_user, passenger=passenger)
 
     # if the person is not able to see
-    return render_template('error_template.html', main_message='Go Away', sub_message='You do not have access to see the passenger.', user=current_user)
+    return render_template('error_template.html', main_message='Go Away',
+                           sub_message='You do not have access to see the passenger.', user=current_user)
 
 
 @main_blueprint.route('/safety')
@@ -368,7 +401,7 @@ def safety():
 
 
 @main_blueprint.route('/request-carpool/<event_index>/<region_name>', methods=['GET', 'POST'])
-def passenger_carpool_request_page(event_index, region_name):
+def passenger_carpool_request_page(event_index, region_name): # temp disabled
     """
     Page for a passenger to request a carpool
     event_index: index of the event
@@ -405,7 +438,8 @@ def passenger_carpool_request_page(event_index, region_name):
         else:
             regions = Region.query.all()
             return redirect(url_for('auth.generic_register_page'))
-            return render_template('passenger_carpool_request_template.html', event=event, user=current_user, regions=regions, region_name=region_name)
+            return render_template('passenger_carpool_request_template.html', event=event, user=current_user,
+                                   regions=regions, region_name=region_name)
     if request.method == 'POST':
         return
         # making sure that the event exists ...
@@ -429,11 +463,12 @@ def passenger_carpool_request_page(event_index, region_name):
             first_name=first_name, last_name=last_name).first()
         if passenger is not None:
             logger.info('Passenger {} already exists'.format(passenger))
-            return render_template('error_page_template', main_message='You are already in the database', sub_message='Please log in to request a carpool.')
+            return render_template('error_page_template', main_message='You are already in the database',
+                                   sub_message='Please log in to request a carpool.')
 
         # creating the passenger
         passenger = User(first_name=first_name, last_name=last_name,
-                              email_address=email_address, phone_number=phone_number, region_name=region_name)
+                         email_address=email_address, phone_number=phone_number, region_name=region_name)
         db.session.add(passenger)
         db.session.commit()
         logger.info('Passenger {} created'.format(passenger))
@@ -456,7 +491,6 @@ def passenger_carpool_request_page(event_index, region_name):
 
         logger.info('finished notifying drivers.')
         return redirect(url_for('main.event_page', event_index=event.index))
-
 
 
 @main_blueprint.route('/user-route-summary/<carpool_index>')

@@ -1,31 +1,37 @@
-{% extends 'bases/driver_info_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
  
 {% set active_page='user_profile' %}
  
 {% block title %}{{ user.first_name.capitalize() }} {{ user.last_name.capitalize() }}{% endblock %}
  
 {% block main %}
-<h1 id="text02" class="style1" style="opacity: 1; transform: none;"> User: {{ user.first_name }} {{ user.last_name }}</h1>
-<p id="text07" class="style2" style="opacity: 1; transform: none;">{{ user.student_or_parent }}</p>
-<p id="text01" class="style2" style="opacity: 1; transform: none;">
-    <span class="p">
+        <section class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+<h1 id="text02" class="text-center" style="opacity: 1; transform: none; color: var(--bs-primary); font-family: 'ostrich_sansheavy', sans-serif"> User: {{ user.first_name }} {{ user.last_name }}</h1>
+<p id="text07" class="text-center" style="opacity: 1; transform: none;">{{ user.student_or_parent }}</p>
+                <div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+<div class="card">
+<div class="card-body shadow d-flex flex-column align-items-center">
         Number of seats: {{ user.num_seats }}
         <br>
         Years with license: {{user.num_years_with_license}}
         <br>
-         Car type: {{ user.car_type_1 }}
-        <br>
-         Car color: {{ user.car_color_1}}
-        <br>
          Email: {{ user.email_address }}
         <br>
          Phone number: {{ user.phone_number }}
+        {%  if user.is_driver %}
+        <br>
+         Car type: {{ user.car_type_1 }}
+        <br>
+         Car color: {{ user.car_color_1}}
+
          {% if user.car_type_2 %}
         <br>
          Secondary car type: {{ user.car_type_2}}
         <br>
          Secondary car color: {{ user.car_color_2}}
         {% endif %}
+        {%  endif %}
         <br>
          Emergency contact number: {{user.emergency_contact_number}}
         <br>
@@ -39,22 +45,27 @@
          <br>
          Last authentication update: {{user.get_auth_key_date()}}
 
-    </span>
-</p>
-<p id="text02" class="style2" style="opacity: 1; transform: none;"> Actions</p>
-<ul id="buttons01" class="style1 buttons">
-    <li>
-        <a href="{{url_for('auth.update_user_information_page')}}" class="button n01">
-            <span class="label"><b>Edit information</b></span>
+</div>
+</div>
+                </div>
+</div>
+        <div class="text-center">
+            <a href="{{url_for('auth.update_user_information_page')}}" class="btn btn-outline-primary m-2">
+            <span class="label"><b>Edit Profile</b></span>
         </a>
-        <a href="{{url_for('auth.forgot_password_page')}}" class="button n01">
+        <a href="{{url_for('auth.forgot_password_page')}}" class="btn btn-outline-primary m-2">
             <span class="label"><b>Reset Password</b></span>
         </a>
         <br>
-        <a href="{{url_for('main.manage_carpools_page')}}" class="button n01">
+        <a href="{{url_for('main.manage_carpools_page')}}" class="btn-outline-primary btn m-2">
             <span class="label"><b>Manage Carpools</b></span>
         </a>
-    
-    </li>
-</ul>
+        {% if not user.is_driver %}
+            <a href="{{url_for('auth.passenger_to_driver_page')}}" class="btn-outline-primary btn m-2">
+            <span class="label"><b>Convert to Driver</b></span>
+        </a>
+
+        {% endif %}
+        </div>
+    </section>
 {% endblock %}

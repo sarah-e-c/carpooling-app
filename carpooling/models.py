@@ -157,7 +157,7 @@ class Event(db.Model):
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='event', lazy=True)
     needs_matching_build_to = db.Column(db.Boolean, default=False)
     needs_matching_build_from = db.Column(db.Boolean, default=False)
-
+    matching_build_type = db.Column(db.Integer, default=0,)  # 0=none, 1=to, 2=from, 3=to and from
     # carpools = db.relationship('Carpool', backref='event', lazy=True)
 
     def get_description(self):
@@ -174,6 +174,17 @@ class Event(db.Model):
     def get_checkins(self):
         return EventCheckIn.query.filter_by(event_id=self.index).all()
 
+    def get_carpool_type_string(self):
+        match self.matching_build_type:
+            case 0:
+                return 'not'
+            case 1:
+                return 'to'
+            case 2:
+                return 'from'
+            case 3:
+                return 'to and from'
+        return 'null value'
     def __repr__(self):
         return f'Event: {self.name}'
 
@@ -538,7 +549,6 @@ class GeneratedCarpool(db.Model):
         Returns the time the user should be picked up for this carpool
         """
         if user == self.driver or self.carpool_solution.type == 'from':
-            logger.debug('Carpool start time: {}'.format(self.from_time))
             return self.from_time
         else:  # carpool is 'to' and user is a passenger
             try:

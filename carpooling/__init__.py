@@ -37,12 +37,9 @@ def load_user(user_id):
             logger.info('imported User')
     except NameError as e:
         from carpooling.models import User as user_
-        logger.info('imported User with nameerror')
+        logger.info('imported User with name error')
 
     return user_.query.get(int(user_id))
-
-
-celery = Celery(__name__)
 
 
 def create_app(extra_config_settings=None):

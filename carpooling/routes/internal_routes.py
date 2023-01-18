@@ -8,13 +8,14 @@ from carpooling.models import Event, Carpool, User, EventCheckIn, Destination, A
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
-from flask import render_template, request, redirect, url_for, Blueprint, make_response
+from flask import render_template, request, redirect, url_for, Blueprint, make_response, jsonify
 import datetime
 from flask_login import login_required, current_user
 from flask_mail import Message
 from io import StringIO
 import csv
 import json
+from werkzeug.security import generate_password_hash
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -611,3 +612,51 @@ def cancel_generated_carpool(carpool_id):
         return redirect(url_for('main.manage_carpools_page'))
 
 
+@internal_blueprint.route('/register_new_user', methods=['POST'])
+def register_new_user():
+    def valid(s: str) -> str | None:
+        return s if s else None
+
+    address = Address(
+        address_line_1=request.form['addressline1'],
+        address_line_2=request.form['addressline2'],
+        city=request.form['city'],
+        state='VA',
+        zip_code=request.form['zipcode'],
+        latitude=request.form['latitude'],
+        longitude=request.form['longitude'],
+        code=request.form['placeid']
+    )
+
+    new_user = User(
+        first_name=request.form['firstname'].lower(),
+        last_name=request.form['lastname'].lower(),
+        email_address=request.form['email'],
+        phone_number=request.form['phonenumber'],
+        team_auth_key='0',
+        region_name=request.form['regionname'],
+        car_type_1=valid(request.form['cartype1']),
+        car_type_2=valid(request.form['cartype2']),
+        car_color_1=valid(request.form['carcolor1']),
+        car_color_2=valid(request.form['carcolor2']),
+        emergency_contact_number=request.form['emergencycontact'],
+        emergency_contact_relation=request.form['emergencycontactrelation'],
+        num_years_with_license = valid(request.form['numyearswithlicense']),
+        extra_information=request.form['note'],
+        num_seats=valid(request.form['numberofseats']),
+        student_or_parent=valid(request.form['studentorparent']),
+        password=generate_password_hash(request.form['password'])
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+    return redirect(url_for('main.home_page'))
+
+
+@internal_blueprint.route('/email-address-exists/<email_address>')
+def email_address_exists(email_address):
+    user = User.query.filter_by(email_address=email_address).first()
+    if user:
+        return 'True'
+    else:
+        return 'False'

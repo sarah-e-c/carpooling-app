@@ -1,9 +1,10 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 {% block title %}Create New Event{% endblock %}
 
 {% set active_page='events' %}
 
+{# TODO make this look good #}
 {% block styles %}
 <style>
     #createDestinationDiv  {
@@ -25,17 +26,16 @@
 {% block main %}
 <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
-
-
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt="" />
-    </span>
+    <section class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+<h1 id="text01" class="text-center" style="font-family: 'ostrich_sansheavy', sans-serif; color:var(--bs-primary);">Create New Event</h1>
+<div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+<div id="text02" class="card ">
+<div class="card-header">
+<h6 id="text07">{{ message }}</h6>
 </div>
-<h1 id="text01" class="style1">Create New Event</h1>
-<h2 id="text07" class="style2">{{ message }}</h2>
-<hr id="divider02" class="style1">
-<div id="text02" class="style2">
+
+<div class="card-body shadow d-flex flex-column align-items-center">
     <form action="{{url_for('main.create_event_page')}}" method="post">
         <div id="formtable">
             <p>
@@ -46,39 +46,30 @@
             </p>
             <br>
 
-            <p>
                 <label for="eventdate">Event Date
                     &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-                <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="input1"
+                <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="align-right"
                     required="required">
-            </p>
             <br>
-            <p>
-
                 <label for="eventstarttime">Event Start Time
                     &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
                 <input type="time" id="eventstarttime" name="eventstarttime" placeholder="4:00" class="input1"
                     required="required">
-            </p>
             <br>
 
-            <p>
                 <label for="eventendtime">Event End Time</label>
                 <input type="time" id="eventendtime" name="eventendtime" placeholder="8:30" class="input1"
                     required="required">
-            </p>
             <br>
 
             <p>
-                <label for="region">Event Location</label>
+                <label for="eventAddress">Event Location</label>
                 <select onclick="verifyDestination(event)" name="eventAddress" id="eventAddress">
                     {% for destination in destinations %}
                     <option value="{{destination.name}}" selected> {{destination.name}}</option>
                     {% endfor %}
                 </select>
-                <ul id="buttons01" class="style1 buttons">
-                    <span class="button n01" onclick="verifyDestination(event)">Create Destination</span>
-                </ul>
+                <a class="btn btn-outline-dark" onclick="verifyDestination(event)">Create Destination</a>
             </p>
 
             <p>
@@ -100,26 +91,26 @@
 
         </div>
 
-        <ul id="buttons01" class="style1 buttons">
-            <input type="submit" value="Create" class="style1" id="submitbutton">
-        </ul>
+        <div class="mb-3"><input type="submit" value="Create" class="btn btn-primary" id="submitbutton"></div>
         <br>
     </form>
+</div>
+</div>
+                </div>
+</div>
 
-    <div id="createDestinationDiv" class="createDestinationDiv">
+    <div id="createDestinationDiv" style="display: none;" class="createDestinationDiv card m-lg-5">
+        <div class="card-header">
+            <h3>Create New Destination</h3>
+        </div>
+        <div class="card-body">
         <form action="{{url_for('internal.create_destination')}}" method="post" id="createDestinationForm">
-            <p>
-                <label for="destinationname">Destination Name</label>
-                <input type="text" id="destinationname" name="destinationname" placeholder="Destination Name"
-                    class="input1" required="required">
-            </p>
+                <div class="mb-3"><input type="text" id="destinationname" name="destinationname" placeholder="Destination Name"
+                                         class="input1" required="required"></div>
             <br>
 
-            <p>
-                <label for="addressline1">Destination Address</label>
-                <input type="text" id="addressline1" name="addressline1" placeholder="Destination Address"
-                    class="input1" required="required">
-            </p>
+                <div class="mb-3"><input type="text" id="addressline1" name="addressline1" placeholder="Destination Address"
+                                        class="input1" required="required"></div>
             <br>
 
             <input type="hidden" id="city" name="city" class="input1" required="required">
@@ -129,14 +120,12 @@
             <input type="hidden" id="longitude" name="longitude" class="input1" required="required">
             <input type="hidden" id="place_id" name="place_id" class="input1" required="required">
 
-            <ul id="buttons01" class="style1 buttons">
-                <input type="submit" onclick="verify_and_submit_form(event)" class="style1" id="submitbutton">
-            </ul>
+                <input type="submit" onclick="verify_and_submit_form(event)" class="btn button-primary" id="submitbutton">
             <br>
         </form>
+        </div>
     </div>
-</div>
-
+    </section>
 {% endblock %}
 
 {% block scripts %}
@@ -157,15 +146,14 @@
 
     function verifyDestination(event) {
         let element = document.getElementById("eventAddress");
-        createDestinationDiv = document.getElementById("createDestinationDiv");
-        if (createDestinationDiv.style.display == 'block') {
+        let createDestinationDiv = document.getElementById("createDestinationDiv");
+        if (createDestinationDiv.style.display === 'block') {
             createDestinationDiv.style.display = 'none';
         } else {
             createDestinationDiv.style.display = 'block';
         }
         
         console.log("new destination selected")
-
 
     }
 

@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from flask import current_app
 from flask.cli import with_appcontext
@@ -12,6 +13,7 @@ import json
 
 
 @click.command('init-db')
+@click.argument('is_testing', default=False)
 @with_appcontext
 def init_db_command(is_testing=False):
     db.drop_all()
@@ -45,7 +47,7 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
         new_address = models.Address(
             latitude = person['address']['latitude'],
             longitude = person['address']['longitude'],
-            code = person['address']['code'],
+            code = random.random(),  # person['address']['code'],
             address_line_1 = person['address']['address_line_1'],
             city = person['address']['city'],
             state = person['address']['state'],
@@ -67,10 +69,6 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
             emergency_contact_number=person['emergency_contact_number'],
             emergency_contact_relation=person['emergency_contact_relation'],
             extra_information=person['extra_information'],
-            address_line_1=person['address']['address_line_1'],
-            address_line_2=person['address']['address_line_2'],
-            city=person['address']['city'],
-            zip_code=person['address']['zip_code'],
             student_or_parent=person['student_or_parent'],
             addresses=[new_address],
             password=person['password']
@@ -89,8 +87,8 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
             name=event['event_name'],
             description=event['event_description'],
             date=datetime.datetime.strptime(event['event_date'], '%Y-%m-%d'),
-            start_time=datetime.datetime.strptime(event['event_start_time'], '%H:%M:%S'),
-            end_time=datetime.datetime.strptime(event['event_end_time'], '%H:%M:%S'),
+            start_time=datetime.datetime.strptime(event['event_start_time'], '%I:%M %p'),
+            end_time=datetime.datetime.strptime(event['event_end_time'], '%I:%M %p'),
             location=event['event_location'],
             destination=models.Destination.query.get(event['destination_id']),
             destination_id=event['destination_id'],

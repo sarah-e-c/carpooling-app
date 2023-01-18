@@ -1,27 +1,21 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 {% block title %}Verify 422 Key{% endblock %}
 
 {% block main %}
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
-    </span>
-</div>
-<h1 id="text01" class="style1">Verify Access Key</h1>
-<h2 class="style2">{{message}}</h2>
+<h1 id="text-center" class="style1">Verify Access Key</h1>
+<h2 class="text-center">{{message}}</h2>
 <hr id="divider02" class="style1">
-<div id="text02" class="style2">
+<div id="text02" class="card">
+<div class="card-body">
     <form action="{{url_for('auth.verify_auth_key_page', next=next, kwargs_keys=kwargs_keys, kwargs_string=kwargs_string)}}" method="post" class="style1" id="formtable">
         <p>
         <label for="key">Access Key</label>
         <input type="text" name="key" id="key" value=""/>
         </p>
-
-        <ul id = "buttons01" class="style1 buttons">
-            <input type="submit" value="Verify" class="style1" id="submitbutton"> 
-        </ul>
+        <input type="submit" value="Verify" class="style1" id="submitbutton">
         <br>
     </form>
+</div>
 </div>
 {% endblock %}

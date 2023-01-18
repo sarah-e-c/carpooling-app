@@ -52,7 +52,7 @@ def requires_auth_key(function):
                     if not kwargs_string:
                         kwargs_string = '--'
                     return redirect(
-                        url_for('auth.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys,
+                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
                                 kwargs_string=kwargs_string))
             except:
                 if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key):
@@ -64,7 +64,7 @@ def requires_auth_key(function):
                     if not kwargs_string:
                         kwargs_string = '--'
                     return redirect(
-                        url_for('auth.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys,
+                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
                                 kwargs_string=kwargs_string))
         else:
             s = URLSafeSerializer(current_app.secret_key)
@@ -80,13 +80,13 @@ def requires_auth_key(function):
                     if not kwargs_string:
                         kwargs_string = '--'
                     return redirect(
-                        url_for('auth.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys,
+                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
                                 kwargs_string=kwargs_string))
             except TypeError as e:  # this is very awful
                 logger.debug(e)
                 kwargs_keys = '--'.join(kwargs)
                 kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                return redirect(url_for('auth.verify_auth_key_page', next=function.__name__, kwargs_keys=kwargs_keys,
+                return redirect(url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
                                         kwargs_string=kwargs_string))
 
         return function(*args, **kwargs)

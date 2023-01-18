@@ -1,4 +1,4 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 {% set active_page='user_profile' %}
 
@@ -130,6 +130,54 @@
         <br>
     </form>
 </div>
+
+<section class="position-relative py-4 py-xl-5">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h1 style="font-family: ostrich_sansheavy;font-size: 57.928px;color: var(--bs-link-color);">Alter Profile</h1>
+                <p class="w-lg-50">Make the profile change you want to see in the world.</p>
+            </div>
+        </div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="card mb-5">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg class="bi bi-shuffle" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3v1c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.317 1.918C9.828 10.99 11.204 12 13 12v1c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1 0-1H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.317-1.918C4.172 5.01 2.796 4 1 4H.5a.5.5 0 0 1-.5-.5z"></path>
+                                <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"></path>
+                            </svg></div>
+                        <form class="text-center" action="{{ url_for('auth.update_user_information_page') }}" method="post">
+                            <div class="text-start mb-3"><small class="form-text text-start">First Name</small><input class="form-control" type="text" name="firstname" value="{{ user.first_name.capitalize() }}" placeholder="First Name"/></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Last Name</small><input class="form-control" type="text" name="lastname" value="{{ user.last_name.capitalize() }}" placeholder="Last Name" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Student or Parent</small><input class="form-control" type="text" value="{{ user.student_or_parent }}" name="password" placeholder="Student or Parent" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Car Type 1</small><input class="form-control" type="text" name="cartype1" value="{{ user.car_type_1 }}" placeholder="Car Type 1" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Car Color 1</small><input class="form-control" type="text" name="carcolor1" value="{{ user.car_color_1 }}" placeholder="Car Color 1" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Car Type 2</small><input class="form-control" type="text" name="cartype2" value="{{ user.car_type_2 }}" placeholder="Car Type 2" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Car Color 2</small><input class="form-control" type="text" name="carcolor2" value="{{ user.car_color_2 }}" placeholder="Car Color 2" /></div>
+
+                            <div class="text-start mb-3"><small class="form-text text-start">Email Address</small><input class="form-control" type="text" name="email" value="{{ user.email_address }}" placeholder="Email Address" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Phone Number</small><input class="form-control" type="text" name="phonenumber" value="{{ user.phone_number }}" placeholder="Phone Number" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Address Line 1</small><input id="addressline1" class="form-control" type="text" name="addressline1" value="{{ user.addresses[0].address_line_1 }}" placeholder="Address Line 1" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Address Line 2</small><input id="addressline2" class="form-control" type="text" name="addressline2" value="{{ user.addresses[0].address_line_2 }}" placeholder="Address Line 2" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">City</small><input id="city" class="form-control" type="text" name="city" value="{{ user.addresses[0].city }}" placeholder="City" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">State</small><input id="state" class="form-control" type="text" name="state" value="{{ user.addresses[0].state }}" placeholder="State" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Zip Code</small><input id="zipcode" class="form-control" type="text" name="zipcode" value="{{ user.addresses[0].zip_code }}" placeholder="Zip Code" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Note</small><input id="note" class="form-control" type="text" name="note" value="{{ user.addresses[0].extra_information }}" placeholder="Note" /></div>
+
+                            <input class="form-control" type="hidden" id="latitude" name="latitude" value="{{ user.addresses[0].latitude }}"  />
+                            <input class="form-control" type="hidden" id="longitude" name="longitude" value="{{ user.addresses[0].longitude }}" />
+                            <input class="form-control" type="hidden" id="place_id" name="place_id" value="{{ user.addresses[0].code }}" />
+
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="submit">Update</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
 
 

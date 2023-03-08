@@ -46,7 +46,7 @@ def send_async_email(to, subject, message):
     """
     logger.info(current_app.config['MAIL_SERVER'])
     try:
-        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'Mech Techs Carpooling'),
+        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'CarpoolGO'),
                       recipients=[to])
         msg.body = message
         mail.send(msg)
@@ -68,7 +68,7 @@ def send_async_email_to_many(to: list, subject: str, message: str):
     if len(to) < 1:
         raise AssertionError
     try:
-        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'Mech Techs Carpooling'), recipients=to)
+        msg = Message(subject, sender=(current_app.config['MAIL_USERNAME'], 'CarpoolGO'), recipients=to)
         msg.body = message
         mail.send(msg)
         logger.info('Email sent to %s', to)

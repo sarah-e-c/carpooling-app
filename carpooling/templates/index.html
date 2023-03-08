@@ -1,13 +1,13 @@
 {%  extends 'bases/bootstrap_base.html' %}
 
-{%  block title %}Mech Tech Dragons Carpooling {%  endblock %}
+{%  block title %}CarpoolGO {%  endblock %}
     {% block main %}
         {%  if not user.is_authenticated %} {# uesr is not authenticated... default here for clarity #}
     <section class="text-bg-dark border-1 shadow py-4 py-xl-5" style="background: linear-gradient(var(--bs-link-color) 0%, var(--bs-body-color) 100%);">
         <div class="container" style="background: #00000000;">
             <div class="text-center text-bg-light p-4 p-lg-5" style="background: linear-gradient(var(--bs-gray-300), var(--bs-gray-400) 100%), var(--bs-cyan);">
-                <p class="fw-bold mb-2">It's finally here...</p>
-                <h1 class="fw-bold text-primary mb-4" style="font-family: ostrich_sansheavy, sans-serif;font-size: 86.928px;">Mech Techs Carpooling</h1><a href="{{ url_for('auth.generic_register_page') }}"><button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button">Register Now</button></a><a href="{{ url_for('auth.login_page') }}"><button class="btn btn-outline-primary fs-5 py-2 px-4" type="button">Log In</button></a>
+                <p class="fw-bold mb-2">I</p>
+                <h1 class="fw-bold text-primary mb-4" style="font-family: ostrich_sansheavy, sans-serif;font-size: 86.928px;">CarpoolGO</h1><a href="{{ url_for('auth.generic_register_page') }}"><button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button">Register Now</button></a><a href="{{ url_for('auth.login_page') }}"><button class="btn btn-outline-primary fs-5 py-2 px-4" type="button">Log In</button></a>
             </div>
         </div>
     </section>
@@ -60,7 +60,7 @@
         <div class="container" style="background: #00000000;">
             <div class="text-center text-bg-light p-4 p-lg-5" style="background: linear-gradient(var(--bs-gray-300), var(--bs-gray-400) 100%), var(--bs-cyan);">
                 <p class="fw-bold mb-2">Carpool and build robots!</p>
-                <h1 class="fw-bold text-primary mb-4" style="font-family: ostrich_sansheavy,sans-serif; font-size: 86.928px;">Mech Techs Carpooling</h1>
+                <h1 class="fw-bold text-primary mb-4" style="font-family: ostrich_sansheavy,sans-serif; font-size: 86.928px;">CarpoolGO</h1>
             </div>
         </div>
     </section>

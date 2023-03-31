@@ -227,7 +227,7 @@ def driver_carpool_signup_page(carpool_index):
                     tasks_.send_async_email.delay(
                         passenger.email_address,
                         'Carpool Request',
-                        f'Hi {passenger.first_name.capitalize()},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nTeam 422'
+                        f'Hi {passenger.first_name.capitalize()},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nCarpool Manager.'
                     )
             # removing the passengers needing a ride in the region
             for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if

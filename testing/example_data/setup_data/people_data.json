@@ -15,7 +15,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": "None",
         "region_name": "I-95",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.576224,
             "longitude": -121.979386,
@@ -44,7 +44,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.390391,
             "longitude": -122.060062,
@@ -73,7 +73,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.6053127,
             "longitude": -122.0528926,
@@ -102,7 +102,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.767338,
             "longitude": -122.167775,
@@ -131,7 +131,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 34.414491,
             "longitude": -117.375403,
@@ -160,7 +160,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.6631486,
             "longitude": -121.862728,
@@ -189,7 +189,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.6349837,
             "longitude": -118.9915892,
@@ -218,7 +218,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 36.950901,
             "longitude": -122.046881,
@@ -247,7 +247,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.869121,
             "longitude": -122.296661,
@@ -276,7 +276,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.602458,
             "longitude": -122.046613,
@@ -305,7 +305,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.776415,
             "longitude": -122.209418,
@@ -334,7 +334,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.3254329,
             "longitude": -122.026957,
@@ -363,7 +363,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 36.963154,
             "longitude": -121.994045,
@@ -392,7 +392,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.655627,
             "longitude": -121.77304,
@@ -421,7 +421,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.641304,
             "longitude": -118.971489,
@@ -450,7 +450,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.661416,
             "longitude": -121.908019,
@@ -479,7 +479,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 33.8673562,
             "longitude": -118.2597713,
@@ -508,7 +508,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 38.918128,
             "longitude": -119.98002,
@@ -537,7 +537,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 39.190947,
             "longitude": -120.108825,
@@ -566,7 +566,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.7356811,
             "longitude": -122.2349598,
@@ -595,7 +595,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.153463,
             "longitude": -119.648192,
@@ -624,7 +624,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.745714,
             "longitude": -122.176955,
@@ -653,7 +653,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.320994,
             "longitude": -122.063047,
@@ -682,7 +682,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.9028101,
             "longitude": -122.2981152,
@@ -711,7 +711,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 36.9863278,
             "longitude": -121.9625694,
@@ -740,7 +740,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.94042,
             "longitude": -121.944464,
@@ -769,7 +769,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.7168246,
             "longitude": -122.1336681,
@@ -798,7 +798,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.5534511,
             "longitude": -122.0133239,
@@ -827,7 +827,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 37.739659,
             "longitude": -122.255689,
@@ -856,7 +856,7 @@
         "emergency_contact_relation": "friend",
         "extra_information": null,
         "region_name": "West Henrico",
-        "is_admin": 2,
+        "is_admin()": 2,
         "address": {
             "latitude": 38.512894,
             "longitude": -121.41258,

@@ -59,7 +59,6 @@ def fill_fake_people_command(number_of_people):
                 region_name='West Henrico',
                 student_or_parent = 'Student',
                 addresses=[new_address],
-                is_admin=2,
                 password=generate_password_hash('password'),
             )
             db.session.add(new_user)

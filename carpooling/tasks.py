@@ -2,7 +2,7 @@ import carpooling.celeryapp as celeryapp
 from carpooling.logic.carpool_matching import evaluate_best_solution_one_way
 from carpooling.logic.carpool_matching.data_classes import DRIVER_WAITING_TIME
 from carpooling.logic.carpool_matching.general_functions import load_people_from_sql
-from carpooling.models import Event, AuthKey, User, Address, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
+from carpooling.models import Event, User, Address, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
 from flask import current_app
 import logging
 import time
@@ -96,11 +96,12 @@ def maintenance_task():
 
     logger.debug('started building carpooling solutions for events if needed')
 
-    # checking if an auth key is needed
-    if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(
-            days=28):
-        new_auth_key = AuthKey(key=secrets.token_hex(4))
-        celery.__getattribute__('to_add_to_session').append(new_auth_key)
+    # disabled
+    # # checking if an auth key is needed
+    # if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(
+    #         days=28):
+    #     new_auth_key = AuthKey(key=secrets.token_hex(4))
+    #     celery.__getattribute__('to_add_to_session').append(new_auth_key)
 
     # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
     problematic_users = [user for user in User.query.all() if user.addresses[0].latitude is None]

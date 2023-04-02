@@ -3,7 +3,7 @@ All routes that have to do with authorization are defined here.
 """
 
 from carpooling import db, mail
-from carpooling.models import Address, AuthKey, LegacyDriver, Region, User
+from carpooling.models import Address, User
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import PersonAlreadyExistsException, InvalidNumberOfSeatsException
@@ -82,52 +82,52 @@ def reset_password_page(user_id, token):
                                    user=current_user)
 
 
-@auth_blueprint.route('/verify_auth_key/<next>/<kwargs_keys>/<kwargs_string>', methods=['GET', 'POST'])
-def verify_auth_key_page(next, kwargs_keys, kwargs_string):
-    """
-    Page that users are redirected to if they need to get an auth key
-    next: the next page to go to
-    kwargs_keys: the keys of the kwargs, encoded by the decorator
-    kwargs_string: the values of the kwargs, encoded by the decorator
+# @auth_blueprint.route('/verify_auth_key/<next>/<kwargs_keys>/<kwargs_string>', methods=['GET', 'POST'])
+# def verify_auth_key_page(next, kwargs_keys, kwargs_string):
+#     """
+#     Page that users are redirected to if they need to get an auth key
+#     next: the next page to go to
+#     kwargs_keys: the keys of the kwargs, encoded by the decorator
+#     kwargs_string: the values of the kwargs, encoded by the decorator
 
-    This page is called by the decorator requires_auth_key, and is pretty much exclusivelt used for that purpose.
+#     This page is called by the decorator requires_auth_key, and is pretty much exclusivelt used for that purpose.
 
-    """
-    if request.method == 'GET':
-        # this is how the things are encoded
-        # kwargs_keys = '--'.join(kwargs)
-        # kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-        return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys,
-                               kwargs_string=kwargs_string, user=current_user)
-    if request.method == 'POST':
-        try:
-            has_key = request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == \
-                    AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key
-        except IndexError:
-            has_key = request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key
+#     """
+#     if request.method == 'GET':
+#         # this is how the things are encoded
+#         # kwargs_keys = '--'.join(kwargs)
+#         # kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+#         return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys,
+#                                kwargs_string=kwargs_string, user=current_user)
+#     if request.method == 'POST':
+#         try:
+#             has_key = request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key or request.form['key'] == \
+#                     AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key
+#         except IndexError:
+#             has_key = request.form['key'] == AuthKey.query.order_by(AuthKey.index.desc()).first().key
 
-        if has_key:
-            if current_user.is_authenticated:
-                current_user.team_auth_key = AuthKey.query.order_by(AuthKey.index.desc()).first().key
-                db.session.commit()
-                logger.info('Driver access granted to user {}'.format(current_user))
+#         if has_key:
+#             if current_user.is_authenticated:
+#                 current_user.team_auth_key = AuthKey.query.order_by(AuthKey.index.desc()).first().key
+#                 db.session.commit()
+#                 logger.info('Driver access granted to user {}'.format(current_user))
 
-            # re-encoding the keys
-            kwargs = {}
-            for kwarg_key, kwarg in zip(kwargs_keys.split('--'), kwargs_string.split('--')):
-                kwargs[kwarg_key] = kwarg
+#             # re-encoding the keys
+#             kwargs = {}
+#             for kwarg_key, kwarg in zip(kwargs_keys.split('--'), kwargs_string.split('--')):
+#                 kwargs[kwarg_key] = kwarg
 
-            # setting the response
-            response = make_response(redirect(url_for(next, **kwargs)))
-            s = URLSafeSerializer(current_app.secret_key)
-            logger.info('setting cookie')
-            response.set_cookie('driver-access', s.dumps(['access granted']),
-                                max_age=datetime.timedelta(seconds=60))
-            return response
-        else:
-            flash('Invalid Auth Key')  # theres no flash support but like whatever
-            return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys,
-                                   kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
+#             # setting the response
+#             response = make_response(redirect(url_for(next, **kwargs)))
+#             s = URLSafeSerializer(current_app.secret_key)
+#             logger.info('setting cookie')
+#             response.set_cookie('driver-access', s.dumps(['access granted']),
+#                                 max_age=datetime.timedelta(seconds=60))
+#             return response
+#         else:
+#             flash('Invalid Auth Key')  # theres no flash support but like whatever
+#             return render_template('get_driver_access_template.html', next=next, kwargs_keys=kwargs_keys,
+#                                    kwargs_string=kwargs_string, user=current_user, message='Invalid Key')
 
 
 @auth_blueprint.route('/update-user', methods=['GET', 'POST'])
@@ -136,12 +136,11 @@ def update_user_information_page():
     """
     Page that allows for the updating of user information -- basically just a copy of the sign up page but with default values
     """
-    regions = Region.query.all()
     if (request.method == 'GET') and (current_user.num_seats is not None):
-        return render_template('update_user_information_template.html', user=current_user, regions=regions)
+        return render_template('update_user_information_template.html', user=current_user)
     elif request.method == 'GET':
         logger.debug(current_user)
-        return render_template('update_user_information_template_passenger.html', user=current_user, regions=regions)
+        return render_template('update_user_information_template_passenger.html', user=current_user)
     elif request.method == 'POST':
         # if the user is a driver
         if current_user.num_seats is not None:
@@ -158,7 +157,6 @@ def update_user_information_page():
                 current_user.last_name = request.form['lastname'].lower()
                 current_user.email_address = request.form['email']
                 current_user.phone_number = request.form['phonenumber']
-                current_user.region_name = request.form.get('region')
                 current_user.extra_information = request.form['note']
                 current_user.emergency_contact_number = request.form['emergencycontact']
                 current_user.emergency_contact_relation = request.form['emergencycontactrelation']
@@ -170,7 +168,7 @@ def update_user_information_page():
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template.html', message='There was an error',
-                                       user=current_user, regions=regions)
+                                       user=current_user)
         # if the user is a passenger
         else:
             try:
@@ -185,7 +183,6 @@ def update_user_information_page():
                 current_user.last_name = request.form['lastname'].lower()
                 current_user.email_address = request.form['email']
                 current_user.phone_number = request.form['phonenumber']
-                current_user.region_name = request.form.get('region')
                 current_user.extra_information = request.form['note']
                 current_user.emergency_contact_number = request.form['emergencycontact']
                 current_user.emergency_contact_relation = request.form['emergencycontactrelation']
@@ -194,8 +191,7 @@ def update_user_information_page():
             except Exception as e:
                 logger.debug(e)
                 return render_template('update_user_information_template_passenger.html',
-                                       message='There was an error. Please try again.', user=current_user,
-                                       regions=regions)
+                                       message='There was an error. Please try again.', user=current_user)
 
     else:
         return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.',
@@ -260,73 +256,6 @@ def user_profile_page():
     """
     return render_template('user_profile_template.html', user=current_user)
 
-
-@auth_blueprint.route('/legacy-driver-to-current', methods=['GET', 'POST'])
-def legacy_driver_to_login_page():
-    """
-    Page that allows for the conversion of a legacy driver to creating an account
-    """
-
-    if request.method == 'GET':
-        logger.debug('get request')
-        # TODO this doesn't work anymore 
-        return render_template('legacy_driver_to_login_template.html', message='Enter your information',
-                               user=current_user, regions=Region.query.all())
-    if request.method == 'POST':
-        try:
-            legacy_driver = LegacyDriver.query.filter_by(first_name=request.form['firstname'].lower(),
-                                                         last_name=request.form['lastname'].lower()).first()
-            if legacy_driver is None:
-                raise Exception('Legacy Driver not found')
-            address = Address.query.filter_by(address_line_1=request.form['addressline1'],
-                                              address_line_2=request.form['addressline2'], city=request.form['city'],
-                                              zip_code=request.form['zipcode']).first()
-            if address is None:
-                address = Address(
-                    address_line_1=request.form['addressline1'],
-                    address_line_2=request.form['addressline2'],
-                    city=request.form['city'],
-                    zip_code=request.form['zipcode'],
-                    latitude=request.form['latitude'],
-                    longitude=request.form['longitude'],
-                    state=request.form['state'],
-                    code=request.form['place_id']
-                )
-            new_user = User(
-                first_name=request.form['firstname'].lower(),
-                last_name=request.form['lastname'].lower(),
-                email_address=legacy_driver.email_address,
-                phone_number=legacy_driver.phone_number,
-                num_seats=legacy_driver.num_seats,
-                num_years_with_license=legacy_driver.num_years_with_license,
-                student_or_parent=legacy_driver.student_or_parent,
-                car_type_1=legacy_driver.car_type_1,
-                car_color_1=legacy_driver.car_color_1,
-                car_type_2=legacy_driver.car_type_2,
-                car_color_2=legacy_driver.car_color_2,
-                addresses=[address],
-                emergency_contact_number=legacy_driver.emergency_contact_number,
-                emergency_contact_relation=legacy_driver.emergency_contact_relation,
-                password=generate_password_hash(request.form['password']),
-                region_name=request.form['region'],
-                extra_information=legacy_driver.extra_information
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            logger.info(f'User created: {new_user}')
-
-            # deleting the legacy driver
-            db.session.delete(legacy_driver)
-            db.session.commit()
-            logger.info(f'Legacy Driver deleted: {legacy_driver}')
-
-            return redirect(url_for('auth.login_page'))
-        except Exception as e:
-            logger.debug(e)
-            return render_template('legacy_driver_to_login_template.html',
-                                   message='There was an error. Please try again.', user=current_user)
-
-
 @auth_blueprint.route('/login-help')
 def login_help_page():
     """
@@ -340,4 +269,4 @@ def generic_register_page():
     """
     Page that points to driver or passenger registration
     """
-    return render_template('generic_register_template.html', user=current_user, regions=Region.query.all())
+    return render_template('generic_register_template.html', user=current_user)

@@ -4,7 +4,7 @@ Main, user-facing routes for the application
 
 from carpooling import db
 from carpooling import mail
-from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination, \
+from carpooling.models import Address, Event, Carpool, User, Destination, \
     GeneratedCarpool
 import logging
 from carpooling.tasks import send_async_email
@@ -14,7 +14,7 @@ import datetime
 from flask_login import login_required, current_user, logout_user
 from carpooling.utils import requires_auth_key
 from flask_mail import Message
-from flask import Blueprint
+from flask import Blueprint, session
 from carpooling import tasks_
 
 main_blueprint = Blueprint('main', __name__, template_folder='templates')
@@ -131,7 +131,7 @@ def event_page(event_index):
     except:  # the event doesn't exist
         redirect(url_for('main.events_page'))
 
-    return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
+    return render_template('event_template.html', event=event, user=current_user)
 
 
 @main_blueprint.route('/create-event', methods=['GET', 'POST'])
@@ -141,6 +141,11 @@ def create_event_page():
     """
     Create event page. Used for verified users to create events.
     """
+    try:
+        if not session["organization"]:
+            session["organization"] = current_user.organizations[0].id
+    except KeyError as e:
+        session["organization"] = current_user.organizations[0].id
 
     if request.method == 'GET':
         destinations = Destination.query.all()
@@ -148,7 +153,7 @@ def create_event_page():
         if message is None:
             message = 'Create an Event'
         return render_template('create_event_template.html', message=message, user=current_user,
-                               destinations=destinations)
+                               destinations=destinations, organization=session["organization"])
 
     if request.method == 'POST':
         # getting the event info from the form
@@ -173,18 +178,13 @@ def create_event_page():
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,
             'needs_matching_build_to': needs_matching_build_to,
             'needs_matching_build_from': needs_matching_build_from,
-            'matching_build_type': matching_build_type
+            'matching_build_type': matching_build_type,
+            'organization_id': request.form['organization']
         }
 
         try:
             new_event = Event(**event_info)
             db.session.add(new_event)
-            for region in Region.query.all():  # i love for loops
-                # for each region, create carpools
-                for _ in range(DEFAULT_NUMBER_OF_CARPOOLS):
-                    carpool = Carpool(event_index=new_event.index, region_name=region.name,
-                                      num_passengers=0, destination=region.dropoff_location)
-                    db.session.add(carpool)
 
             db.session.commit()
             logger.info(
@@ -407,7 +407,6 @@ def passenger_carpool_request_page(event_index, region_name): # temp disabled
     event_index: index of the event
     """
     if request.method == 'GET':
-        regions = Region.query.all()
         try:
             event = Event.query.get(event_index)
         except Exception as e:
@@ -436,7 +435,6 @@ def passenger_carpool_request_page(event_index, region_name): # temp disabled
             logger.info('finished notifying drivers.')
             return redirect(url_for('main.event_page', event_index=event.index))
         else:
-            regions = Region.query.all()
             return redirect(url_for('auth.generic_register_page'))
             return render_template('passenger_carpool_request_template.html', event=event, user=current_user,
                                    regions=regions, region_name=region_name)

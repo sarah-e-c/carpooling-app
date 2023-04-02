@@ -162,7 +162,7 @@
         </div>
     </div>
             {%  endif %}
-            {%  if user.is_admin %}
+            {%  if user.is_admin() %}
     <div class="container py-4 py-xl-5">
         <div class="row mb-5">
             <div class="col-md-8 col-xl-6 text-center mx-auto">
@@ -229,7 +229,7 @@
     </div>
                 {%  endif %}
     <script src="assets/js/bs-init.js"></script>
-            {%  if not (events or user.is_admin or user.driver_generated_carpools or user.passenger_generated_carpools) %}
+            {%  if not (events or user.is_admin() or user.driver_generated_carpools or user.passenger_generated_carpools) %}
              <br><br><br><h4 class="text-center m-lg-5">Wow... it's pretty empty down here...</h4><br><br><br>
         {%  endif %}
         {%  endif %}

@@ -129,7 +129,7 @@
         </div>
     </div>
     {% if current_user.is_authenticated %}
-    {% if user.is_admin > 0 or event.user_id == user.id%}
+    {% if user.is_admin() > 0 or event.user_id == user.id%}
             <a style="color: rgb(228, 53, 53)" href="{{ url_for('internal.delete_event', event_index=event.index)}}"
                 onclick="confirm_delete_event(event)" class="button n01">
                 <span class="label">Delete Event</span>
@@ -138,7 +138,7 @@
     {% endif %}
 
 <div class="carpooling_div tabcontent" id="carpool">
-    {% for region in regions%}
+    <!-- {% for region in regions%}
     <div class="regiondiv" style="border-color:{{region.color}}">
         <h3 class="style2">{{region.name.capitalize()}} Region</h3>
         {% if user.is_authenticated %}
@@ -222,7 +222,7 @@
     </div>
     {% endfor %}
 </div>
-</section>
+</section> -->
 {% endblock %}
 
 {% block scripts %}

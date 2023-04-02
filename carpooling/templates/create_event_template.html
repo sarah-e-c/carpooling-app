@@ -88,6 +88,7 @@
             <input type="checkbox" id="needsmatchingbuildfrom" name="needsmatchingbuildfrom" value="true" class="input1">
         </p>
 
+        <input type="hidden" id="organization" name="organization" value="{{organization}}">
 
         </div>
 
@@ -119,8 +120,9 @@
             <input type="hidden" id="latitude" name="latitude" class="input1" required="required">
             <input type="hidden" id="longitude" name="longitude" class="input1" required="required">
             <input type="hidden" id="place_id" name="place_id" class="input1" required="required">
+            <input type="hidden" id="organization" name="organization" class="input1" required="required">
 
-                <input type="submit" onclick="verify_and_submit_form(event)" class="btn button-primary" id="submitbutton">
+                <input type="submit" onclick="verifyAndSubmitForm(event)" class="btn button-primary" id="submitbutton">
             <br>
         </form>
         </div>
@@ -225,7 +227,7 @@
 
     }
 
-    function verify_and_submit_form(event) {
+    function verifyAndSubmitForm(event) {
         // this function is called when the submit button is clicked
         // it verifies that the passwords match and then submits the form
 
@@ -238,9 +240,11 @@
             document.getElementById("city").value = city;
             document.getElementById("state").value = state;
             document.getElementById("zipcode").value = zipcode;
+            document.getElementById("organization").value = "{{organization}}";
+            console.log("organization id" + document.getElementById("organization").value)
             document.getElementById("createDestinationForm").submit();
         } else {
-            alert("Please select a valid address from the dropdown")
+            alert("Please select a valid address from the dropdown.")
         }
     }
 </script>

@@ -19,7 +19,6 @@ def init_db_command(is_testing=False):
     db.drop_all()
     db.create_all()
     create_regions()
-    create_first_key()
     create_first_destination()
     if is_testing:
         create_test_data()
@@ -30,7 +29,7 @@ def init_db_command_for_code(is_testing=False):
         db.drop_all()
         db.create_all()
         create_regions()
-        create_first_key()
+        
         create_first_destination()
         if is_testing:
             create_test_data()
@@ -166,12 +165,12 @@ def create_regions():
     db.session.add(chesterfield_region)
     db.session.commit()
 
-def create_first_key():
-    first_key = models.AuthKey(
-        key = secrets.token_hex(4)
-    )
-    db.session.add(first_key)
-    db.session.commit()
+# def create_first_key():
+#     first_key = models.AuthKey(
+#         key = secrets.token_hex(4)
+#     )
+#     db.session.add(first_key)
+#     db.session.commit()
 
 def create_first_destination():
     destination_address = models.Address(

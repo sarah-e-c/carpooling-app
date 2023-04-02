@@ -4,7 +4,7 @@ Routes that are used only for internal purposes. (Like leaving carpools). Usuall
 
 from carpooling import db, mail
 from carpooling.models import Event, Carpool, User, EventCheckIn, Destination, Address, GeneratedCarpool, \
-    EventCarpoolSignup, GeneratedCarpoolResponse
+    EventCarpoolSignup, GeneratedCarpoolResponse, Organization
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
@@ -16,6 +16,7 @@ from io import StringIO
 import csv
 import json
 from werkzeug.security import generate_password_hash
+import secrets
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -36,7 +37,7 @@ def delete_event(event_index):
         return redirect(url_for('main.events_page'))
 
     # checking that the user is the creator of the event
-    if not ((event_to_delete.user == current_user) or (current_user.is_admin > 0)):
+    if not ((event_to_delete.user == current_user) or (current_user.is_admin() > 0)):
         logger.info(
             'A person attempted to delete an event they were not authorized to delete')
         return redirect(url_for('main.events_page'))
@@ -82,17 +83,17 @@ def remove_admin(user_id):
     """
     user_to_change = User.query.get(user_id)
     # checking that the person removing is of higher admin than user
-    if user_to_change.is_admin >= current_user.is_admin:
+    if user_to_change.is_admin() >= current_user.is_admin():
         logger.info('User {} {} is of higher admin than user {} {}'.format(current_user.first_name.capitalize(
         ), current_user.last_name.capitalize(), user_to_change.first_name.capitalize(),
             user_to_change.last_name.capitalize()))
         return redirect(url_for('admin.manage_users_page'))
 
-    if user_to_change.is_admin > 1:
+    if user_to_change.is_admin() > 1:
         logger.info('User {} is already super admin'.format(user_to_change))
         return redirect(url_for('admin.manage_users_page'))
 
-    user_to_change.is_admin = 0
+    user_to_change.set_admin_level(0)
     db.session.commit()
     logger.info('User {} {} removed from admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
@@ -107,12 +108,12 @@ def give_admin(user_id):
     """
     user_to_change = User.query.get(user_id)
     # checking that they are not already super admin (that would be bad)
-    if user_to_change.is_admin > 1:
+    if user_to_change.is_admin() > 1:
         logger.info('User {} is already super admin'.format(user_to_change))
         return redirect(url_for('admin.manage_users_page'))
 
-    user_to_change.is_admin = 1
-    db.session.commit()
+    user_to_change.set_admin_level(1)
+    db.session.commit() 
     logger.info('User {} {} given admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
     return redirect(url_for('admin.manage_users_page'))
@@ -126,7 +127,7 @@ def give_super_admin(user_id):
     user_id: the id of the user to give super admin
     """
     user_to_change = User.query.get(user_id)
-    user_to_change.is_admin = 2
+    user_to_change.set_admin_level(2)
     db.session.commit()
     logger.info('User {} {} given super admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
@@ -146,7 +147,7 @@ def admin_delete_user(user_id):
         user_to_delete.first_name, user_to_delete.last_name))
 
     # checking that the user being deleted is not of a higher level than the current one
-    if user_to_delete.is_admin >= current_user.is_admin:
+    if user_to_delete.is_admin() >= current_user.is_admin():
         return redirect(url_for('admin.manage_users_page'))
 
     # notifying the user that they are being deleted
@@ -210,29 +211,29 @@ def admin_delete_user(user_id):
     return redirect(url_for('admin.manage_users_page'))
 
 
-@login_required
-@internal_blueprint.route('/cancel-carpool/<carpool_id>')
-def cancel_carpool(carpool_id):
-    """
-    Page that allows for the cancellation of a carpool. Is not really used except for through carpool management page. Emails the passengers.
-    """
+# @login_required
+# @internal_blueprint.route('/cancel-carpool/<carpool_id>')
+# def cancel_carpool(carpool_id):
+#     """
+#     Page that allows for the cancellation of a carpool. Is not really used except for through carpool management page. Emails the passengers.
+#     """
 
-    for carpool in current_user.driver_carpools:
-        if str(carpool.index) == carpool_id:
-            send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers],
-                                           'Carpool Cancelled',
-                                           f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
+#     for carpool in current_user.driver_carpools:
+#         if str(carpool.index) == carpool_id:
+#             send_async_email_to_many.delay([passenger.email_address for passenger in carpool.passengers],
+#                                            'Carpool Cancelled',
+#                                            f'Hello passengers, \n\n Your carpool for {carpool.event.name} has been cancelled. Please contact the driver for more information, or sign up for another carpool.')
 
-            carpool.driver = None
-            carpool.driver_id = None
-            carpool.passengers = []
-            carpool.destination = carpool.region.dropoff_location
-            db.session.commit()
-            return redirect(url_for('main.manage_carpools_page'))
+#             carpool.driver = None
+#             carpool.driver_id = None
+#             carpool.passengers = []
+#             carpool.destination = carpool.region.dropoff_location
+#             db.session.commit()
+#             return redirect(url_for('main.manage_carpools_page'))
 
-    logger.debug(f'{current_user.driver}')
-    return render_template('error_template.html', main_message='Go Away',
-                           sub_message='You do not have access to cancel this carpool.', user=current_user)
+#     logger.debug(f'{current_user.driver}')
+#     return render_template('error_template.html', main_message='Go Away',
+#                            sub_message='You do not have access to cancel this carpool.', user=current_user)
 
 
 @internal_blueprint.route('/change-carpool-destination', methods=['GET', 'POST'])
@@ -356,8 +357,11 @@ def create_destination():
 
     if request.method == 'GET':
         return redirect(url_for('main.create_event_page'))
+    
     # creating the destination
-    new_address = Address(id=None,
+    new_address = Address.query.filter_by(code=request.form['place_id']).first()
+    if not new_address:
+        new_address = Address(id=None,
                           address_line_1=request.form['addressline1'],
                           zip_code=request.form['zipcode'],
                           city=request.form['city'],
@@ -370,9 +374,12 @@ def create_destination():
     db.session.commit()
 
     logger.info('Address {} created'.format(new_address))
+    logger.info(request.form)
 
     new_destination = Destination(name=request.form['destinationname'],
-                                  address_id=new_address.id)
+                                  address_id=new_address.id,
+                                  organization=Organization.query.get(int(request.form['organization'])),
+                                  organization_id=int(request.form["organization"]))
 
     db.session.add(new_destination)
     db.session.commit()
@@ -392,7 +399,7 @@ def get_generated_carpool_data(carpool_id):
 
     # checking if the person is eligible to view the carpool
     if (carpool.driver.id != current_user.id and len([passenger for passenger in carpool.passengers if
-                                                      passenger.id == current_user.id]) == 0) and not current_user.is_admin:
+                                                      passenger.id == current_user.id]) == 0) and not current_user.is_admin():
         return redirect(url_for('main.index'))
 
     carpool_data = {'driverName': carpool.driver.first_name.capitalize() + ' ' + carpool.driver.last_name.capitalize(),
@@ -616,25 +623,45 @@ def cancel_generated_carpool(carpool_id):
 def register_new_user():
     def valid(s: str) -> str | None:
         return s if s else None
+    
+    new_organization = False
+    try:
+        new_name = request.form["organizationname"]
+        logger.debug(new_name)
+        if new_name:
+            logger.debug(f"The new organization name is {new_name}")
+            new_organization = True
+        else:
+            logger.debug("No new organization was found.")
+    except KeyError as e:
+        logger.debug(e)
 
-    address = Address(
-        address_line_1=request.form['addressline1'],
-        address_line_2=request.form['addressline2'],
-        city=request.form['city'],
-        state='VA',
-        zip_code=request.form['zipcode'],
-        latitude=request.form['latitude'],
-        longitude=request.form['longitude'],
-        code=request.form['placeid']
-    )
+
+    if new_organization:
+        organization = Organization(name=request.form["organizationname"], access_key=secrets.token_urlsafe(8))
+    else:
+        organization = Organization.query.filter_by(access_key=request.form["organizationaccesskey"]).one()
+
+    address = Address.query.filter_by(
+        code=request.form['placeid']).first()
+    
+    if not address:
+        address = Address(
+            address_line_1=request.form['addressline1'],
+            address_line_2=request.form['addressline2'],
+            city=request.form['city'],
+            state='VA',
+            zip_code=request.form['zipcode'],
+            latitude=request.form['latitude'],
+            longitude=request.form['longitude'],
+            code=request.form['placeid']
+        )
 
     new_user = User(
         first_name=request.form['firstname'].lower(),
         last_name=request.form['lastname'].lower(),
         email_address=request.form['email'],
         phone_number=request.form['phonenumber'],
-        team_auth_key='0',
-        region_name=request.form['regionname'],
         car_type_1=valid(request.form['cartype1']),
         car_type_2=valid(request.form['cartype2']),
         car_color_1=valid(request.form['carcolor1']),
@@ -648,8 +675,16 @@ def register_new_user():
         password=generate_password_hash(request.form['password'])
     )
 
+    new_user.addresses.append(address)
+    new_user.organizations.append(organization)
     db.session.add(new_user)
     db.session.commit()
+
+    if new_organization:
+        new_user.organizations[0].organization_user_links[0].admin_level = 2
+    db.session.commit()
+
+
     return redirect(url_for('main.home_page'))
 
 
@@ -660,3 +695,9 @@ def email_address_exists(email_address):
         return 'True'
     else:
         return 'False'
+    
+@internal_blueprint.route('/organization-key-exists/<organization_key>')
+def organization_key_exists(organization_key):
+    organization = Organization.query.filter_by(access_key=organization_key).first()
+    return "True" if organization else "False"
+

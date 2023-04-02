@@ -6,7 +6,58 @@
 
 {% block main %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
-    <section id='firstsection' class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+    <section id='entrancesection' class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-md-8 col-xl-6 text-center mx-auto">
+                    <h2 style="font-family: ostrich_sansheavy;color: var(--bs-link-color);font-size: 64.632px;">Enter Organization Key</h2>
+                    <p class="w-lg-50">Enter your organization key to get started, or start one yourself. You can add more organizations later.</p>
+                </div>
+            </div>
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+                    <div class="card mb-5">
+                        <div class="card-body shadow d-flex flex-column align-items-center">
+                            <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-person">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"></path>
+                                </svg></div>
+                            <form class="text-center" id="entranceForm">
+                                <div class="mb-3"><input class="form-control" type="text" name="organization" id="inputOrganizationKey" placeholder="Organization Key"></div>
+                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="startContinueButton" onclick="renderRegistrationForm(event, false)" type="button">Continue Registration</button></div>
+                                <div class="mb-3"><button class="btn btn-secondary d-block w-100"  id="startContinueButton" onclick="renderNewOrganizationForm(event)" type="button">Create New Organization</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id='neworganizationsection' class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%); display:none">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-md-8 col-xl-6 text-center mx-auto">
+                    <h2 style="font-family: ostrich_sansheavy;color: var(--bs-link-color);font-size: 64.632px;">Create New Organization</h2>
+                    <p class="w-lg-50">Enter settings for the new organization.</p>
+                </div>
+            </div>
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+                    <div class="card mb-5">
+                        <div class="card-body shadow d-flex flex-column align-items-center">
+                            <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-person">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"></path>
+                                </svg></div>
+                            <form class="text-center" id="organizationForm" onsubmit="renderRegistrationForm(event, true)">
+                                <div class="mb-3"><input class="form-control" type="text" name="organization" id="inputOrganizationName" placeholder="New Organization Name"></div>
+                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="startContinueButton" onclick="renderRegistrationForm(event, true)" type="button">Register</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id='firstsection' class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%); display:none">
         <div class="container">
             <div class="row mb-5">
                 <div class="col-md-8 col-xl-6 text-center mx-auto">
@@ -64,15 +115,15 @@
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Primary Car Color" name="carcolor1" required /></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Secondary Car Type" name="cartype2" /></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Secondary Car Color" name="carcolor2" /></div>
-                            <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
+                            <!-- <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
                                     <optgroup label="Region">
                                         {% for region in regions %}
                                         <option value="{{ region.name }}">{{ region.name }}</option>
                                         {%  endfor %}
                                     </optgroup>
-                                </select></div>
+                                </select></div> -->
                             <div class="mb-3"><label class="form-label" name="studentorparent">Student or Parent</label><select class="form-select">
-                                    <optgroup label="Region">
+                                    <optgroup label="Student or Parent">
                                         <option value="12">Student</option>
                                         <option value="14">Parent</option>
                                     </optgroup>
@@ -110,13 +161,13 @@
                             <div class="mb-3"><input class="form-control" type="tel" name="phonenumber" placeholder="Phone Number" required /></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Number" name="emergencycontact" required /></div>
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Emergency Contact Relation" name="emergencycontactrelation" required /></div>
-                            <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
-                                    <optgroup label="Region">
+                            <!-- <div class="mb-3"><label class="form-label" name="regionname">Region</label><select class="form-select">
+                                     <optgroup label="Region">
                                         {% for region in regions %}
                                         <option value="{{ region.name }}">{{ region.name }}</option>
                                         {%  endfor %}
                                     </optgroup>
-                                </select></div>
+                                </select></div> -->
                             <div class="mb-3"><input class="form-control" type="text" placeholder="Note" name="note"/></div>
                             <div class="mb-3"><button class="btn btn-primary d-block w-100" type="button" id="passengerContinueButton" onclick="renderAddressForm(event)">Continue</button></div>
                         </form>
@@ -170,7 +221,7 @@
         <input type="hidden" name="cartype2" id="cartype2">
         <input type="hidden" name="carcolor2" id="carcolor2">
         <input type="hidden" name="numberofseats" id="numberofseats">
-        <input type="hidden" required name="regionname" id="regionname">
+        <!-- <input type="hidden" required name="regionname" id="regionname"> -->
         <input type="hidden" required name="addressline1" id="addressline1">
         <input type="hidden" name="addressline2" id="addressline2">
         <input type="hidden" required name="city" id="city">
@@ -183,6 +234,8 @@
     <input type="hidden" required name="latitude" id="latitude">
     <input type="hidden" required name="longitude" id="longitude">
     <input type="hidden" required name="placeid" id="placeid">
+    <input type="hidden" name="organizationname" id="organizationname"> <!-- will be empty if new organization not created-->
+    <input type="hidden" name="organizationaccesskey" id="organizationaccesskey"> <!--will be empty if new organization is created-->
     <input type="submit"/>
 
     </form>
@@ -196,25 +249,29 @@
     const buttons = ['startContinueButton', 'passengerContinueButton', 'driverContinueButton', 'submitButton'];
     const buttonSections = ['firstsection', 'passengersection', 'driversection', 'addresssection'];
 
-    {#function eventListener(event, buttonName, sectionName) {#}
-    {#    // preventing the hidden sections from pressing (im not actually sure if this is needed)#}
-    {#    console.log("event listener called");#}
-    {#    function tempFunction(event) {#}
-    {#        console.log("inner event listener called");#}
-    {#        if (document.getElementById(sectionName).style.display === 'none') {#}
-    {#            return#}
-    {#        }#}
-    {#        if (event.key === 'Enter') {#}
-    {#            event.preventDefault();#}
-    {#            document.getElementById(buttonName).click();#}
-    {#        }#}
-    {#    }#}
-    {#    return tempFunction;#}
-{##}
-{#    for (let i = 0; i < buttons.length; i++) {#}
-{#        document.getElementById(buttons[i]).addEventListener('keypress', eventListener(event, buttons[i], buttonSections[i]));#}
-{#    }#}
 
+    function eventListener(event, buttonName, sectionName) {
+        // preventing the hidden sections from pressing (im not actually sure if this is needed)#}
+        console.log("event listener called");
+        function tempFunction(event) {
+            console.log("inner event listener called");
+            if (document.getElementById(sectionName).style.display === 'none') {
+                return
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById(buttonName).click();
+            }
+            
+        
+        return tempFunction;
+        }
+    }
+
+  for (let i = 0; i < buttons.length; i++) {
+      document.getElementById(buttons[i]).addEventListener('keypress', eventListener(event, buttons[i], buttonSections[i]));
+  }
+  
 
 
     let roleSelector = document.getElementById('passengerordriver');
@@ -314,6 +371,41 @@
          // help
     }
 
+    function renderRegistrationForm(event, newOrganization) {
+        //checking to make sure that organization key is valid
+
+        if (!newOrganization) {  // if the user is not trying to make a new organization, make sure that the valdation key is valid.
+        console.log("running check to make sure that the email address is not in the database");
+        let request = new XMLHttpRequest();
+        request.open('GET', '{{ url_for('internal.organization_key_exists', organization_key='REPLACE') }}'.replace('REPLACE', document.getElementById('inputOrganizationKey').value), false);
+        request.send(null);
+        console.log("Valid organization key entered: " + request.responseText)
+        if (request.responseText === 'False') {
+            alert('Invalid Access Key entered.');
+            event.preventDefault();
+            return;
+        }
+        console.log('Valid organization key entered');
+        document.getElementById("organizationaccesskey").value = document.getElementById("inputOrganizationKey").value;
+        // setting the value of the access key for use on the backend
+    } else {
+        //setting the organization name input value to the new organization name. The key and things are handled in the backend.
+        document.getElementById("organizationname").value = document.getElementById("inputOrganizationName").value;
+        console.log(document.getElementById("organizationname").value);
+    }
+
+
+        document.getElementById("entrancesection").style.display="none";
+        document.getElementById("neworganizationsection").style.display="none";
+        document.getElementById("firstsection").style.display="block";
+    }
+
+    function renderNewOrganizationForm(event) { 
+
+        document.getElementById("entrancesection").style.display="none";
+        document.getElementById("neworganizationsection").style.display="block";
+        document.getElementById("firstsection").style.display="none";
+    }
 
     function renderRoleSpecificForm(event) {
         console.log('attempting to render the passenger or driver page.')
@@ -441,11 +533,12 @@
                 document.getElementById(inputName).value = roleSpecificForm.children[i].firstElementChild.value;
             }
         }
+
         document.getElementById("latitude").value = latitude;
         document.getElementById("longitude").value = longitude;
         document.getElementById("placeid").value = place_id;
         document.getElementById('submitForm').submit()
     }
-    </script>
+</script>
 
 {%  endblock scripts %}

@@ -1,4 +1,4 @@
-from carpooling.models import User, AuthKey
+from carpooling.models import User
 from carpooling import mail
 from flask import redirect, url_for, session, request
 from flask_mail import Message
@@ -31,63 +31,63 @@ def check_cookie():
     pass
 
 
-def requires_auth_key(function):
+def requires_auth_key(function): # temporarily disabled because authentication system changing
     """
     Decorator for checking if a user has a valid auth key. If they do not, they are redirected to the auth key page.
     """
 
     @wraps(function)
     def wrapper(*args, **kwargs):
-        if current_user.is_authenticated:
-            if current_user.is_admin > 0:  # admins don't need auth keys
-                return function(*args, **kwargs)
-            try:
-                if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key) or (
-                        current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key):
-                    # encoding the key word args for the url
-                    kwargs_keys = '--'.join(kwargs)
-                    kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                    if not kwargs_keys:
-                        kwargs_keys = '--'
-                    if not kwargs_string:
-                        kwargs_string = '--'
-                    return redirect(
-                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
-                                kwargs_string=kwargs_string))
-            except:
-                if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key):
-                    # encoding the key word args for the url
-                    kwargs_keys = '--'.join(kwargs)
-                    kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                    if not kwargs_keys:
-                        kwargs_keys = '--'
-                    if not kwargs_string:
-                        kwargs_string = '--'
-                    return redirect(
-                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
-                                kwargs_string=kwargs_string))
-        else:
-            s = URLSafeSerializer(current_app.secret_key)
-            try:
-                if s.loads(request.cookies.get('driver-access'))[0] == 'access granted':
-                    logger.info('Access granted')
-                    return function(*args, **kwargs)
-                else:
-                    kwargs_keys = '--'.join(kwargs)
-                    kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                    if not kwargs_keys:
-                        kwargs_keys = '--'
-                    if not kwargs_string:
-                        kwargs_string = '--'
-                    return redirect(
-                        url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
-                                kwargs_string=kwargs_string))
-            except TypeError as e:  # this is very awful
-                logger.debug(e)
-                kwargs_keys = '--'.join(kwargs)
-                kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
-                return redirect(url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
-                                        kwargs_string=kwargs_string))
+        # if current_user.is_authenticated:
+        #     if current_user.is_admin() > 0:  # admins don't need auth keys
+        #         return function(*args, **kwargs)
+        #     try:
+        #         if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key) or (
+        #                 current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).all()[1].key):
+        #             # encoding the key word args for the url
+        #             kwargs_keys = '--'.join(kwargs)
+        #             kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+        #             if not kwargs_keys:
+        #                 kwargs_keys = '--'
+        #             if not kwargs_string:
+        #                 kwargs_string = '--'
+        #             return redirect(
+        #                 url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
+        #                         kwargs_string=kwargs_string))
+        #     except:
+        #         if not (current_user.team_auth_key == AuthKey.query.order_by(AuthKey.index.desc()).first().key):
+        #             # encoding the key word args for the url
+        #             kwargs_keys = '--'.join(kwargs)
+        #             kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+        #             if not kwargs_keys:
+        #                 kwargs_keys = '--'
+        #             if not kwargs_string:
+        #                 kwargs_string = '--'
+        #             return redirect(
+        #                 url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
+        #                         kwargs_string=kwargs_string))
+        # else:
+        #     s = URLSafeSerializer(current_app.secret_key)
+        #     try:
+        #         if s.loads(request.cookies.get('driver-access'))[0] == 'access granted':
+        #             logger.info('Access granted')
+        #             return function(*args, **kwargs)
+        #         else:
+        #             kwargs_keys = '--'.join(kwargs)
+        #             kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+        #             if not kwargs_keys:
+        #                 kwargs_keys = '--'
+        #             if not kwargs_string:
+        #                 kwargs_string = '--'
+        #             return redirect(
+        #                 url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
+        #                         kwargs_string=kwargs_string))
+        #     except TypeError as e:  # this is very awful
+        #         logger.debug(e)
+        #         kwargs_keys = '--'.join(kwargs)
+        #         kwargs_string = '--'.join([kwargs[kwarg] for kwarg in kwargs])
+        #         return redirect(url_for('auth.verify_auth_key_page', next=f'main.{function.__name__}', kwargs_keys=kwargs_keys,
+        #                                 kwargs_string=kwargs_string))
 
         return function(*args, **kwargs)
 
@@ -102,7 +102,7 @@ def admin_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if current_user.is_authenticated:
-            if current_user.is_admin > 0:
+            if current_user.is_admin() > 0:
                 return function(*args, **kwargs)
             else:
                 return redirect(url_for('main.home_page'))
@@ -120,7 +120,7 @@ def super_admin_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if current_user.is_authenticated:
-            if current_user.is_admin > 1:
+            if current_user.is_admin() > 1:
                 return function(*args, **kwargs)
             else:
                 return redirect(url_for('main.home_page'))

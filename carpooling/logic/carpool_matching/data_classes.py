@@ -178,7 +178,11 @@ class Solution:
 
                 temp_value += (carpool.driver.num_seats / (carpool.driver.num_seats - 1)) * (
                         1 - total_distance_after_carpool / total_distance_before_carpool)
-            self.length_objective_value = temp_value / len(self.carpools)
+            try:
+                self.length_objective_value = temp_value / len(self.carpools)
+            except ZeroDivisionError:
+                logger.warning('No one has signed up for the carpool.')
+                self.length_objective_value = 0
             logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
             return self.length_objective_value
 
@@ -194,8 +198,11 @@ class Solution:
 
         needed_passengers = [passenger for passenger in self.all_passengers if not passenger.can_drive]
         served_passengers = [passenger for passenger in served_passengers if not passenger.can_drive]
-
-        self.needed_passengers_served_objective_value = len(served_passengers) / len(needed_passengers)  # ratio
+        try:
+            self.needed_passengers_served_objective_value = len(served_passengers) / len(needed_passengers)  # ratio
+        except ZeroDivisionError:
+            logger.warning('no passengers that cannot drive have signed up for the carpool.')
+            self.needed_passengers_served_objective_value = 1
         logger.info(
             f'Solution {self} has a needed passengers served objective value of {self.needed_passengers_served_objective_value}')
         return self.needed_passengers_served_objective_value

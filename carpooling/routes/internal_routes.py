@@ -378,8 +378,8 @@ def create_destination():
 
     new_destination = Destination(name=request.form['destinationname'],
                                   address_id=new_address.id,
-                                  organization=Organization.query.get(int(request.form['organization'])),
-                                  organization_id=int(request.form["organization"]))
+                                  organization=Organization.query.get(int(session['organization'])),
+                                  organization_id=int(session['organization']))
 
     db.session.add(new_destination)
     db.session.commit()

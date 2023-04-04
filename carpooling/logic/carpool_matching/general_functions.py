@@ -128,10 +128,11 @@ def fill_distance_matrix(rsvp_list: list, destination_id: int, use_placeid=True)
     # TODO only get the values that are reasonably close to each other already.
     # We don't need a northside distance to a southside distance.
     # If its in the algorithm, then just input a high value
+    logger.debug(destination_id)
+    logger.debug(rsvp_list)
 
     destination_id = Destination.query.get(destination_id).address.id
-    logger.info(destination_id)
-    logger.debug(rsvp_list)
+
 
     # query addresses
     used_addresses_ids = [address.id for address in Address.query.join(AddressUserLink).filter(

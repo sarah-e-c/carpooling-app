@@ -159,11 +159,7 @@ class User(UserMixin, db.Model):
         """
         Returns the admin level for the current organization section.
         """
-        try:
-            organization = int(session['organization'])
-        except KeyError | ValueError as e:
-            organization = int(self.organizations[0].id)
-
+        organization = int(session['organization'])
         admin_level = OrganizationUserLink.query.filter_by(user_id=self.id, organization_id=organization).first().admin_level
         return admin_level
     
@@ -171,7 +167,7 @@ class User(UserMixin, db.Model):
         """
         Sets the admin level
         """
-        organization_user_link = OrganizationUserLink.query.filter_by(user_id=self.id, organization_id=organization).first()
+        organization_user_link = OrganizationUserLink.query.filter_by(user_id=self.id, organization_id=int(session['organization'])).first()
         organization_user_link.admin_level = level
         db.session.commit()
 

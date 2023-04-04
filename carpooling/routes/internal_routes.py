@@ -8,9 +8,9 @@ from carpooling.models import Event, Carpool, User, EventCheckIn, Destination, A
 import logging
 from carpooling.tasks import send_async_email, send_async_email_to_many
 from carpooling.utils import admin_required, requires_auth_key
-from flask import render_template, request, redirect, url_for, Blueprint, make_response, jsonify
+from flask import render_template, request, redirect, url_for, Blueprint, make_response, jsonify, session, flash
 import datetime
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user
 from flask_mail import Message
 from io import StringIO
 import csv
@@ -683,8 +683,7 @@ def register_new_user():
     if new_organization:
         new_user.organizations[0].organization_user_links[0].admin_level = 2
     db.session.commit()
-
-
+    login_user(new_user, remember=True)
     return redirect(url_for('main.home_page'))
 
 
@@ -701,3 +700,18 @@ def organization_key_exists(organization_key):
     organization = Organization.query.filter_by(access_key=organization_key).first()
     return "True" if organization else "False"
 
+@internal_blueprint.route('/change-organization/<organization_id>')
+@login_required
+def change_organization(organization_id):
+    """
+    route to change the organization that the user is logged into. Requires that they are a part of the organization.
+    Reload is performed on the frontend to enact the change.
+    """
+    if int(organization_id) not in [organization.id for organization in current_user.organizations]:
+        return 'Attempted to change organization into one user did not belong to.'
+    
+    session['organization'] = organization_id
+    session['organizationname'] = Organization.query.get(int(organization_id)).name
+    logger.debug("organization logged into changed.")
+    flash(f'Current organization changed.')
+    return "Successfully changed current organization."

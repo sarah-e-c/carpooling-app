@@ -1,8 +1,7 @@
 from carpooling.models import CarpoolSolution, User, Event
 from carpooling.utils import admin_required
-from flask import render_template
+from flask import render_template, Blueprint
 from flask_login import current_user
-from flask import Blueprint
 import logging
 
 admin_blueprint = Blueprint('admin', __name__, template_folder='templates')

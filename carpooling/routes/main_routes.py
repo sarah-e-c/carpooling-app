@@ -17,6 +17,7 @@ from flask_mail import Message
 from flask import Blueprint, session
 from carpooling import tasks_
 
+
 main_blueprint = Blueprint('main', __name__, template_folder='templates')
 
 DEFAULT_NUMBER_OF_CARPOOLS = 4

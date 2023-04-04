@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, session
 import os
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_mail import Mail
 import logging
 from celery import Celery
@@ -77,6 +77,18 @@ def create_app(extra_config_settings=None):
 
 
 app = create_app()
+
+
+@app.before_request
+def verify_organization():
+    if current_user.is_authenticated:
+        if session['organization'] not in [organization.id for organization in current_user.organizations]:
+            session['organization'] = current_user.organizations[0].id
+            session['organizationname'] = current_user.organizations[0].name
+    else:
+        session['organization'] = None
+        session['organizationname'] = None
+
 
 # import carpooling.routes
 # from carpooling.models import User

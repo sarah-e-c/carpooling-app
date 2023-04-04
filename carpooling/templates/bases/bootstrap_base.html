@@ -12,10 +12,14 @@
     <meta property="og:image:width" content="1280" />
     <meta property="og:image:height" content="800" />
     <title>{% block title %}{% endblock %}</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
+    <!-- <script type="text/javascript" src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script> -->
     <link rel="stylesheet" href="{{ url_for('static', filename= 'assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans&amp;display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', filename= 'assets/css/styles.min.css') }}">
 {% block styles %}
 {% endblock styles %}
 </head>
@@ -30,6 +34,23 @@
                     </svg></span><span>CarpoolGO</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-5"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="navcol-5">
                 {% if user.is_authenticated %}
+                {% if user.organizations | length > 1 %}
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      {{session['organizationname']}}
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        {% for organization in current_user.organizations %}
+                        {% if session['organizationname'] != organization.name %} {# Making sure that duplicate organizations not shown#}
+                        <a class="dropdown-item" onclick="changeOrganization(organizationId='{{organization.id}}')" href="#">{{organization.name}}</a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                  </div>
+                {% else %}
+                <span class="navbar-brand d-flex align-items-center"><small>{{session['organizationname']}}</small></span>
+                {% endif %}
+
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="{{ 'active nav-link' if active_page == 'events' else 'nav-link' }}" href="{{ url_for('main.events_page') }}">Events</a></li>
                     <li class="nav-item"><a class="{{ 'active nav-link' if active_page == 'carpools' else 'nav-link' }}" href="{{ url_for('main.manage_carpools_page') }}">Carpools</a></li>
@@ -45,6 +66,8 @@
             </div>
         </div>
     </nav>
+
+
     {%  block main %}
 
 
@@ -88,6 +111,15 @@
     </footer>
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script>
+        function changeOrganization(organizationId) {
+            console.log(organizationId)
+            let request = new XMLHttpRequest();
+            request.open('GET', "{{url_for('internal.change_organization', organization_id='REPLACE')}}".replace("REPLACE", organizationId), true);
+            request.send();
+            console.log(request.responseText);
+            location.reload();
+        }
+
         let toastElList = [].slice.call(document.querySelectorAll('.toast'));
         let toastList = toastElList.map(function (toastEl) {
             let toast = new bootstrap.Toast(toastEl);

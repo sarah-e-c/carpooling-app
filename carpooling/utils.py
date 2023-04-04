@@ -6,9 +6,22 @@ from flask_login import current_user
 from functools import wraps
 from itsdangerous import URLSafeSerializer
 import logging
+from flask import session, Blueprint
 from flask import current_app
 
 logger = logging.getLogger(__name__)
+
+
+
+class ModifiedBlueprint(Blueprint):
+    """
+    Class that keeps track of the current organization automagically. If the site slows down, modify this
+    """
+    def route(self, rule, **options):
+        something = super().route(rule, **options)
+
+        
+        
 
 
 class PersonAlreadyExistsException(Exception):

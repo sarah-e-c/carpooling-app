@@ -34,7 +34,7 @@
                         <h4 class="card-title">Carpool Summary</h4>
                         <p class="card-text">
                             {% if carpool.driver == user %} You will leave at {{carpool.start_time.strftime('%-I:%M %p')}} for the event from {{carpool.event.start_time.strftime('%-I:%M %p')}} to {{carpool.event.end_time.strftime('%-I:%M %p')}}.
-                            {% else %} {% if carpool.carpool_solution.type == 'to' %} You will be picked up at  {{carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p')}}for the event at {{carpool.event.start_time.strftime('%-I:%M %p')}}.
+                            {% else %} {% if carpool.carpool_solution.type == 'to' %} You will be picked up at {{carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p')}} for the event at {{carpool.event.start_time.strftime('%-I:%M %p')}}.
                             {% else %} You will be dropped off at {{carpool.get_carpool_dropoff_time_for_user(user).strftime('%-I:%M %p')}} for the event ending at {{carpool.event.end_time.strftime('%-I:%M %p')}}.{%endif%}
                             {% endif %}
                             <br>

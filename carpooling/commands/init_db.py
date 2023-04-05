@@ -41,6 +41,24 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
         data = json.load(f)
     
     organization = models.Organization(name="Test Organization", access_key=secrets.token_urlsafe(8))
+    db.session.add(organization)
+    db.session.commit()
+    destination_address = models.Address(
+        latitude = 37.5579166667,
+        longitude = -77.27135,
+        code=0,
+        address_line_1 = '1000 N Lombardy Street',
+        city = 'Richmond',
+        state = 'VA',
+        zip_code = '23220',
+    )
+    first_destination = models.Destination(
+        name='Maggie L. Walker Governor\'s School',
+        address=destination_address,
+        organization=organization
+    )
+    db.session.add(first_destination)
+    db.session.commit()
     for id, person in data.items():
         new_address = models.Address(
             latitude = person['address']['latitude'],
@@ -71,26 +89,6 @@ def create_test_data(people_filepath=None, events_filepath=None, signup_filepath
         )
         db.session.add(new_user)
         new_user.organizations.append(organization)
-
-    db.session.add(organization)
-    db.session.commit()
-    destination_address = models.Address(
-        latitude = 37.5579166667,
-        longitude = -77.27135,
-        code=0,
-        address_line_1 = '1000 N Lombardy Street',
-        city = 'Richmond',
-        state = 'VA',
-        zip_code = '23220',
-    )
-    first_destination = models.Destination(
-        name='Maggie L. Walker Governor\'s School',
-        address=destination_address,
-        organization=organization
-    )
-    db.session.add(first_destination)
-    db.session.commit()
-    
 
     db.session.commit()
 

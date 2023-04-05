@@ -474,8 +474,7 @@ class GeneratedCarpool(db.Model):
         """
         Returns the points for this carpool
         """
-        return 0  # TODO implement the algorithm for this -- i probably also need to add a column for the distances for this
-
+        return int(eval(self.carpool_solution.pool_points)[user.id])
 class Organization(db.Model):
     """
     Table to store organizations.
@@ -558,6 +557,7 @@ class CarpoolSolution(db.Model):
     favorable_route_objective_value = db.Column(db.Float, nullable=False, default=0)
     is_best = db.Column(db.Boolean, nullable=True)
     type = db.Column(db.String(4), nullable=False)  # to or from or both
+    pool_points = db.Column(db.String(1000),nullable=False) # JSON string of pool points earned per user. Format: {user_id: pool_points}
 
 
 class EventCarpoolSignup(db.Model):

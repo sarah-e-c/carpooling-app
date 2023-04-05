@@ -66,13 +66,16 @@ def address_matching_test_implementation(type_: str):
         utility_value=solution.total_utility_value,
         event_id=event.index,
         is_best=False,
-        type=type_
+        type=type_,
+        pool_points=str(solution.pool_points_dict)
     )
     db.session.add(new_solution)
 
     for carpool in solution.carpools:
-        driver_id = User.query.get(
-            carpool.driver.id_).id
+        driver= User.query.get(
+            carpool.driver.id_)
+        driver_id = driver.id
+
         new_carpool = GeneratedCarpool(
             carpool_solution=new_solution,
             from_address_id=carpool.route[0],
@@ -83,7 +86,9 @@ def address_matching_test_implementation(type_: str):
             to_time=carpool.route_specific_times[-1],
         )
         for passenger in carpool.passengers:
-            new_carpool.passengers.append(User.query.get(passenger.id_))
+            stored_passenger = User.query.get(passenger.id_)
+            new_carpool.passengers.append(stored_passenger)
+
         db.session.add(new_carpool)
         for i in range(len(carpool.route) - 1):
             new_part = GeneratedCarpoolPart(

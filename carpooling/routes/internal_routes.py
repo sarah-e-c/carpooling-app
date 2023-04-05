@@ -17,6 +17,7 @@ import csv
 import json
 from werkzeug.security import generate_password_hash
 import secrets
+import json
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -471,6 +472,8 @@ def confirm_carpool(carpool_id):
         generated_carpool=carpool,
         is_accepted=True,
     )
+    current_user.pool_points += eval(carpool.carpool_solution.pool_points)[current_user.id]
+    logger.info('Added {} pool points to user {}'.format(eval(carpool.carpool_solution.pool_points)[current_user.id], current_user))
     db.session.add(new_response)
     db.session.commit()
 
@@ -565,6 +568,8 @@ def cancel_generated_carpool(carpool_id):
     # if they are not the driver, then redirect
     logger.info('Driver {} cancelling carpool {}'.format(current_user, carpool_id))
     carpool = GeneratedCarpool.query.get(carpool_id)
+    current_user.pool_points -= eval(carpool.carpool_solution.pool_points)[current_user.id] - 5
+    logger.info('Subtracting {} pool points to user {} plus an additional 5 for cancelling.'.format(eval(carpool.carpool_solution.pool_points)[current_user.id], current_user))
     if carpool.driver == current_user:
         # notify all the carpool recipients
         send_async_email_to_many.delay(

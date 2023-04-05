@@ -243,9 +243,9 @@ class User(UserMixin, db.Model):
         """
         try:
             if not self.addresses[address_number - 1].address_line_2:
-                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, {self.addresses[address_number -1].state} {self.addresses[address_number - 1].zip_code}'
             else:
-                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, {self.addresses[address_number-1].state} {self.addresses[address_number - 1].zip_code}'
         except IndexError:
             return 'No address'
 
@@ -375,11 +375,17 @@ class Address(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     code = db.Column(db.String, nullable=True,
                      unique=True)  # change these once all of the addresses are loaded in properly
-    destination = db.relationship('Destination', back_populates='address', uselist=False)
+    destination = db.relationship('Destination', back_populates='address')
     users = db.relationship('User', back_populates='addresses', secondary='address_user_links')
 
     def __repr__(self):
         return f'Address: {self.address_line_1}'
+    
+    def get_address(self):
+        if not self.address_line_2:
+            return f'{self.address_line_1}, {self.city}, {self.state} {self.zip_code}'
+        else: 
+            return f'{self.address_line_1}, {self.address_line_2}, {self.city}, {self.state} {self.zip_code}'
 
 
 class Destination(db.Model):
@@ -424,7 +430,7 @@ class GeneratedCarpool(db.Model):
 
     def get_carpool_pickup_time_for_user(self, user: User):
         """
-        Returns the time the user should be picked up for this carpool
+        Returns the time the user should be picked up for this carpool in datetime format.
         """
         if user == self.driver or self.carpool_solution.type == 'from':
             return self.from_time

@@ -1,0 +1,19 @@
+{% extends 'bases/bootstrap_base.html' %}
+ 
+{% block title %}{% endblock %}
+ 
+{% block main %}
+        <section class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
+<h1 id="text02" class="text-center" style="opacity: 1; transform: none; color: var(--bs-primary); font-family: 'ostrich_sansheavy', sans-serif">Organization: {{organization.name}}</h1>
+<p id="text07" class="text-center" style="opacity: 1; transform: none;"></p>
+                <div class="row d-flex justify-content-center">
+                <div class="col-md-6 col-xl-4">
+<div class="card">
+<div class="card-body shadow d-flex flex-column align-items-center">
+    Organization Name: {{organization.name}}
+</div>
+</div>
+                </div>
+</div>
+    </section>
+{% endblock %}

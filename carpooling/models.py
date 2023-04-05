@@ -457,14 +457,14 @@ class GeneratedCarpool(db.Model):
             try:
                 user_address_id = user.addresses[0].id
                 return \
-                    [part.to_time for part in self.generated_carpool_parts if part.from_address_id == user_address_id][
+                    [part.to_time for part in self.generated_carpool_parts if part.to_address_id == user_address_id][
                         0]
             except IndexError:
                 try:
                     user_address_id = user.addresses[1].id
                     return \
                         [part.to_time for part in self.generated_carpool_parts if
-                         part.from_address_id == user_address_id][
+                         part.to_address_id == user_address_id][
                             0]
                 finally:
                     logger.error('Could not find a carpool part for user {} in carpool {}'.format(user, self))

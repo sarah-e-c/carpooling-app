@@ -32,7 +32,11 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">Carpool Summary</h4>
-                        <p class="card-text">{% if carpool.driver == user %} You will leave at {{carpool.start_time.strftime('%-I:%M %p')}}{% else %} You will be picked up at  {{carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p')}}{% endif %} for the event at {{carpool.event.start_time.strftime('%-I:%M %p')}}.
+                        <p class="card-text">
+                            {% if carpool.driver == user %} You will leave at {{carpool.start_time.strftime('%-I:%M %p')}} for the event from {{carpool.event.start_time.strftime('%-I:%M %p')}} to {{carpool.event.end_time.strftime('%-I:%M %p')}}.
+                            {% else %} {% if carpool.carpool_solution.type == 'to' %} You will be picked up at  {{carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p')}}for the event at {{carpool.event.start_time.strftime('%-I:%M %p')}}.
+                            {% else %} You will be dropped off at {{carpool.get_carpool_dropoff_time_for_user(user).strftime('%-I:%M %p')}} for the event ending at {{carpool.event.end_time.strftime('%-I:%M %p')}}.{%endif%}
+                            {% endif %}
                             <br>
                             You will get {{ carpool.get_carpool_points(user) }} Carpool Points for participating.
                         </p>
@@ -45,6 +49,7 @@
                     </div>
                     </div>
                     
+                    {% if carpool.carpool_solution.type == 'to' %}
                     {% for part in carpool.generated_carpool_parts[:-1] %}
                     <div class="card">
                         <div class="card-body">
@@ -62,24 +67,43 @@
 
                         </div>
                     </div>
+                    {% else %}
+                    {% for part in carpool.generated_carpool_parts[:-1] %}
+                    {% set loop_length = carpool.generated_carpool_parts | length%}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Stop {{loop.index}}:  {{part.to_address.users[0].first_name.capitalize()}} {{part.to_address.users[0].last_name[0].capitalize()}}'s Home</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{part.from_time.strftime('%-I:%M %p')}} to {{part.to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text">Stop to drop off {{carpool.passengers[loop_length - loop.index - 1].first_name.capitalize()}} at their home:<br> {{part.to_address.get_address()}}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Final Stop: {{carpool.driver.first_name.capitalize()}} (Driver's) Home</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{carpool.generated_carpool_parts[-1].from_time.strftime('%-I:%M %p')}} to {{carpool.generated_carpool_parts[-1].to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text"><br>Go home and rest!</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% if not user.is_confirmed_for_carpool(carpool.id) %}
         <div class="text-center"> 
-            <a class="btn btn-primary" id="leftbutton"
+            <a class="btn btn-primary btn-lg" id="leftbutton"
                 href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}" onclick="confirmConfirmCarpool(event)">
                 <span class="label">Confirm</span>
             </a>
 
-            <a class="btn-warning btn" id="rightbutton"
+            <a class="btn-warning btn btn-lg" id="rightbutton"
                 href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}" onclick="confirmDenyCarpool(event)">
                 <span class="label">
-                    Deny
+                    Decline
                 </span>
             </a>
         </div>
-        {% else %}          <div class="text-center"> <a class="btn btn-warning" id="leftbutton"
+        {% else %}          <div class="text-center"> <a class="btn btn-warning btn-lg" id="leftbutton"
         href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}" onclick="confirmCancelCarpool(event)">
         <span class="label">Cancel Carpool</span>
     </a>

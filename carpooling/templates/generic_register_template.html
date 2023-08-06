@@ -508,9 +508,16 @@
         for (let i=0; i<roleSpecificForm.length; i++) {
             console.log(i);
             let inputName = roleSpecificForm.children[i].firstElementChild.getAttribute("name");
-            console.log(inputName)
-            if (inputName != null) {
+            let inputType = roleSpecificForm.children[i].firstElementChild.getAttribute("type");
+            if (inputType == null) {
+                inputType = roleSpecificForm.children[i].children[1].getAttribute("type");
+            }
+            console.log(inputName);
+            console.log(inputType);
+            if ((inputName != null) && (inputType !== 'number')) {
                 document.getElementById(inputName).value = roleSpecificForm.children[i].firstElementChild.value;
+            } else if (inputType === 'number') {
+                document.getElementById(inputName).value = roleSpecificForm.children[i].children[1].value;
             } else {
                 break;
             }

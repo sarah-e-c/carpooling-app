@@ -558,6 +558,9 @@ class CarpoolSolution(db.Model):
     is_best = db.Column(db.Boolean, nullable=True)
     type = db.Column(db.String(4), nullable=False)  # to or from or both
     pool_points = db.Column(db.String(1000),nullable=False) # JSON string of pool points earned per user. Format: {user_id: pool_points}
+    corresponding_solution_id = db.Column(db.Integer, db.ForeignKey('carpool_solutions.id'), nullable=True)
+    corresponding_solution = db.relationship('CarpoolSolution', remote_side=[corresponding_solution_id])
+
 
 
 class EventCarpoolSignup(db.Model):

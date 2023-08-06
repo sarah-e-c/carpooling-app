@@ -13,7 +13,7 @@ DRIVER_WAITING_TIME = 5  # assuming 5 minutes of wait time between stops
 PLACEHOLDER_HIGH_VALUE = 9999999999999
 
 MAX_COMPUTATION_TIME = 5  # 5 minutes
-MAX_ITER = 1000  # 1000 iterations
+MAX_ITER = 2  # 1000 iterations
 
 API_KEY = 'AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI'
 
@@ -206,16 +206,23 @@ class Solution:
                 for passenger in carpool.passengers:
                     total_distance_before_carpool += self.kilos_matrix.loc[passenger.location_id][self.destination_id]
                 total_distance_before_carpool += self.kilos_matrix.loc[carpool.driver.location_id][self.destination_id]
-                for i in range(len(carpool.route) - 1):
+                for i in range(len(carpool.route) - 1): 
                     total_distance_after_carpool += self.kilos_matrix.loc[carpool.route[i]][carpool.route[i + 1]]
 
                 temp_value += (carpool.driver.num_seats / (carpool.driver.num_seats - 1)) * (
                         1 - total_distance_after_carpool / total_distance_before_carpool)
+                logger.info(self.destination_id)
+                logger.info(carpool.route)
+                logger.info("The total distance before the carpool is " + str(total_distance_before_carpool))
+                logger.info("The total distance after the carpool is " + str(total_distance_after_carpool))
+                
             try:
                 self.length_objective_value = temp_value / len(self.carpools)
             except ZeroDivisionError:
                 logger.warning('No one has signed up for the carpool.')
                 self.length_objective_value = 0
+            
+            
             logger.info(f'Solution {self} has a length objective value of {self.length_objective_value}')
             return self.length_objective_value
 

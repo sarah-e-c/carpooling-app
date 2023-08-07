@@ -136,94 +136,9 @@
             </a>
     {% endif %}
     {% endif %}
-
-<div class="carpooling_div tabcontent" id="carpool">
-    <!-- {% for region in regions%}
-    <div class="regiondiv" style="border-color:{{region.color}}">
-        <h3 class="style2">{{region.name.capitalize()}} Region</h3>
-        {% if user.is_authenticated %}
-        {% if user.region_name == region.name %}
-        {% if user in event.passengers_needing_ride %}
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="#" class="closedbutton n01">
-                        <span class="label">Carpool Requested</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        {% else %}
-        <div class="style1">
-                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index, region_name=region.name) }}"
-                        onclick="confirm_sign_up_for_carpool(event)" class="button n01">
-                        <span class="label">I need a carpool</span>
-        </div>
-        {% endif %}
-        {% endif %}
-        {% else %}
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index, region_name=region.name) }}"
-                        onclick="confirm_sign_up_for_carpool(event)" class="button n01">
-                        <span class="label">I need a carpool</span>
-                    </a>
-                </li>
-            </ul> <!-- Yes this logic is terrible, IM SORRY-->
-        </div>
-        {% endif %}
-
-
-        {% for carpool in region.get_carpools_in_event(event) %}
-        {% if carpool.has_driver() %}
-        <div class="style1">
-            <p class="style2"> Ride with <a
-                    href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}">
-                    {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a> </p>
-            <ul id="buttons01" class="style1 buttons">
-                <li>
-                    {% for i in range(carpool.num_passengers) %}
-                    {% if carpool.get_passenger_number_name(i) !='Open' %}
-                    <a class="closedbutton n01">
-                        <span class="label"> {{carpool.get_passenger_number_name(i)}} </span>
-                    </a>
-                    {% else %}
-                    <a onclick="is_same_person(event, '{{carpool.driver}}')"
-                        href="{{ url_for('main.passenger_carpool_signup_page', carpool_index = carpool.index)}}"
-                        class="button n01">
-                        <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
-                    </a>
-                    {% endif %}
-                    {% endfor %}
-                </li>
-            </ul>
-
-            <p class="style2"> Drop-off Location: {{carpool.get_dropoff_location()}} </p>
-        </div>
-
-        {% else %}
-        <br>
-        <br>
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="{{ url_for('main.driver_carpool_signup_page', carpool_index = carpool.index)}}"
-                        onclick="confirm_valid_driver(event)" class="button n01">
-                        <span class="label">Drive for this region!</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        {% endif %}
-
-        {% endfor %}
-    </div>
-    {% endfor %}
+    </section>
 </div>
-</section> -->
-{% endblock %}
+{% endblock main %}
 
 {% block scripts %}
 <script>
@@ -305,4 +220,4 @@
     }
 </script>
 {% endif %}
-{% endblock %}
+{% endblock scripts%}

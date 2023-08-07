@@ -13,10 +13,10 @@
     <meta property="og:image:height" content="800" />
     <title>{% block title %}{% endblock %}</title>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- <script type="text/javascript" src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.10.2/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+{#    <script type="text/javascript" src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>#}
     <link rel="stylesheet" href="{{ url_for('static', filename= 'assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,9 +25,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Sans&amp;display=swap">
 {% block styles %}
 {% endblock styles %}
+<style>
+    .bottom-stuck {
+        position: sticky;
+        bottom: 0;
+        width: 100%;
+    }
+</style>
 </head>
-
-
 
     <body>
     <nav class="navbar navbar-dark sticky-top navbar-expand-md bg-dark py-3">
@@ -70,7 +75,6 @@
         </div>
     </nav>
 
-
     {%  block main %}
 
 
@@ -79,7 +83,7 @@
     {%  for message in get_flashed_messages() %}
         <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
         <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
+            <div class="toast-header">
             <strong class="me-auto">New Message</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
@@ -90,8 +94,10 @@
     </div>
     {%  endfor %}
     </div>
-    <footer class="text-center position-sticky bg-dark">
-        <div class="container text-white py-4 py-lg-5">
+
+</body>
+    <footer class="text-center bg-dark">
+        <div class="container text-white py-4 py-lg-5" style="position:relative" >
             <ul class="list-inline">
                 <li class="list-inline-item me-4"><a class="link-light" href="#">About</a></li>
                 <li class="list-inline-item me-4"><a class="link-light" href="#">Contact</a></li>
@@ -114,6 +120,23 @@
     </footer>
     <script src="{{ url_for('static', filename='assets/bootstrap/js/bootstrap.min.js') }}"></script>
     <script>
+        const footer = document.querySelector("footer");
+
+        // Function to update the footer position
+        function updateFooterPosition() {
+            console.log(footer)
+            const isFooterVisible = footer.getBoundingClientRect().top < window.innerHeight;
+            console.log(isFooterVisible);
+            if (isFooterVisible) {
+                footer.classList.add("bottom-stuck");
+            } else {
+                footer.classList.remove("bottom-stuck");
+            }
+        }
+
+        // Call the function on page load and window resize
+        window.addEventListener("load", updateFooterPosition);
+        window.addEventListener("resize", updateFooterPosition);
         function changeOrganization(organizationId) {
             console.log(organizationId)
             let request = new XMLHttpRequest();
@@ -128,9 +151,9 @@
             let toast = new bootstrap.Toast(toastEl);
             toast.show();
             return toast;
-        })
+        });
+
     </script>
     {% block scripts %}
     {%  endblock %}
-</body>
-
+</html>

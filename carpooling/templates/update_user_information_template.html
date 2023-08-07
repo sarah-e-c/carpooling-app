@@ -6,131 +6,6 @@
 
 {% block main %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
-    </span>
-</div>
-<h1 id="text01" class="style1">Change Information</h1>
-<h2 id="text07" class="style2">{{ message }}</h2>
-<hr id="divider02" class="style1">
-<div id="text02" class="style2">
-    <form action="{{url_for('auth.update_user_information_page')}}" method="post">
-        <div id="formtable">
-        <p>
-        <label for="studentorparent">Student or Parent</label>
-        
-        <input type="text" id="studentorparent" name="studentorparent" value={{user.student_or_parent}} class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="licenseyears">Number of Years with License (if student)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-        <input type="text" id="licenseyears" name="licenseyears" value={{user.num_years_with_license}} class="input1">
-        </p>
-        <br>
-        <p>
-            <label for="numberofseats">Max Number of Passengers</label>
-            <input type="text" id="numberofseats" name="numberofseats" value="{{user.num_seats}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="firstname">First Name</label>
-        <input type="text" id="firstname" name="firstname" value="{{user.first_name.capitalize()}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="lastname">Last Name</label>
-        <input type="text" id="lastname" name="lastname" value="{{user.last_name.capitalize()}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="cartype1">Primary Car Type</label>
-        <input type="text" id="cartype1" name="cartype1" value="{{user.car_type_1}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="carcolor1">Primary Car Color</label>
-        <input type="text" id="carcolor1" name="carcolor1" value="{{user.car_color_1}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-            <label for="cartype2">Secondary Car Type</label>
-            <input type="text" id="cartype2" name="cartype2" value="{{user.car_type_2}}" class="input1">
-            </p>
-        <br>
-        <p>
-            <label for="carcolor2">Secondary Car Color</label>
-            <input type="text" id="carcolor2" name="carcolor2" value="{{user.car_color_2}}" class="input1">
-        </p>
-        <br>
-        <p>
-        <label for="email">Email Address</label>
-        <input type="text" id="email" name="email" value="{{user.email_address}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="phonenumber">Phone Number</label>
-        <input type="text" id="phonenumber" name="phonenumber" value="{{user.phone_number}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-            <label for="emergencycontact">Emergency Contact Phone Number</label>
-            <input type="text" id="emergencycontact" name="emergencycontact" value="{{user.emergency_contact_number}}" class="input1" required="required">
-            </p>
-        <br> 
-        <p>
-            <label for="emergencycontactrelation">Emergency Contact Relationship</label>
-            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" value="{{user.emergency_contact_relation}}" class="input1" required="required">
-        </p>
-        <br>
-
-        <p>
-            <!-- <label for="region">Region</label>
-            <select name="region"> 
-                {% for region in regions%}
-                <option value="{{region.name}}" selected>{{region.name}}</option>
-                {% endfor %}
-            </select> -->
-        </p>
-        <br>
-        <p>
-            <label for="addressline1">Address Line 1</label>
-            <input type="text" id="addressline1" name="addressline1" placeholder="123 Example Drive" value= "{{user.addresses[0].address_line_1}}" class="input1" required="required">
-            </p>
-            <br>
-        <p>
-                <label for="addressline2">Address Line 2</label>
-                <input type="text" id="addressline2" name="addressline2" placeholder="" value= "{{user.addresses[0].address_line_2}}" class="input1">
-                </p>
-        <br>
-        <p>
-            <label for="city">City</label>
-            <input type="text" id="city" name="city" placeholder="Richmond" class="input1" value="{{user.addresses[0].city}}" required="required">
-            </p>
-            <br>
-        <p>
-            <label for="zipcode">Zip Code</label>
-            <input type="text" id="zipcode" name="zipcode" placeholder="12345" class="input1" value ="{{user.addresses[0].zip_code}}" required="required">
-            </p>
-            <br>
-            <input type="hidden" id="latitude" name="latitude" placeholder="12345" class="input1 hiddenfield" value="{{user.addresses[0].latitude}}" required="required">
-        <input type="hidden" id="longitude" name="longitude" placeholder="12345" class="input1 hiddenfield" value="{{user.addresses[0].longitude}}" required="required">
-        <input type="hidden" id="place_id" name="place_id" placeholder="12345" class="input1 hiddenfield" value="{{ user.addresses[0].code }}"required="required">
-
-        <p>
-        <label for="note">Note</label>
-        <input type="text" id="note" name="note" value="{{user.extra_information}}" class="input1">
-        </p>
-        <br>
-
-        </div>
-        <ul id = "buttons01" class="style1 buttons">
-            <input type="submit" value="Submit" class="style1" id="submitbutton"> 
-        </ul>
-        <br>
-    </form>
-</div>
-
 <section class="position-relative py-4 py-xl-5">
     <div class="container">
         <div class="row mb-5">
@@ -150,7 +25,6 @@
                         <form class="text-center" action="{{ url_for('auth.update_user_information_page') }}" method="post">
                             <div class="text-start mb-3"><small class="form-text text-start">First Name</small><input class="form-control" type="text" name="firstname" value="{{ user.first_name.capitalize() }}" placeholder="First Name"/></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Last Name</small><input class="form-control" type="text" name="lastname" value="{{ user.last_name.capitalize() }}" placeholder="Last Name" /></div>
-                            <div class="text-start mb-3"><small class="form-text text-start">Student or Parent</small><input class="form-control" type="text" value="{{ user.student_or_parent }}" name="password" placeholder="Student or Parent" /></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Car Type 1</small><input class="form-control" type="text" name="cartype1" value="{{ user.car_type_1 }}" placeholder="Car Type 1" /></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Car Color 1</small><input class="form-control" type="text" name="carcolor1" value="{{ user.car_color_1 }}" placeholder="Car Color 1" /></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Car Type 2</small><input class="form-control" type="text" name="cartype2" value="{{ user.car_type_2 }}" placeholder="Car Type 2" /></div>
@@ -164,7 +38,14 @@
                             <div class="text-start mb-3"><small class="form-text text-start">State</small><input id="state" class="form-control" type="text" name="state" value="{{ user.addresses[0].state }}" placeholder="State" /></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Zip Code</small><input id="zipcode" class="form-control" type="text" name="zipcode" value="{{ user.addresses[0].zip_code }}" placeholder="Zip Code" /></div>
                             <div class="text-start mb-3"><small class="form-text text-start">Note</small><input id="note" class="form-control" type="text" name="note" value="{{ user.addresses[0].extra_information }}" placeholder="Note" /></div>
-
+                            <div class="text-start mb-3"><small class="form-text text-start">Emergency Contact Number</small><input id="note" class="form-control" type="text" name="emergencycontact" value="{{ user.emergency_contact_number }}" placeholder="Emergency Contact Number" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Emergency Contact Relationship</small><input id="note" class="form-control" type="text" name="emergencycontactrelation" value="{{ user.emergency_contact_relation }}" placeholder="Contact Relationship" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Number of Available Seats</small><input id="note" class="form-control" type="number" name="numberofseats" value="{{ user.num_seats }}" placeholder="4" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Years with License</small><input id="note" class="form-control" type="number" name="licenseyears" value="{{ user.num_years_with_license }}" placeholder="7" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Student or Parent</small><select name="studentorparent" id="studentorparent" class="form-select">
+                                        <option value="Student" >Student</option>
+                                        <option value="Parent" {% if user.student_or_parent == "Parent" %} selected {% endif %}>Parent</option>
+                                </select></div>
                             <input class="form-control" type="hidden" id="latitude" name="latitude" value="{{ user.addresses[0].latitude }}"  />
                             <input class="form-control" type="hidden" id="longitude" name="longitude" value="{{ user.addresses[0].longitude }}" />
                             <input class="form-control" type="hidden" id="place_id" name="place_id" value="{{ user.addresses[0].code }}" />

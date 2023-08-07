@@ -144,8 +144,8 @@ def update_user_information_page():
     elif request.method == 'POST':
         # if the user is a driver
         if current_user.num_seats is not None:
-
             try:
+                logger.info(request.form)
                 current_user.addresses[0].address_line_1 = request.form['addressline1']
                 current_user.addresses[0].address_line_2 = request.form['addressline2']
                 current_user.addresses[0].city = request.form['city']
@@ -158,6 +158,10 @@ def update_user_information_page():
                 current_user.email_address = request.form['email']
                 current_user.phone_number = request.form['phonenumber']
                 current_user.extra_information = request.form['note']
+                current_user.car_type_1 = request.form['cartype1']
+                current_user.car_color_1 = request.form['carcolor1']
+                current_user.car_type_2 = request.form['cartype2']
+                current_user.car_color_2 = request.form['carcolor2']
                 current_user.emergency_contact_number = request.form['emergencycontact']
                 current_user.emergency_contact_relation = request.form['emergencycontactrelation']
                 current_user.num_seats = request.form['numberofseats']
@@ -167,6 +171,7 @@ def update_user_information_page():
                 return redirect(url_for('auth.user_profile_page'))
             except Exception as e:
                 logger.debug(e)
+                flash("There was an error. Please make sure that your information is valid and try again.")
                 return render_template('update_user_information_template.html', message='There was an error',
                                        user=current_user)
         # if the user is a passenger

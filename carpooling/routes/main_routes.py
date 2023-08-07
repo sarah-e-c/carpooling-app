@@ -70,6 +70,7 @@ def home_page(logout=False):
         driver_carpools = []
         passenger_carpools = []
 
+    flash("Welcome to the Carpooling App!", "success")
     return render_template('index.html', user=current_user, driver_carpools=driver_carpools,
                            passenger_carpools=passenger_carpools, events=events)
 

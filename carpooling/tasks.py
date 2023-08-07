@@ -50,11 +50,12 @@ def send_async_email(to, subject, message):
                       recipients=[to])
         msg.body = message
         mail.send(msg)
-        logger.info('Email sent to %s', to)
+        #logger.info('Email sent to %s', to)
     except Exception as e:
         logger.debug(e)
         logger.warning('Email failed to send to {}, probably due to an invalid email address'.format(to))
 
+    return "Email sent!"
 
 @celery.task
 def send_async_email_to_many(to: list, subject: str, message: str):
@@ -80,8 +81,12 @@ def send_async_email_to_many(to: list, subject: str, message: str):
         logger.warning('Email failed to send to {}, probably due to an invalid email address'.format(to))
 
 
+
 @celery.task(name='maintenance_task')
 def maintenance_task():
+    """
+    Task that starts carpool matching and also makes sure that the database is up to date.
+    """
     # checking if an event should have a carpooling build done for it
     events = Event.query.filter(Event.date > datetime.datetime.now()).all()
     logger.debug('fetched events from database {}'.format(events))

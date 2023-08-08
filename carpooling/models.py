@@ -1,11 +1,9 @@
 from carpooling import db
 from flask import current_app, session
-from sqlalchemy.sql import func
 from flask_login import UserMixin
 from itsdangerous import URLSafeSerializer
 import logging
 import datetime
-from sqlalchemy import event, Sequence
 
 logger = logging.getLogger(__name__)
 

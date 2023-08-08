@@ -5,7 +5,7 @@ Main, user-facing routes for the application
 from carpooling import db
 from carpooling import mail
 from carpooling.models import Address, Event, Carpool, User, Destination, \
-    GeneratedCarpool
+    GeneratedCarpool, Organization
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
@@ -509,3 +509,26 @@ def view_carpool_page(carpool_index):
     #     return redirect(url_for('main.events_page')) TODO
 
     return render_template('user_route_summary_template.html', carpool=carpool, user=current_user)
+
+
+@main_blueprint.route('/view-organization')
+@login_required
+def view_organization_page():
+    """
+    Page to view the organization
+    """
+    return render_template('view_organization_template.html', user=current_user, organization=Organization.query.get(session['organization']))
+
+@main_blueprint.route('/about')
+def about_page():
+    """
+    Page to view information about the app
+    """
+    return render_template('about_template.html', user=current_user)
+
+@main_blueprint.route('/contact')
+def contact_page():
+    """
+    Page to contact the developers
+    """
+    return render_template('contact_template.html', user=current_user)

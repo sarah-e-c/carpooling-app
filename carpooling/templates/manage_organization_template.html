@@ -10,13 +10,14 @@
                 <div class="col-md-6 col-xl-4">
 <div class="card">
 <div class="card-body shadow d-flex flex-column align-items-center">
-
     <h5 class="card-title">Organization Details</h5>
 {% if organization.description %}
     {{ organization.description }} <br><br>
 {% endif %}
+
     Organization Access Key: {{ organization.access_key }} <br>
     Number of members: {{ organization.users | length }} <br>
+
 <ul style="text-align: left">
     {% for member in organization.users %}
         {% if member.num_seats %}
@@ -26,7 +27,16 @@
         {% endif %}
     {% endfor %}
 </ul>
+<div class="row">
+<div class="col">
     <a href="{{ url_for("admin.manage_users_page") }}" class="btn btn-outline-primary p2 m3">Manage Users</a>
+</div>
+<div class="col">
+{%  if user.is_admin() > 1 %}
+    <a href="{{ url_for("admin.edit_organization_page", organization_id=organization.id) }}" class="btn btn-outline-primary p2 m3">Edit Organization</a>
+{%  endif %}
+</div>
+</div>
 </div>
 </div>
                 </div>

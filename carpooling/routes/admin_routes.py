@@ -1,8 +1,9 @@
 from carpooling.models import CarpoolSolution, Organization, User, Event
 from carpooling.utils import admin_required
-from flask import render_template, Blueprint, session
+from flask import render_template, Blueprint, session, request
 from flask_login import current_user
 import logging
+from carpooling import db
 
 admin_blueprint = Blueprint('admin', __name__, template_folder='templates')
 logger = logging.getLogger(__name__)
@@ -90,3 +91,17 @@ def route_summary_page(solution_id):
 def manage_organization_page():
     organization = Organization.query.get(int(session['organization']))
     return render_template('manage_organization_template.html', user=current_user, organization=organization)
+
+@admin_blueprint.route('/edit-organization', methods=['GET', 'POST'])
+@admin_required
+def edit_organization_page():
+    if request.method == 'GET':
+        organization = Organization.query.get(int(session['organization']))
+        return render_template('edit_organization_template.html', user=current_user, organization=organization)
+    elif request.method == 'POST':
+        organization = Organization.query.get(int(session['organization']))
+        organization.name = request.form['organizationname']
+        organization.description = request.form['organizationdescription']
+        db.session.commit()
+        return render_template('manage_organization_template.html', user=current_user, organization=organization)
+

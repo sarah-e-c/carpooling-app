@@ -479,7 +479,7 @@ class Organization(db.Model):
     """
     __tablename__ = "organizations"
     id = db.Column(db.Integer, primary_key=True)
-    access_key = db.Column(db.String(100), unique=True)
+    access_key = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     icon_location = db.Column(db.String(100), default="carpooling/static/icons/default_icon.jpg") # icons for organizations to use
     users = db.relationship("User", secondary="organization_user_links", back_populates="organizations", lazy="subquery")

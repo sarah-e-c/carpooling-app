@@ -1,6 +1,7 @@
 """
 Main, user-facing routes for the application
 """
+import secrets
 
 from carpooling import db
 from carpooling import mail
@@ -539,3 +540,38 @@ def contact_page():
     Page to contact the developers
     """
     return render_template('contact_template.html', user=current_user)
+
+
+@main_blueprint.route('/add_new_organization', methods=['GET', 'POST'])
+@login_required
+def add_new_organization_page():
+    """
+    Page to add a new organization
+    """
+    if request.method == "GET":
+        return render_template('add_new_organization_template.html', user=current_user)
+    if request.method == "POST":
+        if request.form.get("neworganizationname") is not None:
+            new_organization = Organization(name=request.form.get("neworganizationname"), description=request.form.get("neworganizationdescription"), access_key=secrets.token_urlsafe(8))
+            db.session.add(new_organization)
+            current_user.organizations.append(new_organization)
+            db.session.commit()
+            session["organization"] = new_organization.id
+            current_user.set_admin_level(2)
+            flash("Your organization, {}, was created successfully!".format(new_organization.name), "success")
+            return redirect(url_for("main.home_page"))
+        else:
+            new_organization = Organization.query.filter_by(access_key=request.form.get("organizationkey")).first()
+            if new_organization is None:
+                flash("That organization does not exist. Please try again.", "error")
+                return redirect(url_for("main.add_new_organization_page"))
+            else:
+                current_user.organizations.append(new_organization)
+                db.session.commit()
+                session["organization"] = new_organization.id
+                flash("You have successfully joined {}!".format(new_organization.name), "success")
+                return redirect(url_for("main.home_page"))
+
+
+
+

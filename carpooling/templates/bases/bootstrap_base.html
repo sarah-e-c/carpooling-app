@@ -139,7 +139,7 @@
         // Function to update the footer position
         function updateFooterPosition() {
             console.log(footer)
-            const isFooterVisible = footer.getBoundingClientRect().top < window.innerHeight - 200;
+            const isFooterVisible = footer.getBoundingClientRect().top < window.innerHeight - 100;
             console.log(isFooterVisible);
             if (isFooterVisible) {
                 footer.classList.add("bottom-stuck");

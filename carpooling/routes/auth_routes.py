@@ -45,6 +45,7 @@ def login_page():
             except ValueError:
                 remember = False
             login_user(user, remember=remember)
+            flash("Logged in successfully!", "success")
             return redirect(url_for('main.home_page'))
         else:
             return render_template('login_template.html', message='Incorrect password. Please try again.',

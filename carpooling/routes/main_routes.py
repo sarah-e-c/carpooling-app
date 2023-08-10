@@ -51,7 +51,7 @@ def home_page(logout=False):
     logout = request.args.get('logout')
     if logout:
         logout_user()
-        flash('You have been logged out.', 'success')
+        flash('You have been logged out.', 'message')
         logger.info(f'User {current_user} logged out')
 
     # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
@@ -70,7 +70,6 @@ def home_page(logout=False):
         driver_carpools = []
         passenger_carpools = []
 
-    flash("Welcome to the Carpooling App!", "success")
     return render_template('index.html', user=current_user, driver_carpools=driver_carpools,
                            passenger_carpools=passenger_carpools, events=events)
 
@@ -197,6 +196,7 @@ def create_event_page():
             return redirect(
                 url_for("main.create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
 
+        flash("Your event, {}, was created successfully!".format(event_info["name"]), "success")
         return redirect(url_for('main.events_page'))
     else:
         return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.',

@@ -12,27 +12,30 @@
                 <div class="col-md-6 col-xl-4">
 <div class="card">
 <div class="card-body shadow d-flex flex-column align-items-center">
+{%  if user.num_seats %}
         Number of seats: {{ user.num_seats }}
         <br>
         Years with license: {{user.num_years_with_license}}
         <br>
+        {%  endif %}
          Email: {{ user.email_address }}
         <br>
          Phone number: {{ user.phone_number }}
-        {%  if user.is_driver %}
         <br>
+            {%  if user.num_seats %}
          Car type: {{ user.car_type_1 }}
         <br>
          Car color: {{ user.car_color_1}}
+        <br>
 
          {% if user.car_type_2 %}
-        <br>
          Secondary car type: {{ user.car_type_2}}
         <br>
          Secondary car color: {{ user.car_color_2}}
-        {% endif %}
-        {%  endif %}
+
         <br>
+             {% endif %}
+ {% endif %}
          Emergency contact number: {{user.emergency_contact_number}}
         <br>
          Emergency contact relationship: {{user.emergency_contact_relation}}

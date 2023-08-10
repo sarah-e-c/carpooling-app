@@ -689,6 +689,7 @@ def register_new_user():
         new_user.organizations[0].organization_user_links[0].admin_level = 2
     db.session.commit()
     login_user(new_user, remember=True)
+    flash("Welcome to CarpoolGo, {}!".format(new_user.first_name.capitalize()), "success")
     return redirect(url_for('main.home_page'))
 
 

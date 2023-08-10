@@ -60,9 +60,17 @@
                         {% endfor %}
                     </div>
                   </div>
+                    {% if user.is_admin() > 0 %}
+                    <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('admin.manage_organization_page') }}">View organization</a></small></span>
+                        {% else %}
+                        <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('main.view_organization_page') }}">View organization</a></small></span>
+                        {% endif %}
                 {% else %}
-                <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('main.view_organization_page') }}">{{session['organizationname']}}</a></small></span>
-                {% endif %}
+                    {% if user.is_admin() > 0 %}
+                    <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('admin.manage_organization_page') }}">{{ session["organizationname"] }}</a></small></span>
+                        {% else %}
+                        <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('main.view_organization_page') }}">{{ session["organizationname"] }}</a></small></span>
+                        {% endif %}                {% endif %}
 
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="{{ 'active nav-link' if active_page == 'events' else 'nav-link' }}" href="{{ url_for('main.events_page') }}">Events</a></li>

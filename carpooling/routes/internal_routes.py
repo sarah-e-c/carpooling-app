@@ -643,7 +643,7 @@ def register_new_user():
 
 
     if new_organization:
-        organization = Organization(name=request.form["organizationname"], access_key=secrets.token_urlsafe(8))
+        organization = Organization(name=request.form["organizationname"], description=request.form["organizationdescription"], access_key=secrets.token_urlsafe(8))
     else:
         organization = Organization.query.filter_by(access_key=request.form["organizationaccesskey"]).one()
 
@@ -718,5 +718,5 @@ def change_organization(organization_id):
     session['organization'] = organization_id
     session['organizationname'] = Organization.query.get(int(organization_id)).name
     logger.debug("organization logged into changed.")
-    flash(f'Current organization changed.')
+    flash(f'Current organization changed.', "success")
     return "Successfully changed current organization."

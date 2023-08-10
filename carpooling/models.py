@@ -486,6 +486,12 @@ class Organization(db.Model):
     destinations = db.relationship("Destination", back_populates="organization", lazy="subquery")
     events = db.relationship("Event", back_populates="organization", lazy=True)
     organization_user_links = db.relationship("OrganizationUserLink", back_populates="organization", lazy=True) # this allows for direct access to admin information
+    description = db.Column(db.String(5000), nullable=True)
+    level = db.Column(db.Integer(), nullable=False, default=0) # saving for future use for max members and such
+    points = db.Column(db.Integer(), nullable=False, default=0) # saving for future use for team points
+
+    def __repr__(self):
+        return f"Organization: {self.name}"
 
 class OrganizationUserLink(db.Model):
     """

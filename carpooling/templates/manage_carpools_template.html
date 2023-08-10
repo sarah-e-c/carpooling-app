@@ -1,5 +1,5 @@
 {% extends 'bases/bootstrap_base.html' %}
-{% set title = 'Upcoming Carpools'%}
+{% block title %}Upcoming Carpools{% endblock title %}
 {% block subtitle %}View upcoming Carpools{% endblock %}
 {% set active_page='carpools' %}
 
@@ -14,7 +14,7 @@
     <br>
     <br>
     <br>
-    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: Bungee Shade;font-size: 103.52px; background: rgba(0, 0, 0, 0.2)">Manage Carpools</h2>
+    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: Bungee Shade;font-size: 103.52px; background: rgba(0, 0, 0, 0.5)">Manage Carpools</h2>
 </div>
 
 {% if not driver_carpools and not passenger_carpools and not user.driver_generated_carpools and not user.passenger_generated_carpools%}

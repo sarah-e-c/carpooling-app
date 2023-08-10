@@ -23,8 +23,8 @@
                                 </svg></div>
                             <form class="text-center" id="entranceForm">
                                 <div class="mb-3"><input class="form-control" type="text" name="organization" id="inputOrganizationKey" placeholder="Organization Key"></div>
-                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="startContinueButton" onclick="renderRegistrationForm(event, false)" type="button">Continue Registration</button></div>
-                                <div class="mb-3"><button class="btn btn-secondary d-block w-100"  id="startContinueButton" onclick="renderNewOrganizationForm(event)" type="button">Create New Organization</button></div>
+                                <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="firstContinueButton" onclick="renderRegistrationForm(event, false)" type="button">Continue Registration</button></div>
+                                <div class="mb-3"><button class="btn btn-secondary d-block w-100"  id="newOrganizationButton" onclick="renderNewOrganizationForm(event)" type="button">Create New Organization</button></div>
                             </form>
                         </div>
                     </div>
@@ -49,6 +49,8 @@
                                 </svg></div>
                             <form class="text-center" id="organizationForm" onsubmit="renderRegistrationForm(event, true)">
                                 <div class="mb-3"><input class="form-control" type="text" name="organization" id="inputOrganizationName" placeholder="New Organization Name"></div>
+                                <div class="mb-3"><textarea class="form-control" rows="3" name="organization" id="inputOrganizationDescription" placeholder="Description"></textarea></div>
+
                                 <div class="mb-3"><button class="btn btn-primary d-block w-100"  id="startContinueButton" onclick="renderRegistrationForm(event, true)" type="button">Register</button></div>
                             </form>
                         </div>
@@ -235,6 +237,7 @@
     <input type="hidden" required name="longitude" id="longitude">
     <input type="hidden" required name="placeid" id="placeid">
     <input type="hidden" name="organizationname" id="organizationname"> <!-- will be empty if new organization not created-->
+        <input type="hidden" name="organizationdescription" id="organizationdescription"> <!-- will be empty if new organization not created-->
     <input type="hidden" name="organizationaccesskey" id="organizationaccesskey"> <!--will be empty if new organization is created-->
     <input type="submit"/>
 
@@ -245,32 +248,55 @@
 {%  block scripts %}
     <script>
 
-    // this doesn't work but hopefully you get the idea
-    const buttons = ['startContinueButton', 'passengerContinueButton', 'driverContinueButton', 'submitButton'];
-    const buttonSections = ['firstsection', 'passengersection', 'driversection', 'addresssection'];
+    let formNumber = 0;
 
-
-    function eventListener(event, buttonName, sectionName) {
-        // preventing the hidden sections from pressing (im not actually sure if this is needed)#}
-        console.log("event listener called");
-        function tempFunction(event) {
-            console.log("inner event listener called");
-            if (document.getElementById(sectionName).style.display === 'none') {
-                return
-            }
-            if (event.key === 'Enter') {
+    $(document).keypress(
+        function(event){
+            if (event.which == '13') {
                 event.preventDefault();
-                document.getElementById(buttonName).click();
-            }
-            
-        
-        return tempFunction;
-        }
-    }
+                if (formNumber == 0) {
+                    renderRegistrationForm(event, false);
+                } else if (formNumber == 1) {
+                    renderRegistrationForm(event, true);
+                } else if (formNumber == 2) {
+                    renderRoleSpecificForm(event);
+                } else if (formNumber == 3) {
+                    renderAddressForm(event);
+                } else if (formNumber == 4) {
+                    submitForm();
+                }
+             }
 
-  for (let i = 0; i < buttons.length; i++) {
-      document.getElementById(buttons[i]).addEventListener('keypress', eventListener(event, buttons[i], buttonSections[i]));
-  }
+        });
+
+
+{##}
+{##}
+{#    // this doesn't work but hopefully you get the idea#}
+{#    const buttons = ['firstContinueButton', 'newOrganizationButton', 'startContinueButton', 'passengerContinueButton', 'driverContinueButton', 'submitButton'];#}
+{#    const buttonSections = ['entranceSection', 'entranceSection', 'firstsection', 'passengersection', 'driversection', 'addresssection'];#}
+{##}
+{##}
+{#    function eventListener(event, buttonName, sectionName) {#}
+{#        // preventing the hidden sections from pressing (im not actually sure if this is needed)#}
+{#        console.log("event listener called");#}
+{#        function tempFunction(event) {#}
+{#            console.log("inner event listener called");#}
+{#            if (document.getElementById(sectionName).style.display === 'none') {#}
+{#                return;#}
+{#            }#}
+{#            if (event.key === 'Enter') {#}
+{#                event.preventDefault();#}
+{#                document.getElementById(buttonName).click();#}
+{#            }#}
+{##}
+{#        return tempFunction;#}
+{#        }#}
+{#    }#}
+{##}
+{#  for (let i = 0; i < buttons.length; i++) {#}
+{#      document.getElementById(buttons[i]).addEventListener('keypress', eventListener(event, buttons[i], buttonSections[i]));#}
+{#  }#}
   
 
 
@@ -372,16 +398,23 @@
     }
 
     function renderRegistrationForm(event, newOrganization) {
+
         //checking to make sure that organization key is valid
 
         if (!newOrganization) {  // if the user is not trying to make a new organization, make sure that the valdation key is valid.
+            if (document.getElementById('inputOrganizationKey').value === '') {
+                alert('Please enter an organization key.');
+                event.preventDefault();
+                return;
+            }
+
         console.log("running check to make sure that the email address is not in the database");
         let request = new XMLHttpRequest();
         request.open('GET', '{{ url_for('internal.organization_key_exists', organization_key='REPLACE') }}'.replace('REPLACE', document.getElementById('inputOrganizationKey').value), false);
         request.send(null);
         console.log("Valid organization key entered: " + request.responseText)
         if (request.responseText === 'False') {
-            alert('Invalid Access Key entered.');
+            alert('Invalid Organization Key entered.');
             event.preventDefault();
             return;
         }
@@ -389,8 +422,16 @@
         document.getElementById("organizationaccesskey").value = document.getElementById("inputOrganizationKey").value;
         // setting the value of the access key for use on the backend
     } else {
+
+            if (document.getElementById('inputOrganizationName').value === '') {
+                alert('Please enter an organization name.');
+                event.preventDefault();
+            return;
+        }
+
         //setting the organization name input value to the new organization name. The key and things are handled in the backend.
         document.getElementById("organizationname").value = document.getElementById("inputOrganizationName").value;
+            document.getElementById("organizationdescription").value = document.getElementById("inputOrganizationDescription").value;
         console.log(document.getElementById("organizationname").value);
     }
 
@@ -398,13 +439,14 @@
         document.getElementById("entrancesection").style.display="none";
         document.getElementById("neworganizationsection").style.display="none";
         document.getElementById("firstsection").style.display="block";
+        formNumber = 2;
     }
 
-    function renderNewOrganizationForm(event) { 
-
+    function renderNewOrganizationForm(event) {
         document.getElementById("entrancesection").style.display="none";
         document.getElementById("neworganizationsection").style.display="block";
         document.getElementById("firstsection").style.display="none";
+        formNumber = 1;
     }
 
     function renderRoleSpecificForm(event) {
@@ -441,7 +483,7 @@
         } else { // person is a driver
             document.getElementById('driversection').style.display = 'block';
         }
-
+        formNumber = 3;
     }
     function renderAddressForm(event) {
         console.log('attempting to render address form');
@@ -462,6 +504,7 @@
 
         roleSection.style.display = 'none';
         document.getElementById('addresssection').style.display = 'block';
+        formNumber = 4;
     }
 
     function fakeSubmit(event, formId) {
@@ -546,6 +589,7 @@
         document.getElementById("placeid").value = place_id;
         document.getElementById('submitForm').submit()
     }
+
 </script>
 
 {%  endblock scripts %}

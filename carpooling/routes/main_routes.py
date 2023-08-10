@@ -389,7 +389,11 @@ def passenger_page(lastname, firstname):
                 if (passenger.first_name == firstname) and (passenger.last_name == lastname):
                     return render_template('passenger_template.html', user=current_user, passenger=passenger)
 
-    # if the person is not able to see
+    passenger = User.query.filter_by(first_name=firstname, last_name=lastname).first()
+    if current_user.is_admin() > 1 and session["organization"] in [organization.id for organization in passenger.organizations]:
+        return render_template('passenger_template.html', user=current_user, passenger=passenger)
+    # if the person is not able to see the passenger
+
     return render_template('error_template.html', main_message='Go Away',
                            sub_message='You do not have access to see the passenger.', user=current_user)
 

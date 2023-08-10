@@ -92,7 +92,7 @@
                             <br>Passengers:<br></p>
                         <ul style="padding: 0px 0px 0px 32px;">
                             {% for passenger in carpool.passengers %}
-                            <li><a href="{{ url_for('main.passenger_page', lastname=passenger.last_name, firstname=passenger.first_name) }}">{{ passenger.first_name.capitalize() }} {{ passenger.last_name.capitalize() }}</a></li>
+                            <li><a href="{{ url_for('main.passenger_page', id=passenger.id) }}">{{ passenger.first_name.capitalize() }} {{ passenger.last_name.capitalize() }}</a></li>
                             {%  endfor %}
                         </ul><button class="btn btn-outline-primary" type="button" style="padding: 6px 12px;margin: 0px 5px 0px 0px;" onclick="copyPhoneNumbers({{ carpool.id }})">Copy Phone Numbers</button><a href="{{ url_for('main.view_carpool_page', carpool_index='carpool.id') }}"><button class="btn btn-primary" type="button">View<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-arrow-right">
                                 <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"></path>
@@ -112,7 +112,7 @@
                         <p class="card-text" style="margin: 0px;">You are riding in this carpool.
                             <br>Carpool Pick Up Time: {{ carpool.get_carpool_pickup_time_for_user(user).strftime('%I:%M %p') }}
                             <br>Carpool Drop-off Time: {{ carpool.get_carpool_dropoff_time_for_user(user).strftime('%I:%M %p') }}
-                            <br>Driver:&nbsp;<a href="{{ url_for('main.driver_page', lastname=carpool.driver.last_name, firstname=carpool.driver.first_name) }}">
+                            <br>Driver:&nbsp;<a href="{{ url_for('main.driver_page', id=driver.id) }}">
                                 {{ carpool.driver.first_name.capitalize() }} {{ carpool.driver.last_name.capitalize() }}</a><br>Other passengers:<br></p>
                         <ul style="padding: 0px 0px 0px 32px;">
                             {%  for passenger in carpool.passengers %}

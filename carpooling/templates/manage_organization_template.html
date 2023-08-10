@@ -21,9 +21,9 @@
 <ul style="text-align: left">
     {% for member in organization.users %}
         {% if member.num_seats %}
-        <li><a href="{{ url_for('main.driver_page', lastname=member.last_name, firstname=member.first_name) }}">{{ member.first_name.capitalize() }} {{ member.last_name.capitalize() }}</a></li>
+        <li><a href="{{ url_for('main.driver_page', id=member.id) }}">{{ member.first_name.capitalize() }} {{ member.last_name.capitalize() }}</a></li>
             {%  else %}
-            <li><a href="{{ url_for('main.passenger_page', lastname=member.last_name, firstname=member.first_name) }}">{{ member.first_name.capitalize() }} {{ member.last_name.capitalize() }}</a></li>
+            <li><a href="{{ url_for('main.passenger_page', id=member.id) }}">{{ member.first_name.capitalize() }} {{ member.last_name.capitalize() }}</a></li>
         {% endif %}
     {% endfor %}
 </ul>

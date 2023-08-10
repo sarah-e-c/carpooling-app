@@ -45,7 +45,7 @@
                             {% for passenger in carpool.passengers %}
                             <li>{{passenger.first_name.capitalize()}} {{passenger.last_name.capitalize()}}</li>
                             {%endfor %}
-                        </ul><a class="card-link" href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name)}}">Driver: {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a>
+                        </ul><a class="card-link" href="{{url_for('main.driver_page', id=carpool.driver.id)}}">Driver: {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a>
                     </div>
                     </div>
                     

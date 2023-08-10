@@ -71,6 +71,7 @@ def delete_event(event_index):
     db.session.delete(event_to_delete)
     db.session.commit()
 
+    flash('The event, {}, was deleted.'.format(event_to_delete.name), 'warning')
     logger.info('Event {} deleted'.format(event_to_delete.name))
     return redirect(url_for('main.events_page'))
 
@@ -98,6 +99,7 @@ def remove_admin(user_id):
     db.session.commit()
     logger.info('User {} {} removed from admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    flash('User {} {} had their admin privileges removed.'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()), 'warning')
     return redirect(url_for('admin.manage_users_page'))
 
 
@@ -117,6 +119,7 @@ def give_admin(user_id):
     db.session.commit() 
     logger.info('User {} {} given admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    flash('User {} {} had admin privileges given.'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()), 'success')
     return redirect(url_for('admin.manage_users_page'))
 
 
@@ -132,6 +135,7 @@ def give_super_admin(user_id):
     db.session.commit()
     logger.info('User {} {} given super admin'.format(
         user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()))
+    flash('User {} {} had super admin privileges given.'.format(user_to_change.first_name.capitalize(), user_to_change.last_name.capitalize()), 'success')
     return redirect(url_for('admin.manage_users_page'))
 
 
@@ -197,6 +201,7 @@ def admin_delete_user(user_id):
             logger.debug(e)
             pass
 
+
     db.session.commit()
     db.session.delete(user_to_delete)
     try:
@@ -206,6 +211,10 @@ def admin_delete_user(user_id):
 
     db.session.delete(user_to_delete)
     db.session.commit()
+
+    flash(
+        'User {} {} was deleted.'.format(user_to_delete.first_name.capitalize(), user_to_delete.last_name.capitalize()),
+        'warning')
 
     # redirecting back to the admin user page
     logger.info('User deleted.')
@@ -263,6 +272,7 @@ def change_carpool_destination():
             The driver of the carpool has changed the destination from {old_destination} to {new_destination}. 
             Please make sure that you are ready to go to {new_destination} at the time of the carpool.
             """)
+        flash('The destination of the carpool has been changed to {}'.format(new_destination), 'warning')
         return redirect(url_for('main.manage_carpools_page'))
 
 
@@ -283,6 +293,7 @@ def leave_carpool(carpool_id):
             db.session.commit()
             logger.info(f'User {current_user} left carpool {carpool}')
 
+    flash('You have left the carpool for {}'.format(carpool.event.name), 'warning')
     return redirect(url_for('main.manage_carpools_page'))
 
 
@@ -302,6 +313,7 @@ def event_check_in_page(event_index):
         return redirect(url_for('main.event_page', event_index=event_index))
 
     logger.info('Passenger {} checking in for event {}'.format(current_user, event_index))
+    flash('You have successfully checked in for {}'.format(Event.query.get(event_index).name), 'success')
     new_event_check_in = EventCheckIn(event_id=event_index, user_id=current_user.id)
     db.session.add(new_event_check_in)
     db.session.commit()
@@ -319,6 +331,7 @@ def event_check_out_page(event_index):
     event_check_in.re_check_in_time = None
     event_check_in.check_out_time = datetime.datetime.now()
     db.session.commit()
+    flash('You have successfully checked out of {}'.format(Event.query.get(event_index).name), 'success')
     return redirect(url_for('main.event_page', event_index=event_index))
 
 
@@ -385,7 +398,7 @@ def create_destination():
     db.session.add(new_destination)
     db.session.commit()
     logger.info('Destination {} created'.format(new_destination))
-
+    flash('You have successfully created a destination!', 'success')
     return redirect(url_for('main.create_event_page'))
 
 
@@ -440,7 +453,8 @@ def create_carpool_signup(event_index):
                                         needs_ride=needs_ride)
         current_user.event_carpool_signups.append(new_signup)
         db.session.commit()
-        logger.info('Passenger {} signed up for carpool event {}'.format(current_user, event_index))
+        logger.info('Passenger {} signed up for the event \'{}\'.'.format(current_user, event_index))
+        flash('You have successfully signed up for \"{}.\"'.format(Event.query.get(event_index).name), 'success')
         return redirect(url_for('main.event_page', event_index=event_index))
 
 
@@ -456,6 +470,7 @@ def cancel_carpool_signup(event_index):
         db.session.delete(signup)
         db.session.commit()
         logger.info('Passenger {} cancelled carpool signup for event {}'.format(current_user, event_index))
+        flash("You have successfully cancelled your carpool signup for \"{}.".format(Event.query.get(event_index).name), "message")
     return redirect(url_for('main.event_page', event_index=event_index))
 
 
@@ -489,7 +504,7 @@ def confirm_carpool(carpool_id):
     # if all the passengers have confirmed, then we can set everything as accepted and notify the drivers and passengers
     carpool.is_accepted = True
     db.session.commit()
-
+    flash("You have successfully confirmed your carpool for {}.".format(carpool.event.name), "success")
     # notify the driver
     send_async_email_to_many.delay(
         to=[passenger.email_address for passenger in carpool.passengers] + [carpool.driver.email_address],
@@ -555,6 +570,7 @@ def decline_carpool(carpool_id):
     else:
         logger.error('User {} is not in carpool {}'.format(current_user, carpool_id))
 
+    flash("You have declined your carpool for {}".format(carpool.event.name), "warning")
     return redirect(url_for('main.carpool_summary_page', carpool_id=carpool_id))
 
 
@@ -601,7 +617,7 @@ def cancel_generated_carpool(carpool_id):
         carpool_response = [response for response in carpool.generated_carpool_responses if response.user == current_user][0]
         carpool_response.is_accepted = False
         logger.debug(
-            'Passenger {} cancelling carpool {}, with resopnse {}'.format(current_user, carpool_id, carpool_response))
+            'Passenger {} cancelling carpool {}, with resoponse {}'.format(current_user, carpool_id, carpool_response))
 
         # changing the carpool to reflect the change
         carpool.passengers.remove(current_user)
@@ -621,6 +637,7 @@ def cancel_generated_carpool(carpool_id):
         return redirect(url_for('main.manage_carpools_page'))
     else:
         logger.info(f"User {current_user} is not a part of carpool {carpool_id}")
+        flash("You have cancelled your carpool.", "warning")
         return redirect(url_for('main.manage_carpools_page'))
 
 
@@ -719,5 +736,5 @@ def change_organization(organization_id):
     session['organization'] = organization_id
     session['organizationname'] = Organization.query.get(int(organization_id)).name
     logger.debug("organization logged into changed.")
-    flash(f'Current organization changed.', "success")
+    flash(f'Current organization changed.', "message")
     return "Successfully changed current organization."

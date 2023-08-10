@@ -27,8 +27,7 @@ def login_page():
     if request.method == 'GET':
         return render_template('login_template.html', message='Login!', user=current_user)
     if request.method == 'POST':
-        user = User.query.filter_by(first_name=request.form['firstname'].lower(),
-                                    last_name=request.form['lastname'].lower()).first()
+        user = User.query.filter_by(email_address=request.form['email']).first()
         if user is None:
             logger.debug('attempted user does not exist')
             return render_template('login_template.html', message='That user does not exist. Please try again.',
@@ -233,12 +232,11 @@ def forgot_password_page():
     Page that allows for the resetting of a password
     """
     if request.method == 'GET':
-        return render_template('forgot_password_template.html', message='Enter your name to reset your password.',
+        return render_template('forgot_password_template.html', message='Enter your email address to reset your password.',
                                user=current_user)
     if request.method == 'POST':
-        first_name = request.form['firstname'].lower()
-        last_name = request.form['lastname'].lower()
-        user = User.query.filter_by(first_name=first_name, last_name=last_name).first()
+        email = request.form['email']
+        user = User.query.filter_by(email_address=email).first()
         if user:
             logger.info('User {} found'.format(user))
             send_async_email.delay(user.email_address, 'Password Reset', f"""

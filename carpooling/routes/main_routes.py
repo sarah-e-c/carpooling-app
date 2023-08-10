@@ -74,9 +74,9 @@ def home_page(logout=False):
                            passenger_carpools=passenger_carpools, events=events)
 
 
-@main_blueprint.route('/driver/<lastname>/<firstname>')
+@main_blueprint.route('/driver/<id>')
 @requires_auth_key
-def driver_page(lastname, firstname):
+def driver_page(id):
     """
     Driver page for passengers and other drivers to see
     last_name: last name of the driver
@@ -84,8 +84,7 @@ def driver_page(lastname, firstname):
     """
     logger.info('driver page')
     try:
-        driver = User.query.filter_by(
-            last_name=lastname, first_name=firstname).one()
+        driver = User.query.get(id)
     except:
         logger.info('no driver was found')
         return 'No driver was found.'
@@ -368,10 +367,10 @@ def manage_carpools_page():
                            passenger_carpools=passenger_carpools)
 
 
-@main_blueprint.route('/passenger/<lastname>/<firstname>')
+@main_blueprint.route('/passenger/<id>')
 @login_required
 @requires_auth_key
-def passenger_page(lastname, firstname):
+def passenger_page(id):
     """
     Page that allows for the viewing of passenger information. Is only accessible if the person is logged in 
     and has an upcoming carpool with the person in it.
@@ -386,10 +385,10 @@ def passenger_page(lastname, firstname):
     for carpool in current_user_carpools:
         if (carpool.event.start_time) > datetime.datetime.now():
             for passenger in carpool.passengers:
-                if (passenger.first_name == firstname) and (passenger.last_name == lastname):
+                if (passenger.id == id):
                     return render_template('passenger_template.html', user=current_user, passenger=passenger)
 
-    passenger = User.query.filter_by(first_name=firstname, last_name=lastname).first()
+    passenger = User.query.filter_by(id=id).first()
     if current_user.is_admin() > 1 and session["organization"] in [organization.id for organization in passenger.organizations]:
         return render_template('passenger_template.html', user=current_user, passenger=passenger)
 

@@ -99,6 +99,8 @@
             <div class="toast-header alert-primary" style="background-color: var(--bs-success); color: white;">
                 {%  elif message[0] == "error" %}
                 <div class="toast-header alert-primary" style="background-color: var(--bs-yellow); color: white;">
+                            {%  elif message[0] == "warning" %}
+                <div class="toast-header alert-primary" style="background-color: var(--bs-yellow); color: white;">
                 {%  else %}
                 <div class="toast-header alert-primary" style="background-color: var(--bs-primary); color: white;">
                 {%  endif %}

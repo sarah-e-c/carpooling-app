@@ -43,7 +43,6 @@ logger = logging.getLogger(__name__)
 
 
 @main_blueprint.route('/')
-@main_blueprint.route('/home')
 def home_page(logout=False):
     """
     Home page. Also index page.

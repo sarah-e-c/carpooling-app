@@ -43,7 +43,7 @@ def login_page():
                 remember = request.form.get('remember')
             except ValueError:
                 remember = False
-            login_user(user, remember=remember)
+            login_user(user, remember=True)
             flash("Logged in successfully!", "success")
             return redirect(url_for('main.home_page'))
         else:

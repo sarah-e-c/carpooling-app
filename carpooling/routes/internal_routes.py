@@ -11,13 +11,12 @@ from carpooling.utils import admin_required, requires_auth_key
 from flask import render_template, request, redirect, url_for, Blueprint, make_response, jsonify, session, flash
 import datetime
 from flask_login import login_required, current_user, login_user
-from flask_mail import Message
 from io import StringIO
 import csv
-import json
 from werkzeug.security import generate_password_hash
 import secrets
 import json
+import urllib.parse
 
 internal_blueprint = Blueprint(
     'internal', __name__, template_folder='templates')
@@ -723,18 +722,22 @@ def organization_key_exists(organization_key):
     organization = Organization.query.filter_by(access_key=organization_key).first()
     return "True" if organization else "False"
 
-@internal_blueprint.route('/change-organization/<organization_id>')
+@internal_blueprint.route('/change-organization/')
 @login_required
-def change_organization(organization_id):
+def change_organization(organizationId=False, next=False):
     """
     route to change the organization that the user is logged into. Requires that they are a part of the organization.
     Reload is performed on the frontend to enact the change.
     """
-    if int(organization_id) not in [organization.id for organization in current_user.organizations]:
+    organizationId = request.args.get('organizationId')
+    next = request.args.get('next')
+    logger.debug(f"organization_id: {organizationId}, next_page: {next}")
+    if int(organizationId) not in [organization.id for organization in current_user.organizations]:
         return 'Attempted to change organization into one user did not belong to.'
-    
-    session['organization'] = organization_id
-    session['organizationname'] = Organization.query.get(int(organization_id)).name
+
+    session['organization'] = organizationId
+    session['organizationname'] = Organization.query.get(int(organizationId)).name
+    logger.debug(f"organization logged into changed to {session['organizationname']}")
     logger.debug("organization logged into changed.")
-    flash(f'Current organization changed.', "message")
-    return "Successfully changed current organization."
+    next = urllib.parse.unquote(next)
+    return redirect(next)

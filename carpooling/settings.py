@@ -28,6 +28,8 @@ USER_ENABLE_USERNAME = False  # Register and Login with username
 USER_AFTER_LOGIN_ENDPOINT = 'main.member_page'
 USER_AFTER_LOGOUT_ENDPOINT = 'main.home_page'
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+SESSION_COOKIE_HTTPONLY = False
+SESSION_TYPE = "filesystem"
 
 TESTING = False
 

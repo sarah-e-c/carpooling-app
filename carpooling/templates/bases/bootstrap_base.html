@@ -49,21 +49,22 @@
                 {% if user.is_authenticated %}
                 {% if user.organizations | length > 1 %}
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       {{session['organizationname']}}
                     </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <div class="dropdown-menu" aria-expanded="true" aria-labelledby="dropdownMenuButton">
                         {% for organization in current_user.organizations %}
-                        {% if session['organizationname'] != organization.name %} {# Making sure that duplicate organizations not shown#}
-                        <a class="dropdown-item" onclick="changeOrganization(organizationId='{{organization.id}}')" href="#">{{organization.name}}</a>
-                        {% endif %}
+                        {# Making sure that duplicate organizations not shown#}
+                            {%  if organization.name != session["organizationname"] %}
+                        <a class="dropdown-item" onclick="changeOrganization(organizationId={{ organization.id }})" href="#">{{organization.name}}</a>
+{%  endif %}
                         {% endfor %}
                     </div>
                   </div>
                     {% if user.is_admin() > 0 %}
-                    <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('admin.manage_organization_page') }}">View organization</a></small></span>
+                    <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: underline; font-size: small" href="{{ url_for('admin.manage_organization_page') }}">View organization</a></small></span>
                         {% else %}
-                        <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: inherit" href="{{ url_for('main.view_organization_page') }}">View organization</a></small></span>
+                        <span class="navbar-brand d-flex align-items-center"><small><a style="color:inherit; text-decoration: underline; font-size: small" href="{{ url_for('main.view_organization_page') }}">View organization</a></small></span>
                         {% endif %}
                 {% else %}
                     {% if user.is_admin() > 0 %}
@@ -87,6 +88,8 @@
             </div>
         </div>
     </nav>
+
+
 
     {%  block main %}
 
@@ -200,12 +203,7 @@
         window.addEventListener("load", updateFooterPosition);
         window.addEventListener("resize", updateFooterPosition);
         function changeOrganization(organizationId) {
-            console.log(organizationId)
-            let request = new XMLHttpRequest();
-            request.open('GET', "{{url_for('internal.change_organization', organization_id='REPLACE')}}".replace("REPLACE", organizationId), true);
-            request.send();
-            console.log(request.responseText);
-            location.reload();
+            window.location.href = "{{ url_for('internal.change_organization') }}" + "?organizationId=" + organizationId + "&next=" + encodeURIComponent(window.location.href);
         }
 
         let toastElList = [].slice.call(document.querySelectorAll('.toast'));

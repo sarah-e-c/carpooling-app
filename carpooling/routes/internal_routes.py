@@ -334,31 +334,31 @@ def event_check_out_page(event_index):
     return redirect(url_for('main.event_page', event_index=event_index))
 
 
-@internal_blueprint.route('/download-hours-csv/<event_index>')
-@admin_required
-def download_hours_csv(event_index):
-    """
-    Function to download the hours csv as an admin
-    """
-    check_ins = EventCheckIn.query.filter_by(event_id=event_index)
-    event_name = Event.query.get(event_index).name
-    heading_row = ["First Name", "Last Name", "Check In Time", "Check Out Time", "Check In Hours"]
-    strio = StringIO()
-    cw = csv.writer(strio)
-    cw.writerow(heading_row)
-    csv_content = []
-    for check_in in check_ins:
-        new_row = [check_in.user.first_name.capitalize(),
-                   check_in.user.last_name.capitalize(),
-                   check_in.check_in_time.strftime('%I:%M %p'),
-                   check_in.check_out_time.strftime('%I:%M %p'),
-                   str(check_in.check_out_time - check_in.check_in_time)]
-        csv_content.append(new_row)
-    cw.writerows(csv_content)
-    output = make_response(strio.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename={event_name}.csv"
-    output.headers["Content-type"] = "text/csv"
-    return output
+# @internal_blueprint.route('/download-hours-csv/<event_index>')
+# @admin_required
+# def download_hours_csv(event_index):
+#     """
+#     Function to download the hours csv as an admin
+#     """
+#     check_ins = EventCheckIn.query.filter_by(event_id=event_index)
+#     event_name = Event.query.get(event_index).name
+#     heading_row = ["First Name", "Last Name", "Check In Time", "Check Out Time", "Check In Hours"]
+#     strio = StringIO()
+#     cw = csv.writer(strio)
+#     cw.writerow(heading_row)
+#     csv_content = []
+#     for check_in in check_ins:
+#         new_row = [check_in.user.first_name.capitalize(),
+#                    check_in.user.last_name.capitalize(),
+#                    check_in.check_in_time.strftime('%I:%M %p'),
+#                    check_in.check_out_time.strftime('%I:%M %p'),
+#                    str(check_in.check_out_time - check_in.check_in_time)]
+#         csv_content.append(new_row)
+#     cw.writerows(csv_content)
+#     output = make_response(strio.getvalue())
+#     output.headers["Content-Disposition"] = f"attachment; filename={event_name}.csv"
+#     output.headers["Content-type"] = "text/csv"
+#     return output
 
 
 @internal_blueprint.route('/create-destination', methods=['GET', 'POST'])

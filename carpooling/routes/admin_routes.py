@@ -43,20 +43,6 @@ def manage_users_page():
     """
     return render_template('manage_users_template.html', users=Organization.query.get(session['organization']).users, user=current_user )
 
-
-@admin_blueprint.route('/view-checkins')
-@admin_required
-def view_checkins_page():
-    """
-    Function to view all the check ins.
-    """
-    recent_events = Event.query.order_by(
-        Event.start_time.desc()).limit(3).all()
-    other_events = Event.query.order_by(
-        Event.start_time.desc()).offset(3).all()
-    return render_template('view_checkins_template.html', recent_events=recent_events, other_events=other_events, user=current_user)
-
-
 @admin_blueprint.route('/view-routes/<solution_id>')
 @admin_required
 def route_summary_page(solution_id):

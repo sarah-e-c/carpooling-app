@@ -21,7 +21,6 @@
     <div>
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation"><a class="nav-link active" role="tab" data-bs-toggle="tab" href="#tab-1">Sign Up</a></li>
-            <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="tab" href="#tab-2">Check In</a></li>
             <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="tab" href="#tab-3">Info</a></li>
         </ul>
         <div class="tab-content">
@@ -46,33 +45,12 @@
                         {%  endif %}
                 {%  else %}
                 <div class="text-center border rounded-0 border-dark shadow p-4 p-lg-5" style="margin: 38px;">
-                    <h1 class="fs-3">Please log in to sign up or check in.</h1>
+                    <h1 class="fs-3">Please log in to sign up.</h1>
                     <a class="btn btn-primary ms-md-2" role="button" href="{{ url_for('auth.login_page') }}">Log In</a>
                     <a class="btn btn-outline-primary ms-md-2" role="button" href="{{ url_for('auth.generic_register_page') }}">Register</a>
                 </div>
                 {%  endif %}
 
-            </div>
-            <div id="tab-2" class="tab-pane justify-content-sm-end" role="tabpanel">
-                {%  if user.is_authenticated %}
-                    {%  if user.is_checked_in_for_event(event) %}
-                        <h4 class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%I:%M') }}</h4>
-                        <a href="{{ url_for('internal.event_checkout', event_id=event.id) }}"><button class="btn btn-primary text-center" type="button"></button></a>
-                    {%  else %}
-                <div class="border rounded-0 border-dark shadow" style="margin: 38px;">
-
-                    <h1 class="fs-3 text-center" style="margin: 10px;">Check in to this event</h1><button
-                        class="btn btn-primary text-center" type="button" style="margin: 9px;">Check In</button>
-
-                {%  endif %}
-                </div>
-                {%  else %}
-                <div class="text-center border rounded-0 border-dark shadow p-4 p-lg-5" style="margin: 38px;">
-                    <h1 class="fs-3">Please log in to sign up or check in.</h1>
-                    <a class="btn btn-primary ms-md-2" role="button" href="{{ url_for('auth.login_page') }}">Log In</a>
-                    <a class="btn btn-outline-primary ms-md-2" role="button" href="{{ url_for('auth.generic_register_page') }}">Register</a>
-                </div>
-                {%  endif %}
             </div>
             <div id="tab-3" class="tab-pane justify-content-sm-end">
                 <h1 class="fs-3">Event Information</h1>

@@ -10,12 +10,12 @@ from carpooling.models import Address, User, Event, CarpoolSolution, GeneratedCa
 from werkzeug.security import generate_password_hash
 import random
 import logging
-#from random_address import real_random_address_by_state
+from random_address import real_random_address_by_state
 
 logger = logging.getLogger(__name__)
 
 
-real_random_address_by_state = None #temporarily disabled
+#real_random_address_by_state = None #temporarily disabled
 
 @click.command(name='fill-fake-people')
 @click.argument('number_of_people')
@@ -38,7 +38,7 @@ def fill_fake_people_command(number_of_people):
                 zip_code=address_source['postalCode'],
                 latitude=address_source['coordinates']['lat'],
                 longitude=address_source['coordinates']['lng'],
-                code = 0,
+                code = random.random(),
             )
         db.session.add(new_address)
         seed = random.randint(0, 1)
@@ -56,10 +56,8 @@ def fill_fake_people_command(number_of_people):
                 car_color_2 = 'blue',
                 car_type_2 = 'Honda Civic', 
                 num_seats = 3,
-                region_name='West Henrico',
                 student_or_parent = 'Student',
                 addresses=[new_address],
-                is_admin=2,
                 password=generate_password_hash('password'),
             )
             db.session.add(new_user)
@@ -71,7 +69,6 @@ def fill_fake_people_command(number_of_people):
             phone_number=source['results'][i]['phone'],
             emergency_contact_number=source['results'][i]['cell'],
             emergency_contact_relation='friend',
-            region_name='West Henrico',
             address_line_1=address_source['address1'],
             address_line_2= address_source['address2'],
             city=address_source['city'],

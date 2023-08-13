@@ -1,4 +1,4 @@
-{% extends 'bases/webflow_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 
 {% set title='Manage Users' %}
@@ -9,9 +9,9 @@
 {% for user_ in users%}
 <div class="regiondiv">
     <h3 class="style2">
-        {% if user_.is_admin > 1 %}
+        {% if user_.is_admin() > 1 %}
         Super Admin: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
-        {% elif user_.is_admin > 0 %}
+        {% elif user_.is_admin() > 0 %}
         Admin: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
         {% else %}
         User: {{user_.first_name.capitalize()}} {{user_.last_name.capitalize()}}
@@ -20,7 +20,7 @@
     <p class="style2"> Actions </p>
     <div class="style1">
         <ul class="style1 buttons">
-            {% if (user.is_admin > user_.is_admin) %}
+            {% if (user.is_admin() > user_.is_admin()) %}
             <li>
                 <a href="{{ url_for('internal.admin_delete_user', user_id = user_.id)}}"
                     onclick="confirm_delete_user(event)" class="button n01">
@@ -28,7 +28,7 @@
                 </a>
             </li>
             {% endif %}
-            {% if (user_.is_admin < 1) %} 
+            {% if (user_.is_admin() < 1) %} 
             <li>
                 <a href="{{ url_for('internal.give_admin', user_id = user_.id)}}"
                     onclick="confirm_make_admin(event)" class="button n01">
@@ -36,7 +36,7 @@
                 </a>
             </li>
             {% endif %}
-            {% if (user_.is_admin < 2) and (user.is_admin> 1) %}
+            {% if (user_.is_admin() < 2) and (user.is_admin()> 1) %}
                 <li>
                     <a href="{{ url_for('internal.give_super_admin', user_id = user_.id)}}"
                         onclick="confirm_make_super_admin(event)" class="button n01">
@@ -44,7 +44,7 @@
                     </a>
                 </li>
             {% endif %}
-            {% if (user_.is_admin > 0) and (user.is_admin > user_.is_admin) %}
+            {% if (user_.is_admin() > 0) and (user.is_admin() > user_.is_admin()) %}
             <li>
                 <a href="{{ url_for('internal.remove_admin', user_id = user_.id)}}"
                     onclick="confirm_remove_admin(event)" class="button n01">

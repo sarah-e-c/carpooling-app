@@ -1,4 +1,4 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
 {% set active_page='user_profile' %}
 
@@ -6,93 +6,50 @@
 
 {% block main %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
-    </span>
-</div>
-<h1 id="text01" class="style1">Change Information</h1>
-<h2 id="text07" class="style2">{{ message }}</h2>
-<hr id="divider02" class="style1">
-<div id="text02" class="style2">
-    <form action="{{url_for('auth.update_user_information_page')}}" method="post">
-        <div id="formtable">
-        <p>
-        <label for="firstname">First Name</label>
-        <input type="text" id="firstname" name="firstname" value="{{user.first_name.capitalize()}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="lastname">Last Name</label>
-        <input type="text" id="lastname" name="lastname" value="{{user.last_name.capitalize()}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="email">Email Address</label>
-        <input type="text" id="email" name="email" value="{{user.email_address}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-        <label for="phonenumber">Phone Number</label>
-        <input type="text" id="phonenumber" name="phonenumber" value="{{user.phone_number}}" class="input1" required="required">
-        </p>
-        <br>
-        <p>
-            <label for="emergencycontact">Emergency Contact Phone Number</label>
-            <input type="text" id="emergencycontact" name="emergencycontact" value="{{user.emergency_contact_number}}" class="input1" required="required">
-            </p>
-        <br> 
-        <p>
-            <label for="emergencycontactrelation">Emergency Contact Relationship</label>
-            <input type="text" id="emergencycontactrelation" name="emergencycontactrelation" value="{{user.emergency_contact_relation}}" class="input1" required="required">
-        </p>
-        <br>
-
-        <p>
-            <label for="region">Region</label>
-            <select name="region"> 
-                {% for region in regions%}
-                <option value="{{region.name}}" selected>{{region.name}}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <br>
-        <p>
-            <label for="addressline1">Address Line 1</label>
-            <input type="text" id="addressline1" name="addressline1" placeholder="123 Example Drive" value= "{{user.addresses[0].address_line_1}}" class="input1" required="required">
-            </p>
-            <br>
-        <p>
-                <label for="addressline2">Address Line 2</label>
-                <input type="text" id="addressline2" name="addressline2" placeholder="" value= "{{user.addresses[0].address_line_2}}" class="input1">
-                </p>
-        <br>
-        <p>
-            <label for="city">City</label>
-            <input type="text" id="city" name="city" placeholder="Richmond" class="input1" value="{{user.addresses[0].city}}" required="required">
-            </p>
-            <br>
-        <p>
-            <label for="zipcode">Zip Code</label>
-            <input type="text" id="zipcode" name="zipcode" placeholder="12345" class="input1" value ="{{user.addresses[0].zip_code}}" required="required">
-            </p>
-            <br>
-
-        <p>
-        <label for="note">Note</label>
-        <input type="text" id="note" name="note" value="{{user.extra_information}}" class="input1">
-        </p>
-        <br><input type="hidden" id="latitude" name="latitude" placeholder="12345" class="input1 hiddenfield" value="{{user.addresses[0].latitude}}" required="required">
-        <input type="hidden" id="longitude" name="longitude" placeholder="12345" class="input1 hiddenfield" value="{{user.addresses[0].longitude}}" required="required">
-        <input type="hidden" id="place_id" name="place_id" placeholder="12345" class="input1 hiddenfield" value="{{ user.addresses[0].code }}"required="required">
-
+<section class="position-relative py-4 py-xl-5">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 col-xl-6 text-center mx-auto">
+                <h1 style="font-family: Bungee Shade;font-size: 57.928px;color: var(--bs-link-color);">Alter Profile</h1>
+                <p class="w-lg-50">Make the profile change you want to see in the world.</p>
+            </div>
         </div>
-        <ul id="buttons01" class="style1 buttons">
-            <input type="submit" value="Submit" class="style1" id="submitbutton"> 
-        </ul>
-        <br>
-    </form>
-</div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="card mb-5">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4"><svg class="bi bi-shuffle" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3v1c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.317 1.918C9.828 10.99 11.204 12 13 12v1c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1 0-1H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.317-1.918C4.172 5.01 2.796 4 1 4H.5a.5.5 0 0 1-.5-.5z"></path>
+                                <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"></path>
+                            </svg></div>
+                        <form class="text-center" action="{{ url_for('auth.update_user_information_page') }}" method="post">
+                            <div class="text-start mb-3"><small class="form-text text-start">First Name</small><input class="form-control" type="text" name="firstname" value="{{ user.first_name.capitalize() }}" placeholder="First Name"/></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Last Name</small><input class="form-control" type="text" name="lastname" value="{{ user.last_name.capitalize() }}" placeholder="Last Name" /></div>
+
+                            <div class="text-start mb-3"><small class="form-text text-start">Email Address</small><input class="form-control" type="text" name="email" value="{{ user.email_address }}" placeholder="Email Address" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Phone Number</small><input class="form-control" type="text" name="phonenumber" value="{{ user.phone_number }}" placeholder="Phone Number" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Address Line 1</small><input id="addressline1" class="form-control" type="text" name="addressline1" value="{{ user.addresses[0].address_line_1 }}" placeholder="Address Line 1" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Address Line 2</small><input id="addressline2" class="form-control" type="text" name="addressline2" value="{{ user.addresses[0].address_line_2 }}" placeholder="Address Line 2" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">City</small><input id="city" class="form-control" type="text" name="city" value="{{ user.addresses[0].city }}" placeholder="City" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">State</small><input id="state" class="form-control" type="text" name="state" value="{{ user.addresses[0].state }}" placeholder="State" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Zip Code</small><input id="zipcode" class="form-control" type="text" name="zipcode" value="{{ user.addresses[0].zip_code }}" placeholder="Zip Code" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Note</small><input id="note" class="form-control" type="text" name="note" value="{{ user.addresses[0].extra_information }}" placeholder="Note" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Emergency Contact Number</small><input id="note" class="form-control" type="text" name="emergencycontact" value="{{ user.emergency_contact_number }}" placeholder="Emergency Contact Number" /></div>
+                            <div class="text-start mb-3"><small class="form-text text-start">Emergency Contact Relationship</small><input id="note" class="form-control" type="text" name="emergencycontactrelation" value="{{ user.emergency_contact_relation }}" placeholder="Contact Relationship" /></div>
+
+                            <input class="form-control" type="hidden" id="latitude" name="latitude" value="{{ user.addresses[0].latitude }}"  />
+                            <input class="form-control" type="hidden" id="longitude" name="longitude" value="{{ user.addresses[0].longitude }}" />
+                            <input class="form-control" type="hidden" id="place_id" name="place_id" value="{{ user.addresses[0].code }}" />
+
+                            <div class="mb-3"><button class="btn btn-primary d-block w-100" type="submit">Update</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
 
 
@@ -184,20 +141,21 @@
     function verify_and_submit_form(event) {
         // this function is called when the submit button is clicked
         // it verifies that the passwords match and then submits the form
-
-        //makes sure that the lat and long are different than the original
-        if (("{{user.addresses[0].address_line_1}}" !== addressLine1Field.value) && (parseFloat("{{ user.addresses[0].latitude }}")=== latitude)) {
-            alert("Please select an address from the dropdown")
-            return;
+        let password = document.getElementById("password").value;
+        let confirmpassword = document.getElementById("confirmpassword").value;
+        if (password != confirmpassword) {
+            alert("Passwords do not match");
+            event.preventDefault();
+            return false;
         }
-        event.preventDefault();
-        console.log(latitude, longitude)
-        document.getElementById("latitude").value = latitude;
-        document.getElementById("longitude").value = longitude;
-        document.getElementById("place_id").value = place_id;
-        document.getElementById("registerform").submit();
-
-
+        else {
+            event.preventDefault();
+            console.log(latitude, longitude)
+            document.getElementById("latitude").value = latitude;
+            document.getElementById("longitude").value = longitude;
+            document.getElementById("place_id").value = place_id;
+            document.getElementById("registerform").submit();
+        }
     }
 </script>
 {% endblock %}

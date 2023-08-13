@@ -1,5 +1,5 @@
 {% extends 'bases/bootstrap_base.html' %}
-{% set title = 'Upcoming Carpools'%}
+{% block title %}Upcoming Carpools{% endblock title %}
 {% block subtitle %}View upcoming Carpools{% endblock %}
 {% set active_page='carpools' %}
 
@@ -14,7 +14,7 @@
     <br>
     <br>
     <br>
-    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: ostrich_sansheavy;font-size: 103.52px; background: rgba(0, 0, 0, 0.2)">Manage Carpools</h2>
+    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: Bungee Shade;font-size: 103.52px; background: rgba(0, 0, 0, 0.5)">Manage Carpools</h2>
 </div>
 
 {% if not driver_carpools and not passenger_carpools and not user.driver_generated_carpools and not user.passenger_generated_carpools%}
@@ -42,7 +42,7 @@
     <ul class="style2">
         {% for passenger in carpool.passengers %}
         <li><p class="style2"> <a
-                href="{{url_for('main.passenger_page', firstname=passenger.first_name, lastname=passenger.last_name )}}">
+                href="{{url_for('main.passenger_page', id=passenger.id )}}">
                 {{passenger.first_name.capitalize()}} {{passenger.last_name.capitalize()}} </a>
             {{passenger.phone_number}}</p></li> 
         {% endfor %}
@@ -79,7 +79,7 @@ Event End Time {{carpool.event.end_time.strftime('%I:%M %p')}}
 Destination: {{ carpool.destination }}
 <br>
 Driver: <a
-        href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}">
+        href="{{url_for('main.driver_page', id=carpool.driver.id )}}">
         {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}} </a>:
     {{carpool.driver.phone_number}}</p>
 
@@ -116,7 +116,7 @@ Driver: <a
             <ul class="">
                 {% for passenger in carpool.passengers %}
                 <li><p class="style2"> <a
-                        href="{{url_for('main.passenger_page', firstname=passenger.first_name, lastname=passenger.last_name )}}">
+                        href="{{url_for('main.passenger_page', id=passenger.id )}}">
                         {{passenger.first_name.capitalize()}} {{passenger.last_name.capitalize()}} </a>
                     {{passenger.phone_number}}</p></li>
                 {% endfor %}
@@ -168,7 +168,7 @@ Driver: <a
     Destination: {{ carpool.destination }}
     <br>
     Driver: <a
-            href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}">
+            href="{{url_for('main.driver_page', id=carpool.driver.id )}}">
             {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a>:
         {{carpool.driver.phone_number}}</p>
     <br>
@@ -194,7 +194,7 @@ Driver: <a
         </div>
     {%endfor%}
 
-{% endblock %}
+{% endblock main %}
 
 {% block scripts %}
 
@@ -222,6 +222,6 @@ Driver: <a
             e.preventDefault();
         }
     }
-
 </script>
-{% endblock %}
+
+{% endblock scripts %}

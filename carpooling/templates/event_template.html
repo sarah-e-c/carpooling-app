@@ -14,14 +14,13 @@
     <br>
     <br>
     <br>
-    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: ostrich_sansheavy;font-size: 103.52px; background: rgba(0, 0, 0, 0.2)">{{ event.name }}</h2>
+    <h2 class="fw-bold text-center text-primary mb-4" style="font-family: Bungee Shade;font-size: 103.52px; background: rgba(0, 0, 0, 0.5)">{{ event.name }}</h2>
 </div>
 <div class="carpooling_div tabcontent" id="carpool">
     <section class="text-center py-4 py-xl-5">
     <div>
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation"><a class="nav-link active" role="tab" data-bs-toggle="tab" href="#tab-1">Sign Up</a></li>
-            <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="tab" href="#tab-2">Check In</a></li>
             <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="tab" href="#tab-3">Info</a></li>
         </ul>
         <div class="tab-content">
@@ -46,33 +45,12 @@
                         {%  endif %}
                 {%  else %}
                 <div class="text-center border rounded-0 border-dark shadow p-4 p-lg-5" style="margin: 38px;">
-                    <h1 class="fs-3">Please log in to sign up or check in.</h1>
+                    <h1 class="fs-3">Please log in to sign up.</h1>
                     <a class="btn btn-primary ms-md-2" role="button" href="{{ url_for('auth.login_page') }}">Log In</a>
                     <a class="btn btn-outline-primary ms-md-2" role="button" href="{{ url_for('auth.generic_register_page') }}">Register</a>
                 </div>
                 {%  endif %}
 
-            </div>
-            <div id="tab-2" class="tab-pane justify-content-sm-end" role="tabpanel">
-                {%  if user.is_authenticated %}
-                    {%  if user.is_checked_in_for_event(event) %}
-                        <h4 class="style2">Check in time: {{ user.get_event_check_in(event).check_in_time.strftime('%I:%M') }}</h4>
-                        <a href="{{ url_for('internal.event_checkout', event_id=event.id) }}"><button class="btn btn-primary text-center" type="button"></button></a>
-                    {%  else %}
-                <div class="border rounded-0 border-dark shadow" style="margin: 38px;">
-
-                    <h1 class="fs-3 text-center" style="margin: 10px;">Check in to this event</h1><button
-                        class="btn btn-primary text-center" type="button" style="margin: 9px;">Check In</button>
-
-                {%  endif %}
-                </div>
-                {%  else %}
-                <div class="text-center border rounded-0 border-dark shadow p-4 p-lg-5" style="margin: 38px;">
-                    <h1 class="fs-3">Please log in to sign up or check in.</h1>
-                    <a class="btn btn-primary ms-md-2" role="button" href="{{ url_for('auth.login_page') }}">Log In</a>
-                    <a class="btn btn-outline-primary ms-md-2" role="button" href="{{ url_for('auth.generic_register_page') }}">Register</a>
-                </div>
-                {%  endif %}
             </div>
             <div id="tab-3" class="tab-pane justify-content-sm-end">
                 <h1 class="fs-3">Event Information</h1>
@@ -129,101 +107,16 @@
         </div>
     </div>
     {% if current_user.is_authenticated %}
-    {% if user.is_admin > 0 or event.user_id == user.id%}
+    {% if user.is_admin() > 0 or event.user_id == user.id%}
             <a style="color: rgb(228, 53, 53)" href="{{ url_for('internal.delete_event', event_index=event.index)}}"
                 onclick="confirm_delete_event(event)" class="button n01">
                 <span class="label">Delete Event</span>
             </a>
     {% endif %}
     {% endif %}
-
-<div class="carpooling_div tabcontent" id="carpool">
-    {% for region in regions%}
-    <div class="regiondiv" style="border-color:{{region.color}}">
-        <h3 class="style2">{{region.name.capitalize()}} Region</h3>
-        {% if user.is_authenticated %}
-        {% if user.region_name == region.name %}
-        {% if user in event.passengers_needing_ride %}
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="#" class="closedbutton n01">
-                        <span class="label">Carpool Requested</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        {% else %}
-        <div class="style1">
-                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index, region_name=region.name) }}"
-                        onclick="confirm_sign_up_for_carpool(event)" class="button n01">
-                        <span class="label">I need a carpool</span>
-        </div>
-        {% endif %}
-        {% endif %}
-        {% else %}
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="{{ url_for('main.passenger_carpool_request_page', event_index=event.index, region_name=region.name) }}"
-                        onclick="confirm_sign_up_for_carpool(event)" class="button n01">
-                        <span class="label">I need a carpool</span>
-                    </a>
-                </li>
-            </ul> <!-- Yes this logic is terrible, IM SORRY-->
-        </div>
-        {% endif %}
-
-
-        {% for carpool in region.get_carpools_in_event(event) %}
-        {% if carpool.has_driver() %}
-        <div class="style1">
-            <p class="style2"> Ride with <a
-                    href="{{url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name )}}">
-                    {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a> </p>
-            <ul id="buttons01" class="style1 buttons">
-                <li>
-                    {% for i in range(carpool.num_passengers) %}
-                    {% if carpool.get_passenger_number_name(i) !='Open' %}
-                    <a class="closedbutton n01">
-                        <span class="label"> {{carpool.get_passenger_number_name(i)}} </span>
-                    </a>
-                    {% else %}
-                    <a onclick="is_same_person(event, '{{carpool.driver}}')"
-                        href="{{ url_for('main.passenger_carpool_signup_page', carpool_index = carpool.index)}}"
-                        class="button n01">
-                        <span class="label">{{carpool.get_passenger_number_name(i)}} </span>
-                    </a>
-                    {% endif %}
-                    {% endfor %}
-                </li>
-            </ul>
-
-            <p class="style2"> Drop-off Location: {{carpool.get_dropoff_location()}} </p>
-        </div>
-
-        {% else %}
-        <br>
-        <br>
-        <div class="style1">
-            <ul class="style1 buttons">
-                <li>
-                    <a href="{{ url_for('main.driver_carpool_signup_page', carpool_index = carpool.index)}}"
-                        onclick="confirm_valid_driver(event)" class="button n01">
-                        <span class="label">Drive for this region!</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        {% endif %}
-
-        {% endfor %}
-    </div>
-    {% endfor %}
+    </section>
 </div>
-</section>
-{% endblock %}
+{% endblock main %}
 
 {% block scripts %}
 <script>
@@ -305,4 +198,4 @@
     }
 </script>
 {% endif %}
-{% endblock %}
+{% endblock scripts%}

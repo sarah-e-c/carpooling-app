@@ -1,60 +1,8 @@
-{% extends 'bases/carrd_base.html' %}
+{% extends 'bases/bootstrap_base.html' %}
 
-
-{% block title %}Carpools for Event {% endblock %}
-
-{% block styles %}
+{% set title='View Carpool' %}
+{% block styles%}
 <style>
-    #detailsdiv {
-        display: block;
-        position: absolute;
-        top: 20%;
-        left: 90%;
-        width: 40%;
-        height: inherit;
-        background-color: #888;
-        border-radius: 3%;
-        box-shadow: 0px 0px 5px 0px rgba(255, 225, 225, 0.75);
-        padding: 10px;
-        margin: 10px;
-        z-index: 1;
-    }
-
-    .hiddendetails {
-        display: none;
-        max-height: 0;
-    }
-
-    span.style2 {
-        color: white;
-        font-family: 'Fira Sans', sans-serif;
-        font-size: small;
-        padding-top: 3px;
-        padding-bottom: 3px;
-        display: block;
-        margin-top: 3px;
-    }
-
-    .visibledetails:hover {
-        background-color: #AAA;
-        transition: none;
-        cursor: pointer;
-    }
-
-    .visibledetails:hover .active {
-        background-color: #888;
-        transition: none;
-        cursor: pointer;
-        transition: scale(1.1);
-    }
-
-    .hiddendetails.active {
-        background-color: #999;
-        display: block;
-        height: max-content;
-        max-height: max-content;
-    }
-
     #mapdiv {
         position: relative;
         height: 700px;
@@ -62,93 +10,109 @@
         border-color: #fff;
         background-color: #fff;
     }
-
-    .buttondiv {
-        display: inline-block;
-    }
 </style>
+
+
 {% endblock %}
+
 {% block main %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_JtvDeZqiy9sxCKqfggODYMhuaeeLjXI&callback=initMap"
     async="false"></script>
 
-<h1 class="style1"> Carpools for {{ carpool.event.name }}</h1>
-    <h3 class="style2"> {{ carpool.event.date }} </h3>
-    {%   if carpool.driver == user %}
-    <h3 class="style2"> You are driving this carpool.</h3>
-    {%  else %}
-    <h3 class="style2"> You are riding in this carpool. </h3>
-    {%  endif %}
+<section class="position-relative py-4 py-xl-5">
+    <h1 class="text-center text-primary" style="font-family: Bungee Shade;font-size: 81.632px;">Carpool for {{carpool.event.name}}</h1>
+    <h2 class="text-center text-secondary">{{carpool.event.date.strftime('%A, %B %-d, %Y')}}</h2> 
+    <p class="text-center"></p>
+    <div class="container position-relative">
+        <div class="row">
+            <div class="col">
+            <div id="mapdiv"></div>
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Carpool Summary</h4>
+                        <p class="card-text">
+                            {% if carpool.driver == user %} You will leave at {{carpool.start_time.strftime('%-I:%M %p')}} for the event from {{carpool.event.start_time.strftime('%-I:%M %p')}} to {{carpool.event.end_time.strftime('%-I:%M %p')}}.
+                            {% else %} {% if carpool.carpool_solution.type == 'to' %} You will be picked up at {{carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p')}} for the event at {{carpool.event.start_time.strftime('%-I:%M %p')}}.
+                            {% else %} You will be dropped off at {{carpool.get_carpool_dropoff_time_for_user(user).strftime('%-I:%M %p')}} for the event ending at {{carpool.event.end_time.strftime('%-I:%M %p')}}.{%endif%}
+                            {% endif %}
+                            <br>
+                            You will get {{ carpool.get_carpool_points(user) }} Carpool Points for participating.
+                        </p>
+                        <h6 class="text-black-50">Passengers</h6>
+                        <ul>
+                            {% for passenger in carpool.passengers %}
+                            <li>{{passenger.first_name.capitalize()}} {{passenger.last_name.capitalize()}}</li>
+                            {%endfor %}
+                        </ul><a class="card-link" href="{{url_for('main.driver_page', id=carpool.driver.id)}}">Driver: {{carpool.driver.first_name.capitalize()}} {{carpool.driver.last_name.capitalize()}}</a>
+                    </div>
+                    </div>
+                    
+                    {% if carpool.carpool_solution.type == 'to' %}
+                    {% for part in carpool.generated_carpool_parts[:-1] %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Stop {{loop.index}}:  {{part.to_address.users[0].first_name.capitalize()}} {{part.to_address.users[0].last_name[0].capitalize()}}'s Home</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{part.from_time.strftime('%-I:%M %p')}} to {{part.to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text">Stop to pick up {{carpool.passengers[loop.index - 1].first_name.capitalize()}} at their home:<br> {{carpool.passengers[loop.index-1].get_address()}}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Final Stop: {{carpool.event.destination.name}}</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{carpool.generated_carpool_parts[-1].from_time.strftime('%-I:%M %p')}} to {{carpool.generated_carpool_parts[-1].to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text"> You have arrived at {{carpool.event.destination.address.get_address()}}! </p>
 
-<div id="mapdiv"></div>
-<!--- This is where the map will be rendered-->
-<div id="detailsdiv">
-    <div id="carpool{{carpool.id}}">
-        <div class="visibledetails details{{carpool.id}}" onclick="renderMap(event, '{{carpool.id}}')">
-            {%  if carpool.carpool_solution.type == 'to' %}
-            <p class="style2">{{carpool.from_address.users[0].first_name}}'s Home to
-                {{carpool.to_address.destination.name}}</p>
-            {%  elif carpool.carpool_solution.type == 'from' %}
-            <p class="style2">{{carpool.from_address.destination.name}}'s Home to
-                {{carpool.to_address.users[0].first_name}}</p>
-            {%  endif %}
-            {% for part in carpool.generated_carpool_parts %}
-            <span class="style2 partshowing">
-                <b>{{part.from_address.address_line_1}} {{part.to_address.city }} </b> to <b>{{part.to_address.address_line_1}} {{ part.to_address.city }}</b>
-            </span>
-            <br>
-            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    {% for part in carpool.generated_carpool_parts[:-1] %}
+                    {% set loop_length = carpool.generated_carpool_parts | length%}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Stop {{loop.index}}:  {{part.to_address.users[0].first_name.capitalize()}} {{part.to_address.users[0].last_name[0].capitalize()}}'s Home</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{part.from_time.strftime('%-I:%M %p')}} to {{part.to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text">Stop to drop off {{carpool.passengers[loop_length - loop.index - 1].first_name.capitalize()}} at their home:<br> {{part.to_address.get_address()}}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Final Stop: {{carpool.driver.first_name.capitalize()}} (Driver's) Home</h4>
+                            <h6 class="text-muted card-subtitle mb-2">{{carpool.generated_carpool_parts[-1].from_time.strftime('%-I:%M %p')}} to {{carpool.generated_carpool_parts[-1].to_time.strftime('%-I:%M %p')}}</h6>
+                            <p class="card-text"><br>Go home and rest!</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-    {# TODO add pool points calculation and reward, also show estimated arrival time and things #}
-    <h1 class="style1">More Carpool Details</h1>
-    <h3 class="style2">Estimated Carpool Start Time {{ carpool.from_time.strftime('%-I:%M %p') }} </h3>
-    <h3 class="style2">Estimated Pickup Time {{ carpool.get_carpool_pickup_time_for_user(user).strftime('%-I:%M %p') }}</h3>
-    <h3 class="style2">Estimated Drop-off Time {{ carpool.get_carpool_dropoff_time_for_user(user).strftime('%-I:%M %p') }}</h3>
-    <h3 class="style2">Driver: <a class="style2" href="{{ url_for('main.driver_page', firstname=carpool.driver.first_name, lastname=carpool.driver.last_name) }}">{{ carpool.driver.first_name.capitalize() }} {{ carpool.driver.last_name.capitalize() }}</a></h3>
-    <h3 class="style2">Riders: </h3>
-    {% for rider in carpool.passengers %}
-    <h3 class="style2">{{ rider.first_name.capitalize() }} {{ rider.last_name.capitalize() }}</h3>
-    {% endfor %}
-    <h3 class="style2">Carpool Points For participating: {{ carpool.get_carpool_points(user) }}</h3>
-    {%  if not user.is_confirmed_for_carpool(carpool.id) %}
-<div class="buttondiv">
-    <ul class="style1 buttons">
-        <li>
-
-            <a class="button n01" id="leftbutton"
-                href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}" onclick="confirmConfirmCarpool(event)"><svg>
-                    <use xlink:href="#icon-b64"></use>
-                </svg>
+        {% if not user.is_confirmed_for_carpool(carpool.id) %}
+        <div class="text-center"> 
+            <a class="btn btn-primary btn-lg" id="leftbutton"
+                href="{{url_for('internal.confirm_carpool', carpool_id=carpool.id)}}" onclick="confirmConfirmCarpool(event)">
                 <span class="label">Confirm</span>
             </a>
 
-            <a class="button n01" id="rightbutton"
-                href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}" onclick="confirmDenyCarpool(event)"><svg>
-                    <use xlink:href="#icon-b64"></use>
-                </svg>
+            <a class="btn-warning btn btn-lg" id="rightbutton"
+                href="{{url_for('internal.decline_carpool', carpool_id=carpool.id)}}" onclick="confirmDenyCarpool(event)">
                 <span class="label">
-                    Deny
+                    Decline
                 </span>
             </a>
-        </li>
-    </ul>
-
+        </div>
+        {% else %}          <div class="text-center"> <a class="btn btn-warning btn-lg" id="leftbutton"
+        href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}" onclick="confirmCancelCarpool(event)">
+        <span class="label">Cancel Carpool</span>
+    </a>
 </div>
-    {%  else %}
-    <h3 class="style2">You have confirmed this carpool.</h3>
-        <ul class="style1 buttons">
-        <li>
-            <a class="button n01" id="leftbutton"
-                href="{{url_for('internal.cancel_generated_carpool', carpool_id=carpool.id)}}" onclick="confirmCancelCarpool(event)"><svg>
-                    <use xlink:href="#icon-b64"></use>
-                </svg>
-                <span class="label">Cancel Carpool</span>
-            </a>
-        </li>
-        </ul>
-    {%  endif %}
+        {%endif %}
+    </div>
+
+</section>
+
 {% endblock %}
 
 {% block scripts %}
@@ -158,6 +122,10 @@
     console.log("starting script");
     var map = "";
     let rendered_carpool;
+
+    $(document).ready(function() {
+        renderMap(event, '{{carpool.id}}');
+    });
 
 
 
@@ -196,23 +164,6 @@
     }
 
     function renderMap(event, carpool_id) {
-
-        //toggling the visibility
-        const detailsdiv = document.getElementById('carpool' + carpool_id);
-        //const hiddendetails = detailsdiv.children[1];
-        const visibledetails = detailsdiv.children[0];
-        for (let i = 0; i < document.getElementById('detailsdiv').children.length; i++) {
-            //document.getElementById('detailsdiv').children[i].children[1].classList.remove('active')
-            document.getElementById('detailsdiv').children[i].children[0].classList.remove('active')
-        }
-        if (visibledetails.classList.contains("active")) {
-            visibledetails.classList.remove("active");
-            console.log('deactivated the details div')
-        } else {
-            console.log('activated the details div.')
-            visibledetails.classList.add("active");
-        }
-
 
 
         // getting data for map

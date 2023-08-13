@@ -5,15 +5,10 @@
 {% block title %}{{main_message}}{% endblock %}
 
 {% block main %}
-<div id="image01" class="style1 image">
-    <span class="frame">
-        <img src="{{url_for('static', filename='driver_signup_template_files/image01.png')}}" alt=""/>
-    </span>
-</div>
 <h1 id="text01" class="style1">{{main_message}}</h1>
 <hr id="divider02" class="style1">
-<div id="text02" class="style2">
-    <p class="style2">
+<div id="text02" class="card">
+    <p class="card-body">
         {{sub_message}}
     </p>
 </div>

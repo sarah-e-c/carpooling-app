@@ -27,7 +27,7 @@
 <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBghXgyj-zW3xh5e-2ryMGNh1iRCKvRG6k&libraries=places"></script>
     <section class="position-relative py-4 py-xl-5" style="background: linear-gradient(180deg, var(--bs-gray-200) 0%, var(--bs-gray-400) 100%);">
-<h1 id="text01" class="text-center" style="font-family: 'ostrich_sansheavy', sans-serif; color:var(--bs-primary);">Create New Event</h1>
+<h1 id="text01" class="text-center" style="font-family: 'Bungee Shade', sans-serif; color:var(--bs-primary);">Create New Event</h1>
 <div class="row d-flex justify-content-center">
                 <div class="col-md-6 col-xl-4">
 <div id="text02" class="card ">
@@ -35,59 +35,97 @@
 <h6 id="text07">{{ message }}</h6>
 </div>
 
-<div class="card-body shadow d-flex flex-column align-items-center">
+<div class="card-body shadow d-flex flex-column align-items-right">
     <form action="{{url_for('main.create_event_page')}}" method="post">
         <div id="formtable">
-            <p>
-                <label for="eventname">Event Name</label>
-
+            <div class="row">
+                <div class="col">
+                <label for="eventname">Event Name</label></div>
+                <div class="col">
                 <input type="text" id="eventname" name="eventname" placeholder="Friday Meeting" class="input1"
                     required="required">
-            </p>
-            <br>
-
+                </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col">
                 <label for="eventdate">Event Date
                     &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
-                <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="align-right"
+                    </div>
+                    <div class="col">
+                <input type="date" id="eventdate" name="eventdate" placeholder="8:00" class="align-right text-align-right"
                     required="required">
-            <br>
+                    </div>
+            
+        </div>
+        <br>
+        <div class="row">
+            <div class="col">
                 <label for="eventstarttime">Event Start Time
                     &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </label>
+                    </div>
+                    <div class="col">
                 <input type="time" id="eventstarttime" name="eventstarttime" placeholder="4:00" class="input1"
                     required="required">
+                    </div>
+                </div>
             <br>
-
+            <div class="row">
+                <div class="col">
                 <label for="eventendtime">Event End Time</label>
+                </div>
+                <div class="col">
                 <input type="time" id="eventendtime" name="eventendtime" placeholder="8:30" class="input1"
                     required="required">
+                </div>
+            </div>
             <br>
-
-            <p>
+            <div class="row">
+                <div class="col">
                 <label for="eventAddress">Event Location</label>
+                </div>
+                <div class="col">
                 <select onclick="verifyDestination(event)" name="eventAddress" id="eventAddress">
                     {% for destination in destinations %}
                     <option value="{{destination.name}}" selected> {{destination.name}}</option>
                     {% endfor %}
                 </select>
+                </div>
+            </div>
+            <br>
+            <div class="row">
                 <a class="btn btn-outline-dark" onclick="verifyDestination(event)">Create Destination</a>
-            </p>
-
-            <p>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col">
                 <label for="eventdescription">Event Description</label>
+                </div>
+                <div class="col">
                 <input type="text" id="eventdescription" name="eventdescription" placeholder="Normal Friday Meeting"
                     class="input1">
-            </p>
+                </div>
+        </div>
             <br>
-        <p>
+            <div class="row">
+                <div class="col">
             <label for="needsmatchingbuildto">Schedule Carpool Matching to? &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
+        </div>
+        <div class="col">
             <input type="checkbox" id="needsmatchingbuildto" name="needsmatchingbuildto" value="true" class="input1">
-        </p>
+        </div>
+    </div>
         <br>
-        <p>
+        <div class="row">
+            <div class="col">
             <label for="needsmatchingbuildfrom">Schedule Carpool Matching from? &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
+            </div>
+            <div class="col">
             <input type="checkbox" id="needsmatchingbuildfrom" name="needsmatchingbuildfrom" value="true" class="input1">
-        </p>
+        </div>
+        </div>
 
+        <input type="hidden" id="organization" name="organization" value="{{organization}}">
 
         </div>
 
@@ -119,8 +157,9 @@
             <input type="hidden" id="latitude" name="latitude" class="input1" required="required">
             <input type="hidden" id="longitude" name="longitude" class="input1" required="required">
             <input type="hidden" id="place_id" name="place_id" class="input1" required="required">
+            <input type="hidden" id="organization" name="organization" class="input1" required="required">
 
-                <input type="submit" onclick="verify_and_submit_form(event)" class="btn button-primary" id="submitbutton">
+                <input type="submit" onclick="verifyAndSubmitForm(event)" class="btn button-primary" id="submitbutton">
             <br>
         </form>
         </div>
@@ -225,7 +264,7 @@
 
     }
 
-    function verify_and_submit_form(event) {
+    function verifyAndSubmitForm(event) {
         // this function is called when the submit button is clicked
         // it verifies that the passwords match and then submits the form
 
@@ -238,9 +277,11 @@
             document.getElementById("city").value = city;
             document.getElementById("state").value = state;
             document.getElementById("zipcode").value = zipcode;
+            document.getElementById("organization").value = "{{organization}}";
+            console.log("organization id" + document.getElementById("organization").value)
             document.getElementById("createDestinationForm").submit();
         } else {
-            alert("Please select a valid address from the dropdown")
+            alert("Please select a valid address from the dropdown.")
         }
     }
 </script>

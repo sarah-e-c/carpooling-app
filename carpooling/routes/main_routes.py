@@ -1,11 +1,12 @@
 """
 Main, user-facing routes for the application
 """
+import secrets
 
 from carpooling import db
 from carpooling import mail
-from carpooling.models import Address, AuthKey, Event, Region, Carpool, StudentAndRegion, User, Destination, \
-    GeneratedCarpool
+from carpooling.models import Address, Event, Carpool, User, Destination, \
+    GeneratedCarpool, Organization
 import logging
 from carpooling.tasks import send_async_email
 from carpooling.utils import driver_required
@@ -14,8 +15,9 @@ import datetime
 from flask_login import login_required, current_user, logout_user
 from carpooling.utils import requires_auth_key
 from flask_mail import Message
-from flask import Blueprint
+from flask import Blueprint, session
 from carpooling import tasks_
+
 
 main_blueprint = Blueprint('main', __name__, template_folder='templates')
 
@@ -41,7 +43,6 @@ logger = logging.getLogger(__name__)
 
 
 @main_blueprint.route('/')
-@main_blueprint.route('/home')
 def home_page(logout=False):
     """
     Home page. Also index page.
@@ -50,7 +51,7 @@ def home_page(logout=False):
     logout = request.args.get('logout')
     if logout:
         logout_user()
-        flash('You have been logged out.', 'success')
+        flash('You have been logged out.', 'message')
         logger.info(f'User {current_user} logged out')
 
     # finding the information needed for the dashboard... technically doesn't need to be done if not authenticated, but its not too bad
@@ -73,9 +74,9 @@ def home_page(logout=False):
                            passenger_carpools=passenger_carpools, events=events)
 
 
-@main_blueprint.route('/driver/<lastname>/<firstname>')
+@main_blueprint.route('/driver/<id>')
 @requires_auth_key
-def driver_page(lastname, firstname):
+def driver_page(id):
     """
     Driver page for passengers and other drivers to see
     last_name: last name of the driver
@@ -83,8 +84,7 @@ def driver_page(lastname, firstname):
     """
     logger.info('driver page')
     try:
-        driver = User.query.filter_by(
-            last_name=lastname, first_name=firstname).one()
+        driver = User.query.get(id)
     except:
         logger.info('no driver was found')
         return 'No driver was found.'
@@ -131,7 +131,7 @@ def event_page(event_index):
     except:  # the event doesn't exist
         redirect(url_for('main.events_page'))
 
-    return render_template('event_template.html', event=event, regions=Region.query.all(), user=current_user)
+    return render_template('event_template.html', event=event, user=current_user)
 
 
 @main_blueprint.route('/create-event', methods=['GET', 'POST'])
@@ -141,6 +141,11 @@ def create_event_page():
     """
     Create event page. Used for verified users to create events.
     """
+    try:
+        if not session["organization"]:
+            session["organization"] = current_user.organizations[0].id
+    except KeyError as e:
+        session["organization"] = current_user.organizations[0].id
 
     if request.method == 'GET':
         destinations = Destination.query.all()
@@ -148,7 +153,7 @@ def create_event_page():
         if message is None:
             message = 'Create an Event'
         return render_template('create_event_template.html', message=message, user=current_user,
-                               destinations=destinations)
+                               destinations=destinations, organization=session["organization"])
 
     if request.method == 'POST':
         # getting the event info from the form
@@ -173,18 +178,13 @@ def create_event_page():
             'destination_id': Destination.query.filter_by(name=request.form['eventAddress']).one().id,
             'needs_matching_build_to': needs_matching_build_to,
             'needs_matching_build_from': needs_matching_build_from,
-            'matching_build_type': matching_build_type
+            'matching_build_type': matching_build_type,
+            'organization_id': request.form['organization']
         }
 
         try:
             new_event = Event(**event_info)
             db.session.add(new_event)
-            for region in Region.query.all():  # i love for loops
-                # for each region, create carpools
-                for _ in range(DEFAULT_NUMBER_OF_CARPOOLS):
-                    carpool = Carpool(event_index=new_event.index, region_name=region.name,
-                                      num_passengers=0, destination=region.dropoff_location)
-                    db.session.add(carpool)
 
             db.session.commit()
             logger.info(
@@ -195,6 +195,7 @@ def create_event_page():
             return redirect(
                 url_for("main.create_event_page", message='Something went wrong. Make sure that all inputs are valid.'))
 
+        flash("Your event, {}, was created successfully!".format(event_info["name"]), "success")
         return redirect(url_for('main.events_page'))
     else:
         return render_template('error_template.html', main_message='Go Away', sub_message='You should not be here.',
@@ -227,7 +228,7 @@ def driver_carpool_signup_page(carpool_index):
                     tasks_.send_async_email.delay(
                         passenger.email_address,
                         'Carpool Request',
-                        f'Hi {passenger.first_name.capitalize()},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nTeam 422'
+                        f'Hi {passenger.first_name.capitalize()},\n\nYour request for a carpool has been fulfilled! Check the events page to sign up.\n\nThanks,\nCarpool Manager.'
                     )
             # removing the passengers needing a ride in the region
             for passenger in [passenger for passenger in carpool.event.passengers_needing_ride if
@@ -366,10 +367,10 @@ def manage_carpools_page():
                            passenger_carpools=passenger_carpools)
 
 
-@main_blueprint.route('/passenger/<lastname>/<firstname>')
+@main_blueprint.route('/passenger/<id>')
 @login_required
 @requires_auth_key
-def passenger_page(lastname, firstname):
+def passenger_page(id):
     """
     Page that allows for the viewing of passenger information. Is only accessible if the person is logged in 
     and has an upcoming carpool with the person in it.
@@ -384,10 +385,18 @@ def passenger_page(lastname, firstname):
     for carpool in current_user_carpools:
         if (carpool.event.start_time) > datetime.datetime.now():
             for passenger in carpool.passengers:
-                if (passenger.first_name == firstname) and (passenger.last_name == lastname):
+                if (passenger.id == id):
                     return render_template('passenger_template.html', user=current_user, passenger=passenger)
 
-    # if the person is not able to see
+    passenger = User.query.filter_by(id=id).first()
+    if current_user.is_admin() > 1 and session["organization"] in [organization.id for organization in passenger.organizations]:
+        return render_template('passenger_template.html', user=current_user, passenger=passenger)
+
+    if current_user == passenger:
+        return render_template('passenger_template.html', user=current_user, passenger=passenger)
+
+    # if the person is not able to see the passenger
+
     return render_template('error_template.html', main_message='Go Away',
                            sub_message='You do not have access to see the passenger.', user=current_user)
 
@@ -407,7 +416,6 @@ def passenger_carpool_request_page(event_index, region_name): # temp disabled
     event_index: index of the event
     """
     if request.method == 'GET':
-        regions = Region.query.all()
         try:
             event = Event.query.get(event_index)
         except Exception as e:
@@ -436,7 +444,6 @@ def passenger_carpool_request_page(event_index, region_name): # temp disabled
             logger.info('finished notifying drivers.')
             return redirect(url_for('main.event_page', event_index=event.index))
         else:
-            regions = Region.query.all()
             return redirect(url_for('auth.generic_register_page'))
             return render_template('passenger_carpool_request_template.html', event=event, user=current_user,
                                    regions=regions, region_name=region_name)
@@ -509,3 +516,61 @@ def view_carpool_page(carpool_index):
     #     return redirect(url_for('main.events_page')) TODO
 
     return render_template('user_route_summary_template.html', carpool=carpool, user=current_user)
+
+
+@main_blueprint.route('/view-organization')
+@login_required
+def view_organization_page():
+    """
+    Page to view the organization
+    """
+    return render_template('view_organization_template.html', user=current_user, organization=Organization.query.get(session['organization']))
+
+@main_blueprint.route('/about')
+def about_page():
+    """
+    Page to view information about the app
+    """
+    return render_template('about_template.html', user=current_user)
+
+@main_blueprint.route('/contact')
+def contact_page():
+    """
+    Page to contact the developers
+    """
+    return render_template('contact_template.html', user=current_user)
+
+
+@main_blueprint.route('/add_new_organization', methods=['GET', 'POST'])
+@login_required
+def add_new_organization_page():
+    """
+    Page to add a new organization
+    """
+    if request.method == "GET":
+        return render_template('add_new_organization_template.html', user=current_user)
+    if request.method == "POST":
+        if request.form.get("neworganizationname") is not None:
+            new_organization = Organization(name=request.form.get("neworganizationname"), description=request.form.get("neworganizationdescription"), access_key=secrets.token_urlsafe(8))
+            db.session.add(new_organization)
+            current_user.organizations.append(new_organization)
+            db.session.commit()
+            session["organization"] = new_organization.id
+            current_user.set_admin_level(2)
+            flash("Your organization, {}, was created successfully!".format(new_organization.name), "success")
+            return redirect(url_for("main.home_page"))
+        else:
+            new_organization = Organization.query.filter_by(access_key=request.form.get("organizationkey")).first()
+            if new_organization is None:
+                flash("That organization does not exist. Please try again.", "error")
+                return redirect(url_for("main.add_new_organization_page"))
+            else:
+                current_user.organizations.append(new_organization)
+                db.session.commit()
+                session["organization"] = new_organization.id
+                flash("You have successfully joined {}!".format(new_organization.name), "success")
+                return redirect(url_for("main.home_page"))
+
+
+
+

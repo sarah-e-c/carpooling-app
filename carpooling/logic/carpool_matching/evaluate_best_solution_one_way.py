@@ -119,7 +119,6 @@ def evaluate_best_solution_one_way(rsvp_list: list[Person], destination_id: int,
             carpool_matching_frame))
 
         while carpool_matching_frame.cumsum().sum().sum() > 0:
-            logger.info('Creating carpool for iteration {}'.format(i))
             max_value_in_frame = np.nanmax(
                 carpool_matching_frame.values.flatten())
             if (max_value_in_frame == 0) or (np.isnan(max_value_in_frame)):

@@ -2,7 +2,7 @@ import carpooling.celeryapp as celeryapp
 from carpooling.logic.carpool_matching import evaluate_best_solution_one_way
 from carpooling.logic.carpool_matching.data_classes import DRIVER_WAITING_TIME
 from carpooling.logic.carpool_matching.general_functions import load_people_from_sql
-from carpooling.models import Event, AuthKey, User, Address, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
+from carpooling.models import Event, User, Address, CarpoolSolution, GeneratedCarpool, GeneratedCarpoolPart
 from flask import current_app
 import logging
 import time
@@ -50,11 +50,12 @@ def send_async_email(to, subject, message):
                       recipients=[to])
         msg.body = message
         mail.send(msg)
-        logger.info('Email sent to %s', to)
+        #logger.info('Email sent to %s', to)
     except Exception as e:
         logger.debug(e)
         logger.warning('Email failed to send to {}, probably due to an invalid email address'.format(to))
 
+    return "Email sent!"
 
 @celery.task
 def send_async_email_to_many(to: list, subject: str, message: str):
@@ -80,8 +81,12 @@ def send_async_email_to_many(to: list, subject: str, message: str):
         logger.warning('Email failed to send to {}, probably due to an invalid email address'.format(to))
 
 
+
 @celery.task(name='maintenance_task')
 def maintenance_task():
+    """
+    Task that starts carpool matching and also makes sure that the database is up to date.
+    """
     # checking if an event should have a carpooling build done for it
     events = Event.query.filter(Event.date > datetime.datetime.now()).all()
     logger.debug('fetched events from database {}'.format(events))
@@ -96,11 +101,12 @@ def maintenance_task():
 
     logger.debug('started building carpooling solutions for events if needed')
 
-    # checking if an auth key is needed
-    if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(
-            days=28):
-        new_auth_key = AuthKey(key=secrets.token_hex(4))
-        celery.__getattribute__('to_add_to_session').append(new_auth_key)
+    # disabled
+    # # checking if an auth key is needed
+    # if AuthKey.query.order_by(AuthKey.index.desc()).first().date_created < datetime.datetime.now() - datetime.timedelta(
+    #         days=28):
+    #     new_auth_key = AuthKey(key=secrets.token_hex(4))
+    #     celery.__getattribute__('to_add_to_session').append(new_auth_key)
 
     # making sure that there is no unidentified addresses in the database, if they can't be identified, the driver is notified
     problematic_users = [user for user in User.query.all() if user.addresses[0].latitude is None]

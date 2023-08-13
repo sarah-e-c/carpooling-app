@@ -1,11 +1,9 @@
 from carpooling import db
-from flask import current_app
-from sqlalchemy.sql import func
+from flask import current_app, session
 from flask_login import UserMixin
 from itsdangerous import URLSafeSerializer
 import logging
 import datetime
-from sqlalchemy import event, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -26,65 +24,7 @@ class EventCheckIn(db.Model):
 
     def get_end_time(self):
         return self.check_out_time.strftime('%I:%M %p')
-
-
-# class Driver(db.Model):
-#     __tablename__ = 'drivers'
-#     index = db.Column(db.Integer, primary_key=True)
-#     last_name = db.Column(db.String, nullable=False)
-#     first_name = db.Column(db.String, nullable=False)
-#     num_seats = db.Column(db.Integer, nullable=False)
-#     phone_number = db.Column(db.String, nullable=False)
-#     email_address = db.Column(db.String, nullable=False)
-#     student_or_parent = db.Column(db.String, nullable=False)
-#     num_years_with_license = db.Column(db.String)
-#     car_type_1 = db.Column(db.String, nullable=False)
-#     car_color_1 = db.Column(db.String, nullable=False)
-#     car_type_2 = db.Column(db.String)
-#     car_color_2 = db.Column(db.String)
-#     emergency_contact_number = db.Column(db.String, nullable=False)
-#     emergency_contact_relation = db.Column(db.String, nullable=False)
-#     # carpools = db.relationship('Carpool', backref='driver_index', lazy=True)
-#     extra_information = db.Column(db.String)
-#     region_name = db.Column(db.String, db.ForeignKey('regions.name'), nullable=True)
-#     region = db.relationship('Region', backref=db.backref('drivers', lazy=True))
-#     address_line_1 = db.Column(db.String, nullable=True)
-#     address_line_2 = db.Column(db.String, nullable=True)
-#     city = db.Column(db.String, nullable=True)
-#     zip_code = db.Column(db.String, nullable=True)
-#     # address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-#     address = db.relationship('Address', back_populates='driver', uselist=False)
-#     user = db.relationship('User', back_populates='driver_profile', uselist=False)
-
-
-#     def __repr__(self):
-#         return f'Driver: {self.first_name.capitalize()} {self.last_name.capitalize()}'
-
-#     @staticmethod
-#     def get_by_name(full_name):
-#         first_name, last_name = full_name.split(' ')
-#         return Driver.query.filter_by(first_name=first_name, last_name=last_name).first()
-
-#     def get_address(self):
-#         """
-#         Gives a pretty version of the address
-#         """
-#         if not self.address_line_2:
-#             return f'{self.address_line_1}, {self.city}, VA {self.zip_code}'
-#         else:
-#             return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
-
-
-class AuthKey(db.Model):
-    __tablename__ = 'auth_keys'
-    index = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String, nullable=False)
-    date_created = db.Column(db.DateTime, default=func.now())
-
-    def __repr__(self):
-        return f'AuthKey created at: {self.time_created}'
-
-
+    
 class Carpool(db.Model):
     """
     A carpool is a collection of a driver and a list of passengers. It is within an event.
@@ -98,8 +38,6 @@ class Carpool(db.Model):
     event = db.relationship('Event', backref=db.backref('carpools', lazy=True))
     destination = db.Column(db.String, nullable=False)
     extra_information = db.Column(db.String(200), nullable=True)
-    region = db.relationship('Region', backref=db.backref('carpools'), lazy=True)
-    region_name = db.Column(db.String(30), db.ForeignKey('regions.name'), nullable=False)
     passengers = db.relationship('User', back_populates='passenger_carpools', secondary='passenger_carpool_links')
 
     def has_driver(self):
@@ -117,17 +55,6 @@ class Carpool(db.Model):
 
         return self.passengers[number].first_name.capitalize() + ' ' + self.passengers[number].last_name[
             0].capitalize() + '.'
-
-    def get_dropoff_location(self):
-        """
-        Use this method to get the dropoff location of the carpool if specified
-        or the default drop off of the region.
-        """
-
-        if self.destination is not None:
-            return self.destination
-        else:
-            return self.region.dropoff_location
 
     def __repr__(self):
         try:
@@ -159,6 +86,8 @@ class Event(db.Model):
     needs_matching_build_from = db.Column(db.Boolean, default=False)
     matching_build_type = db.Column(db.Integer, default=0,)  # 0=none, 1=to, 2=from, 3=to and from
     # carpools = db.relationship('Carpool', backref='event', lazy=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False)
+    organization = db.relationship("Organization", back_populates="events", foreign_keys=[organization_id])
 
     def get_description(self):
         if self.description is None:
@@ -187,67 +116,7 @@ class Event(db.Model):
         return 'null value'
     def __repr__(self):
         return f'Event: {self.name}'
-
-
-class Region(db.Model):
-    """
-    A region is a group of students that are close to each other.
-    """
-    __tablename__ = 'regions'
-    name = db.Column(db.String, primary_key=True)
-    dropoff_location = db.Column(db.String, nullable=False)
-    color = db.Column(db.String, nullable=False, default='#fff')
-
-    # carpools = db.relationship('Carpool', backref=db.backref('region'))
-    # passengers = db.relationship('Passenger', backref=db.backref('region'))
-    # drivers = db.relationship('Driver', backref=db.backref('region'))
-
-    def get_carpools_in_event(self, event: Event):
-        return [carpool for carpool in self.carpools if carpool.event == event]
-
-    def __repr__(self):
-        return f'Region: {self.name}'
-
-
-# class Passenger(db.Model):
-#     """
-#     Passenger model. More limited than Driver model. Passengers will not require sign in but might be offered for convenience.
-#     """
-#     __tablename__ = 'passengers'
-#     index = db.Column(db.Integer, primary_key=True)
-#     last_name = db.Column(db.String, nullable=False)
-#     first_name = db.Column(db.String, nullable=False)
-#     phone_number = db.Column(db.String, nullable=False)
-#     email_address = db.Column(db.String, nullable=False)
-#     emergency_contact_number = db.Column(db.String, nullable=True)
-#     emergency_contact_relation = db.Column(db.String, nullable=True)
-#     extra_information = db.Column(db.String(200), nullable=True)
-#     region_name = db.Column(db.String(40), db.ForeignKey('regions.name'), nullable=True)
-#     region = db.relationship('Region', backref=db.backref('passengers'))
-#     carpools = db.relationship('Carpool', secondary='passenger_carpool_links', overlaps='passengers')
-#     address_line_1 = db.Column(db.String(50), nullable=True)
-#     address_line_2 = db.Column(db.String(50), nullable=True)
-#     city = db.Column(db.String(20), nullable=True)
-#     zip_code = db.Column(db.String(12), nullable=True)
-#     # address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=True)
-#     user = db.relationship('User', back_populates='passenger_profile', uselist=False)
-#     generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers', secondary='generated_carpool_part_passenger_links', lazy=True, overlaps='passengers')
-#     generated_carpools = db.relationship('GeneratedCarpool', back_populates='passengers', secondary='generated_carpool_passenger_links', lazy=True, overlaps='passengers')
-#     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='passenger')
-#     address = db.relationship('Address', back_populates='passenger', uselist=False)
-
-#     def __repr__(self):
-#         return f'Passenger: {self.first_name.capitalize()} {self.last_name.capitalize()}'
-
-#     def get_address(self):
-#         """
-#         Gives a pretty version of the address
-#         """
-#         if not self.address_line_2:
-#             return f'{self.address_line_1}, {self.city}, VA {self.zip_code}'
-#         else:
-#             return f'{self.address_line_1}, {self.address_line_2}, {self.city}, VA {self.zip_code}'
-
+    
 
 class User(UserMixin, db.Model):
     """
@@ -260,22 +129,17 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(20), nullable=False)
     last_name = db.Column(db.String(20), nullable=False)
     student_or_parent = db.Column(db.String, nullable=True)
-    team_auth_key = db.Column(db.String(10), nullable=False,
-                              default='0')  # a special key sent out by the team to allow access to the site
-    is_admin = db.Column(db.SmallInteger, nullable=False, default=0)
     pool_points = db.Column(db.Float, default=0.0, nullable=False)
     phone_number = db.Column(db.String, nullable=False)
     emergency_contact_number = db.Column(db.String, nullable=False)
     emergency_contact_relation = db.Column(db.String, nullable=False)
     extra_information = db.Column(db.String(200), nullable=True)
-    region_name = db.Column(db.String(40), db.ForeignKey('regions.name'), nullable=True)
     num_seats = db.Column(db.Integer, nullable=True)
     num_years_with_license = db.Column(db.String, nullable=True)
     car_type_1 = db.Column(db.String, nullable=True)
     car_color_1 = db.Column(db.String, nullable=True)
     car_type_2 = db.Column(db.String, nullable=True)
     car_color_2 = db.Column(db.String, nullable=True)
-    region = db.relationship('Region', backref=db.backref('users'))
     driver_carpools = db.relationship('Carpool', back_populates='driver', lazy=True)
     passenger_carpools = db.relationship('Carpool', secondary='passenger_carpool_links')
     passenger_generated_carpool_parts = db.relationship('GeneratedCarpoolPart', back_populates='passengers',
@@ -286,6 +150,25 @@ class User(UserMixin, db.Model):
     driver_generated_carpools = db.relationship('GeneratedCarpool', back_populates='driver', lazy=True)
     event_carpool_signups = db.relationship('EventCarpoolSignup', back_populates='user')
     addresses = db.relationship('Address', secondary='address_user_links', back_populates='users')
+    organizations=db.relationship("Organization", secondary="organization_user_links", back_populates="users")
+    organization_user_links = db.relationship("OrganizationUserLink", back_populates="user", lazy=True)
+
+    def is_admin(self) -> int:
+        """
+        Returns the admin level for the current organization section.
+        """
+        organization = int(session['organization'])
+        admin_level = OrganizationUserLink.query.filter_by(user_id=self.id, organization_id=organization).first().admin_level
+        return admin_level
+    
+    def set_admin_level(self, level: int):
+        """
+        Sets the admin level
+        """
+        organization_user_link = OrganizationUserLink.query.filter_by(user_id=self.id, organization_id=int(session['organization'])).first()
+        organization_user_link.admin_level = level
+        db.session.commit()
+
 
     def is_signed_up_for_event(self, event_index):
         """
@@ -320,15 +203,6 @@ class User(UserMixin, db.Model):
         except Exception as e:
             logger.critical(f'Error verifying reset password token: {e}')
             return False
-
-    def get_auth_key_date(self):
-        """
-        Method to get the date the auth key was created
-        """
-        if self.team_auth_key == '0':
-            return 'Not team verified'
-        return datetime.datetime.strftime(AuthKey.query.filter_by(key=self.team_auth_key).one().date_created,
-                                          '%m-%d-%Y')
 
     def __repr__(self):
         return f'User: {self.first_name.capitalize()} {self.last_name.capitalize()}'
@@ -367,9 +241,9 @@ class User(UserMixin, db.Model):
         """
         try:
             if not self.addresses[address_number - 1].address_line_2:
-                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].city}, {self.addresses[address_number -1].state} {self.addresses[address_number - 1].zip_code}'
             else:
-                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, VA {self.addresses[address_number - 1].zip_code}'
+                return f'{self.addresses[address_number - 1].address_line_1}, {self.addresses[address_number - 1].address_line_2}, {self.addresses[address_number - 1].city}, {self.addresses[address_number-1].state} {self.addresses[address_number - 1].zip_code}'
         except IndexError:
             return 'No address'
 
@@ -499,11 +373,17 @@ class Address(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     code = db.Column(db.String, nullable=True,
                      unique=True)  # change these once all of the addresses are loaded in properly
-    destination = db.relationship('Destination', back_populates='address', uselist=False)
+    destination = db.relationship('Destination', back_populates='address')
     users = db.relationship('User', back_populates='addresses', secondary='address_user_links')
 
     def __repr__(self):
         return f'Address: {self.address_line_1}'
+    
+    def get_address(self):
+        if not self.address_line_2:
+            return f'{self.address_line_1}, {self.city}, {self.state} {self.zip_code}'
+        else: 
+            return f'{self.address_line_1}, {self.address_line_2}, {self.city}, {self.state} {self.zip_code}'
 
 
 class Destination(db.Model):
@@ -515,6 +395,8 @@ class Destination(db.Model):
     name = db.Column(db.String, nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey('addresses.id'), nullable=False)
     address = db.relationship('Address', back_populates='destination', foreign_keys=[address_id], uselist=False)
+    organization=db.relationship("Organization", back_populates="destinations")
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False)
 
     def __repr__(self):
         return f'Destination: {self.name}'
@@ -546,7 +428,7 @@ class GeneratedCarpool(db.Model):
 
     def get_carpool_pickup_time_for_user(self, user: User):
         """
-        Returns the time the user should be picked up for this carpool
+        Returns the time the user should be picked up for this carpool in datetime format.
         """
         if user == self.driver or self.carpool_solution.type == 'from':
             return self.from_time
@@ -573,14 +455,14 @@ class GeneratedCarpool(db.Model):
             try:
                 user_address_id = user.addresses[0].id
                 return \
-                    [part.to_time for part in self.generated_carpool_parts if part.from_address_id == user_address_id][
+                    [part.to_time for part in self.generated_carpool_parts if part.to_address_id == user_address_id][
                         0]
             except IndexError:
                 try:
                     user_address_id = user.addresses[1].id
                     return \
                         [part.to_time for part in self.generated_carpool_parts if
-                         part.from_address_id == user_address_id][
+                         part.to_address_id == user_address_id][
                             0]
                 finally:
                     logger.error('Could not find a carpool part for user {} in carpool {}'.format(user, self))
@@ -590,29 +472,40 @@ class GeneratedCarpool(db.Model):
         """
         Returns the points for this carpool
         """
-        return 0  # TODO implement the algorithm for this -- i probably also need to add a column for the distances for this
-
-
-class LegacyDriver(db.Model):
+        return int(eval(self.carpool_solution.pool_points)[user.id])
+class Organization(db.Model):
     """
-    Table to store the drivers that signed up before the new system was implemented
+    Table to store organizations.
     """
-    __tablename__ = 'legacy_drivers'
-    id = db.Column(db.Integer(), nullable=False, primary_key=True)
-    first_name = db.Column(db.String(length=120), nullable=False)
-    last_name = db.Column(db.String(length=120), nullable=False)
-    phone_number = db.Column(db.String(), nullable=False)
-    email_address = db.Column(db.String(), nullable=False)
-    num_seats = db.Column(db.Integer(), nullable=True)
-    num_years_with_license = db.Column(db.String(), nullable=True)
-    car_type_1 = db.Column(db.String(), nullable=True)
-    car_color_1 = db.Column(db.String(), nullable=True)
-    car_type_2 = db.Column(db.String(), nullable=True)
-    car_color_2 = db.Column(db.String(), nullable=True)
-    emergency_contact_number = db.Column(db.String(), nullable=True)
-    emergency_contact_relation = db.Column(db.String(), nullable=True)
-    extra_information = db.Column(db.String(length=200), nullable=True)
-    student_or_parent = db.Column(db.String(), nullable=True)
+    __tablename__ = "organizations"
+    id = db.Column(db.Integer, primary_key=True)
+    access_key = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    icon_location = db.Column(db.String(100), default="carpooling/static/icons/default_icon.jpg") # icons for organizations to use
+    users = db.relationship("User", secondary="organization_user_links", back_populates="organizations", lazy="subquery")
+    destinations = db.relationship("Destination", back_populates="organization", lazy="subquery")
+    events = db.relationship("Event", back_populates="organization", lazy=True)
+    organization_user_links = db.relationship("OrganizationUserLink", back_populates="organization", lazy=True) # this allows for direct access to admin information
+    description = db.Column(db.String(5000), nullable=True)
+    level = db.Column(db.Integer(), nullable=False, default=0) # saving for future use for max members and such
+    points = db.Column(db.Integer(), nullable=False, default=0) # saving for future use for team points
+
+    def __repr__(self):
+        return f"Organization: {self.name}"
+
+class OrganizationUserLink(db.Model):
+    """
+    Table to store the relationships between users and their organziations.
+    This table allows for users to be a part of organization.
+    """
+    __tablename__ = "organization_user_links"
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    admin_level = db.Column(db.SmallInteger, default=0)
+    user = db.relationship("User", back_populates="organization_user_links", foreign_keys=[user_id])
+    organization = db.relationship("Organization", back_populates="organization_user_links", foreign_keys=[organization_id])
+    
+
 
 
 class GeneratedCarpoolResponse(db.Model):
@@ -668,6 +561,10 @@ class CarpoolSolution(db.Model):
     favorable_route_objective_value = db.Column(db.Float, nullable=False, default=0)
     is_best = db.Column(db.Boolean, nullable=True)
     type = db.Column(db.String(4), nullable=False)  # to or from or both
+    pool_points = db.Column(db.String(1000),nullable=False) # JSON string of pool points earned per user. Format: {user_id: pool_points}
+    corresponding_solution_id = db.Column(db.Integer, db.ForeignKey('carpool_solutions.id'), nullable=True)
+    corresponding_solution = db.relationship('CarpoolSolution', remote_side=[corresponding_solution_id])
+
 
 
 class EventCarpoolSignup(db.Model):
@@ -734,20 +631,6 @@ class PassengerEventLink(db.Model):
     def __repr__(self):
         return f'UserEventLink: {self.user_id} {self.event_id}'
 
-
-class StudentAndRegion(db.Model):
-    """
-    Table to link students to regions. Is really only going to be used for the initial phase.
-    """
-    __tablename__ = 'student_and_region'
-    index = db.Column(db.Integer, primary_key=True)
-    student_first_name = db.Column(db.String(20), nullable=False)
-    student_last_name = db.Column(db.String(20), nullable=False)
-    region_name = db.Column(db.String(40), db.ForeignKey('regions.name'))
-    region = db.relationship('Region', backref=db.backref('students'))
-
-    def __repr__(self):
-        return f'StudentAndRegion: {self.student_id} {self.region_name}'
 
 
 class AddressUserLink(db.Model):

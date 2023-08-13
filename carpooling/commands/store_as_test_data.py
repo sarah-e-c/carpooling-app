@@ -54,7 +54,7 @@ def get_people_data() ->dict:
         person_dict['emergency_contact_relation'] = user.emergency_contact_relation
         person_dict['extra_information'] = user.extra_information
         person_dict['region_name'] = user.region_name
-        person_dict['is_admin'] = user.is_admin
+        person_dict['is_admin()'] = user.is_admin()
         
         person_dict['address'] = {
             'latitude': user.get_latitude(),

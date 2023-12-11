@@ -14,3 +14,4 @@ dump.rdb
 *.pyc
 ideas.md
 flask_session
+carpooling/local_settings.py

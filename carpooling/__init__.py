@@ -1,17 +1,31 @@
+from dotenv import load_dotenv
+import os
+import dotenv
+
+dotenv_path = os.path.join(os.path.dirname(__file__), ".." '.env')
+
+load_dotenv(dotenv_path)
+
+
+
+print(os.environ.get("SECRET_KEY"))
+
+if os.environ.get("SECRET_KEY") is None:
+    dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+    print("alternate dotenv loading")
+
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, session
-import os
+
 from flask_login import LoginManager, current_user
 from flask_mail import Mail
 import logging
 from celery import Celery
 from carpooling import celeryapp
 from flask_migrate import Migrate
-from dotenv import load_dotenv
-from flask_migrate import Migrate
-from flask_session import Session
 
-load_dotenv()
+from flask_migrate import Migrate
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -24,7 +38,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login_page'
 migrate = Migrate()
-sess = Session()
 login_manager.session_protection =  None
 # global tasks_
 # tasks_ = []
@@ -54,7 +67,6 @@ def create_app(extra_config_settings=None):
     if extra_config_settings is not None:
         app.config.update(extra_config_settings)
 
-    sess.init_app(app)
     db.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
@@ -84,7 +96,11 @@ app = create_app()
 @app.before_request
 def verify_organization(): # this is not the problem with cha nging organizations
     if current_user.is_authenticated:
-        if int(session['organization']) not in [organization.id for organization in current_user.organizations]:
+        try:
+            if session['organization'] and int(session['organization']) not in [organization.id for organization in current_user.organizations]:
+                session['organization'] = current_user.organizations[0].id
+                session['organizationname'] = current_user.organizations[0].name
+        except KeyError:
             session['organization'] = current_user.organizations[0].id
             session['organizationname'] = current_user.organizations[0].name
     else:
